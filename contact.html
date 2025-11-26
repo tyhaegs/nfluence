@@ -290,17 +290,65 @@
     }
 
     @media (max-width: 600px) {
-      /* MOBILE background: keep your tuned radial + gradient */
+      /* MOBILE background: simplified radial center to stop horizontal shifting */
       :root {
         --bg:
           radial-gradient(
-            circle at calc(50% + 140px) 30%,
+            circle at 50% 30%,
             rgba(255,255,255,.13) 0%,
             rgba(255,255,255,.02) 30%,
             transparent 50%
           ),
           linear-gradient(180deg, #040b15 0%, #070f1f 100%);
       }
+
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+      }
+
+      .field-row {
+        flex-direction: column;
+      }
+
+      .field {
+        min-width: 100%;
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        font-size: 16px; /* stop iOS from auto-zooming */
+      }
+
+      .your-info-section > div,
+      .brand-info-section > div,
+      .project-type-section > div,
+      .project-timeline-section > div,
+      .project-details-section > div,
+      .submit-section > div,
+      .thank-you-section > div {
+        padding: 0 16px;
+      }
+
+      .project-type-group {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .project-type-btn {
+        width: 100%;
+      }
+
+      .logo img {
+        max-width: 320px;
+        margin-top: 16px;
+      }
+    }
 
       html,
       body {
