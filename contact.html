@@ -7,11 +7,10 @@
   <title>nfluence — Contact</title>
   <style>
     html {
-  scroll-behavior: smooth;
-  background: #040b15;
-}
-
-
+      scroll-behavior: smooth;
+      background: #040b15;
+      background-color: #040b15;
+    }
 
 
     @font-face {
@@ -20,7 +19,7 @@
     }
 
     :root {
-      /* DESKTOP background: original radial + gradient (3% brighter) */
+      /* DESKTOP background: original radial + gradient */
       --bg:
         radial-gradient(
           circle at calc(46% + 250px) calc(58% - 175px),
@@ -36,26 +35,29 @@
     }
 
     body {
-  margin: 0;
-  min-height: auto;
-  background: var(--bg);
-  background-color: #040b15;
-  background-attachment: scroll;
-  color: #fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  overflow-x: hidden;
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      background-color: #040b15;
+      background-size: cover;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+      position: relative;
+      /* iOS Safari zoom / shift guards */
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
 
-  /* iOS Safari zoom / shift guards */
-  -webkit-text-size-adjust: 100%;
-  touch-action: manipulation;
-  color: #fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  overflow-x: hidden;
-
-  /* iOS Safari zoom / shift guards */
-  -webkit-text-size-adjust: 100%;
-  touch-action: manipulation;
-}
+    /* full-viewport background layer to kill any white at bottom on all screens */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: -1;
+      pointer-events: none;
+    }
 
 
     /* HEADER */
@@ -262,22 +264,6 @@
       margin-bottom: 80px;
     }
 
-    /* full-viewport background layer for desktop to kill any white at bottom */
-    @media (min-width: 901px) {
-      body {
-        min-height: 100vh;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: var(--bg);
-        z-index: -1;
-        pointer-events: none;
-      }
-    }
-
     /* RESPONSIVE */
     @media (max-width: 900px) {
       header {
@@ -290,66 +276,6 @@
     }
 
     @media (max-width: 600px) {
-      /* MOBILE background: simplified radial center to stop horizontal shifting */
-      :root {
-        --bg:
-          radial-gradient(
-            circle at 50% 30%,
-            rgba(255,255,255,.13) 0%,
-            rgba(255,255,255,.02) 30%,
-            transparent 50%
-          ),
-          linear-gradient(180deg, #040b15 0%, #070f1f 100%);
-      }
-
-      html,
-      body {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
-      }
-
-      .field-row {
-        flex-direction: column;
-      }
-
-      .field {
-        min-width: 100%;
-      }
-
-      .field input,
-      .field textarea {
-        width: 100%;
-        font-size: 16px; /* stop iOS from auto-zooming */
-      }
-
-      .your-info-section > div,
-      .brand-info-section > div,
-      .project-type-section > div,
-      .project-timeline-section > div,
-      .project-details-section > div,
-      .submit-section > div,
-      .thank-you-section > div {
-        padding: 0 16px;
-      }
-
-      .project-type-group {
-        grid-template-columns: 1fr;
-        width: 100%;
-      }
-
-      .project-type-btn {
-        width: 100%;
-      }
-
-      .logo img {
-        max-width: 320px;
-        margin-top: 16px;
-      }
-    }
-
       html,
       body {
         width: 100%;
