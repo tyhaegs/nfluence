@@ -42,9 +42,6 @@
       background-size: cover;
       color: #fff;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       overflow-x: hidden;
     }
 
@@ -265,7 +262,7 @@
     }
 
     @media (max-width: 600px) {
-      /* MOBILE background override: tuned radial + gradient */
+      /* MOBILE background: keep your tuned radial + gradient */
       :root {
         --bg:
           radial-gradient(
@@ -282,10 +279,8 @@
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
-      }
-
-      body {
-        align-items: stretch;
+        margin: 0;
+        padding: 0;
       }
 
       .field-row {
