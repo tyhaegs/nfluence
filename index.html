@@ -420,11 +420,14 @@
         align-self: center;
       }
 
-      /* Stop sideways scrolling on mobile */
+            /* Stop sideways scrolling on mobile and ensure full-height background */
       html,
       body {
         overflow-x: hidden;
         max-width: 100%;
+        min-height: 100vh;
+        background: var(--bg);
+        background-color: #040b15;
       }
     }
   </style>
