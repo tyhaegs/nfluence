@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>nfluence — Contact</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      background: #040b15;
+    }
+
+    @font-face {
+      font-family: 'Monda';
+      src: url('https://cdn.jsdelivr.net/gh/tyhaegs/monta-font/Monda.ttf') format('truetype');
+    }
+
+    :root {
+      /* Desktop background: original radial + gradient */
+      --bg:
+        radial-gradient(
+          circle at calc(46% + 250px) calc(58% - 175px),
+          rgba(255,255,255,.10) 0%,
+          rgba(255,255,255,.03) 38%,
+          transparent 53%
+        ),
+        linear-gradient(180deg, #040b15 0%, #070f1f 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      background-size: cover;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      width: 100%;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.35);
+      position: relative;
+      z-index: 20;
+    }
+
+    .nav-brand {
+      font-weight: 600;
+      letter-spacing: -.01em;
+      font-size: 1.1rem;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      font-size: .9rem;
+      opacity: .85;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover {
+      opacity: 1;
+    }
+
+    /* LOGO / HERO */
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      margin-top: 16px;
+    }
+
+    .logo img {
+      position: relative;
+      z-index: 1;
+      max-width: 485px;
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 24px;
+    }
+
+    .hero-line {
+      margin-top: 40px;
+      width: min(58%, 520px);
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.15) 50%,
+        rgba(255,255,255,0) 100%
+      );
+      opacity: .6;
+    }
+
+    /* FORM LAYOUT */
+    form {
+      width: 100%;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      flex: 1 1 0;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    input,
+    textarea {
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.35);
+      color: #fff;
+      padding: 8px 10px;
+      font-size: .85rem;
+      width: 100%;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba(255,255,255,.45);
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: rgba(255,255,255,.7);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.2);
+      background: rgba(0,0,0,.5);
+    }
+
+    /* PROJECT TYPE / TIMELINE PILLS */
+    .project-type-group {
+      display: grid;
+      grid-template-columns: repeat(3, 150px);
+      column-gap: 10px;
+      row-gap: 10px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .project-type-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .project-type-btn {
+      text-align: center;
+      text-transform: lowercase;
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 14px;
+      font-size: .99rem;
+      border: 1px solid rgba(255,255,255,.18);
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: background .12s ease-out, border .12s ease-out, transform .12s ease-out, box-shadow .12s ease-out;
+      width: 150px;
+      margin: 0;
+    }
+
+    .project-type-btn:hover {
+      background: rgba(255,255,255,.04);
+      border-color: rgba(255,255,255,.35);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,.28);
+    }
+
+    .project-type-input:checked + .project-type-btn {
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.55);
+      box-shadow: 0 0 12px rgba(255,255,255,.18);
+    }
+
+    button[type="submit"] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      padding: 12px 24px;
+      border-radius: 16px;
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-transform: lowercase;
+      font-size: .99rem;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.28);
+      backdrop-filter: blur(20px);
+      color: #fff;
+      transition: transform .12s ease-out, border .12s ease-out, box-shadow .12s ease-out, background .12s ease-out;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.45);
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+
+    .thank-you-section {
+      display: none;
+      justify-content: center;
+      text-align: center;
+      margin-top: 60px;
+      margin-bottom: 80px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      header {
+        padding: 0 18px;
+      }
+
+      .logo img {
+        max-width: 380px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      /* Mobile radial blur override: 175px right, 10% down, 15% stronger, 15% less spread */
+      :root {
+        --bg:
+          radial-gradient(
+            circle at calc(50% + 175px) 10%,
+            rgba(255,255,255,.1388625) 0%,
+            rgba(255,255,255,.04165875) 38%,
+            transparent 63.25%) 0%,
+            rgba(255,255,255,.039675) 38%,
+            transparent 38%
+          ),
+          linear-gradient(180deg, #040b15 0%, #070f1f 100%);
+      }
+
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .field-row {
+        flex-direction: column;
+      }
+
+      .field {
+        min-width: 100%;
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        font-size: 16px; /* stop iOS from auto-zooming */
+      }
+
+      .your-info-section > div,
+      .brand-info-section > div,
+      .project-type-section > div,
+      .project-timeline-section > div,
+      .project-details-section > div,
+      .submit-section > div,
+      .thank-you-section > div {
+        padding: 0 16px;
+      }
+
+      .project-type-group {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .project-type-btn {
+        width: 100%;
+      }
+
+      .logo img {
+        max-width: 320px;
+        margin-top: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="nav-brand" style="color:#fff; text-decoration:none;">nfluence</a>
+  <nav class="nav-links">
+    <a href="index.html#popular">Services</a>
+    <a href="contact.html">Contact Us</a>
+    <a href="index.html#about">About Us</a>
+  </nav>
+</header>
+
+<form action="https://formspree.io/f/xrbvdekl" method="POST" id="contact-form">
+
+  <div class="logo">
+    <img src="https://i.imgur.com/O0P96pA.png" alt="Hero Image" />
+    <div class="hero-line"></div>
+  </div>
+
+  <section class="your-info-section" style="display:flex; justify-content:center; margin-top:30px;">
+    <div style="max-width:470px; width:100%;">
+      <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">your info</div>
+
+      <div class="field-row" style="margin-bottom:15px;">
+        <div class="field"><input type="text" name="full_name" placeholder="full name *" required></div>
+        <div class="field"><input type="email" name="email" placeholder="email *" required></div>
+      </div>
+
+      <div class="field-row" style="margin-bottom:15px;">
+        <div class="field"><input type="text" name="phone" placeholder="phone number"></div>
+        <div class="field"><input type="text" name="location" placeholder="location (city, state)"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brand-info-section" style="display:flex; justify-content:center; margin-top:40px;">
+    <div style="max-width:470px; width:100%;">
+      <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">brand info</div>
+
+      <div class="field-row" style="margin-bottom:15px;">
+        <div class="field"><input type="text" name="brand_name" placeholder="brand name"></div>
+        <div class="field"><input type="text" name="website" placeholder="website"></div>
+      </div>
+
+      <div class="field-row" style="margin-bottom:15px;">
+        <div class="field"><input type="text" name="instagram" placeholder="instagram"></div>
+        <div class="field"><input type="text" name="tiktok" placeholder="tiktok"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="project-type-section" style="display:flex; justify-content:center; margin-top:40px;">
+    <div style="max-width:470px; width:100%;">
+      <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">project type</div>
+
+      <div class="project-type-group">
+        <input type="checkbox" id="pt-consulting" value="consulting" class="project-type-input" name="project_type"><label for="pt-consulting" class="project-type-btn">consulting</label>
+        <input type="checkbox" id="pt-influencer" value="influencer" class="project-type-input" name="project_type"><label for="pt-influencer" class="project-type-btn">influencer</label>
+        <input type="checkbox" id="pt-social" value="social media" class="project-type-input" name="project_type"><label for="pt-social" class="project-type-btn">social media</label>
+        <input type="checkbox" id="pt-events" value="events" class="project-type-input" name="project_type"><label for="pt-events" class="project-type-btn">events</label>
+        <input type="checkbox" id="pt-launching" value="launching" class="project-type-input" name="project_type"><label for="pt-launching" class="project-type-btn">launching</label>
+        <input type="checkbox" id="pt-content" value="content" class="project-type-input" name="project_type"><label for="pt-content" class="project-type-btn">content</label>
+      </div>
+
+      <div style="text-align:center; font-family:'Monda'; font-size:.9rem; opacity:.7; margin-top:18px;">(select all that apply)</div>
+    </div>
+  </section>
+
+  <section class="project-timeline-section" style="display:flex; justify-content:center; margin-top:40px;">
+    <div style="max-width:470px; width:100%;">
+      <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">project timeline</div>
+
+      <div class="project-type-group">
+        <input type="radio" id="tl-immediately" name="project_timeline" value="immediately" class="project-type-input" required><label for="tl-immediately" class="project-type-btn">immediately</label>
+        <input type="radio" id="tl-1to3" name="project_timeline" value="1-3 months" class="project-type-input"><label for="tl-1to3" class="project-type-btn">1–3 months</label>
+        <input type="radio" id="tl-undecided" name="project_timeline" value="undecided" class="project-type-input"><label for="tl-undecided" class="project-type-btn">undecided</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="project-details-section" style="display:flex; justify-content:center; margin-top:40px;">
+    <div style="max-width:470px; width:100%;">
+      <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">project details</div>
+
+      <div class="field"><textarea name="project_details" maxlength="500" placeholder="share details, goals, context, or anything we should know"></textarea></div>
+    </div>
+  </section>
+
+  <section class="submit-section" style="display:flex; justify-content:center; margin-top:40px; margin-bottom:80px;">
+    <div style="max-width:470px; width:100%; text-align:center;"><button type="submit">submit</button></div>
+  </section>
+
+  <section class="thank-you-section">
+    <div style="max-width:470px; width:100%; text-align:center;">
+      <div style="font-family:'Monda'; font-size:1.6rem; margin-bottom:10px;">thank you</div>
+      <p style="font-size:.95rem; opacity:.8;">we will be in touch soon!</p>
+    </div>
+  </section>
+
+</form>
+
+<script>
+const form=document.getElementById('contact-form');
+const submitBtn=document.querySelector('button[type="submit"]');
+const thankYou=document.querySelector('.thank-you-section');
+const brandLink=document.querySelector('.nav-brand');
+if(brandLink){
+  brandLink.addEventListener('click',function(e){
+    // explicit navigation fallback for mobile
+    window.location.href='index.html';
+  });
+}
+
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  form.classList.add('submitted');
+  if(!form.reportValidity()) return;
+
+  submitBtn.disabled=true;
+  const original=submitBtn.textContent;
+  submitBtn.textContent='sending...';
+
+  fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}})
+    .then(()=>{
+      form.reset();
+      form.classList.remove('submitted');
+      form.classList.add('success');
+
+      document.querySelectorAll('.your-info-section, .brand-info-section, .project-type-section, .project-timeline-section, .project-details-section, .submit-section').forEach(el=>el.style.display='none');
+
+            const logo=document.querySelector('.logo');
+      if(logo) logo.style.display='none';
+
+      thankYou.style.display='flex';
+      window.scrollTo(0,0);
+
+      submitBtn.disabled=false;
+      submitBtn.textContent=original;
+    })
+    .catch(()=>{
+      submitBtn.disabled=false;
+      submitBtn.textContent=original;
+      alert('Something went wrong. Try again.');
+    });
+});
+</script>
+
+</body>
+</html>

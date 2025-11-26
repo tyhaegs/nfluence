@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>nfluence</title>
+  <style>
+    html { scroll-behavior: smooth; }
+
+    @font-face {
+      font-family: 'Monda';
+      src: url('https://cdn.jsdelivr.net/gh/tyhaegs/monta-font/Monda.ttf') format('truetype');
+    }
+
+    :root {
+      --bg: linear-gradient(180deg, #060e1a 0%, #091324 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      width: 100%;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      text-shadow: 0 1px 3px rgba(0,0,0,.35);
+    }
+
+    .nav-brand {
+      font-weight: 600;
+      letter-spacing: -.01em;
+      font-size: 1.1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      font-size: .9rem;
+      opacity: .85;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .logo::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle at center, rgba(255,255,255,.1) 0%, transparent 70%);
+      filter: blur(40px);
+      z-index: 0;
+    }
+
+    .logo img {
+      position: relative;
+      z-index: 1;
+      max-width: 485px;
+      height: auto;
+      display: block;
+      margin-top: 24px;
+    }
+
+    .actions {
+      margin-top: -1px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      padding: 12px 24px;
+      border-radius: 16px;
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-transform: lowercase;
+      font-size: .99rem;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.28);
+      backdrop-filter: blur(20px);
+      color: #fff;
+      transition: transform .12s ease-out, border .12s ease-out;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.45);
+      background: transparent;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+
+    .hero-line {
+      margin-top: 40px;
+      width: min(58%, 520px);
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%);
+      opacity: .6;
+    }
+
+    .brand-strip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .brand-strip-logos,
+    .brand-strip-logos--row2 {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      opacity: .95;
+    }
+
+    .brand-strip-logos--row2 {
+      margin-top: -64px;
+      width: 100%;
+    }
+
+    .brand-strip-logos img,
+    .brand-strip-logos--row2 img {
+      object-fit: contain;
+      filter: drop-shadow(0 3px 12px rgba(0,0,0,.4));
+    }
+
+    .brand-strip-logos img[alt="Brand 2"] {
+      width: 180px;
+    }
+
+    .brand-strip-logos img[alt="Brand 1"],
+    .brand-strip-logos img[alt="Brand 3"],
+    .brand-strip-logos img[alt="Brand 4"],
+    .brand-strip-logos img[alt="Brand 5"] {
+      width: 150px;
+    }
+
+    .brand-strip-logos--row2 img[alt="Brand 9"] {
+      width: 180px;
+    }
+
+    .brand-strip-logos--row2 img[alt="Brand 7"] {
+      width: 200px;
+    }
+
+    .brand-strip-logos--row2 img[alt="Brand 8"] {
+      width: 130px;
+    }
+
+    .brand-strip-logos--row2 img[alt="Brand 6"] {
+      width: 170px;
+    }
+
+    .brand-strip-logos--row2 img[alt="Brand 10"] {
+      width: 150px;
+    }
+
+    .intro-text {
+      max-width: 880px;
+      text-align: center;
+      margin-top: 36px;
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #fff;
+      opacity: .9;
+      font-size: 23px;
+      line-height: 1.4;
+      z-index: 1;
+       /* tighten edges on mobile */
+    }
+
+    .intro-text p {
+      margin: 0;
+    }
+
+    .popular {
+      width: min(1100px, 100%);
+      margin: 80px auto 140px;
+      padding: 0 24px;
+    }
+
+    .popular-head {
+      margin-bottom: 26px;
+      text-align: center;
+    }
+
+    .popular-head h2 {
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .popular-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center; /* center the card rows */
+    }
+
+    .popular-card {
+      flex: 0 0 31%;
+      min-width: 280px;
+      background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0));
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      padding: 20px 16px 18px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 55px rgba(0,0,0,.35);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: center;
+      height: 400px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s ease-out, box-shadow .25s ease-out;
+    }
+
+    .popular-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        circle at top,
+        rgba(255,255,255,0.16),
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0)
+      );
+      opacity: 0;
+      transition: opacity .25s ease-out;
+      pointer-events: none;
+    }
+
+    .popular-card:hover::before {
+      opacity: 1;
+    }
+
+    .popular-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 28px 60px rgba(0,0,0,.55), 0 0 14px rgba(255,255,255,.10) inset;
+    }
+
+    .popular-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      line-height: 1;
+      margin: 0 auto 6px;
+    }
+
+    .popular-card h3 {
+      font-family: 'Monda', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.8rem;
+      line-height: 1.05;
+      text-transform: lowercase;
+      margin: 0 0 4px;
+    }
+
+    .popular-card p {
+      font-size: .9rem;
+      line-height: 1.45;
+      opacity: .7;
+      text-align: left;
+      margin-top: -4px;
+    }
+
+    .popular-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .popular-card .tag {
+      display: inline-flex;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      font-size: .58rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .price-hint {
+      font-size: .62rem;
+      opacity: .5;
+    }
+
+    .card-btn {
+      margin-top: auto;
+      display: inline-flex;
+      width: 160px;
+      align-self: center;
+    }
+
+    /* MOBILE OPTIMIZATIONS */
+    @media (max-width: 600px) {
+      /* Stack hero buttons and center them */
+      .actions {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        padding: 0 20px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .actions .btn {
+        width: 100%;
+        max-width: 360px;
+      }
+
+      .hero-line {
+        margin-top: 28px;
+        width: 80%;
+      }
+
+      /* Logos: compact rows on mobile */
+      .brand-strip-logos,
+      .brand-strip-logos--row2 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 0 8px;
+      }
+
+      .brand-strip-logos--row2 {
+        margin-top: -16px; /* slight overlap to reduce scroll height */
+      }
+
+      .brand-strip-logos img,
+      .brand-strip-logos--row2 img {
+        max-width: 110px;
+        width: 100%;
+      }
+
+      /* Intro text: narrower and left-aligned on mobile only */
+      .intro-text {
+        padding: 0 24px;
+        text-align: left;
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      /* Services: 1 card per row on mobile, desktop untouched */
+      .popular {
+        margin: 64px auto 96px;
+        padding: 0 16px;
+      }
+
+      .popular-row {
+        flex-direction: column;
+        gap: 28px;
+        align-items: center;
+      }
+
+      .popular-card {
+        width: 100%;
+        max-width: 360px;
+        height: 400px;
+        text-align: center;
+      }
+
+      .popular-card h3 {
+        text-align: center;
+      }
+
+      .popular-card p {
+        text-align: left;
+      }
+
+      .card-btn {
+        width: 100%;
+        max-width: 260px;
+        align-self: center;
+      }
+
+      /* Stop sideways scrolling on mobile */
+      html,
+      body {
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-brand">nfluence</div>
+    <nav class="nav-links">
+      <a href="#popular" class="nav-services">Services</a>
+      <a href="contact.html" class="nav-contact">Contact Us</a>
+      <a href="#about" class="nav-about">About Us</a>
+    </nav>
+  </header>
+
+  <div class="logo">
+    <img src="https://imgur.com/tpcqXvh.png" alt="Logo" />
+    <div class="actions">
+      <a href="#popular" class="btn">view services</a>
+      <a href="contact.html" class="btn">contact us</a>
+    </div>
+    <div class="hero-line" aria-hidden="true"></div>
+
+    <div class="brand-strip">
+      <div class="brand-strip-logos">
+        <img src="https://i.imgur.com/jqxXhAP.png" alt="Brand 1" />
+        <img src="https://i.imgur.com/GguIvy9.png" alt="Brand 2" />
+        <img src="https://i.imgur.com/AuxsHcF.png" alt="Brand 3" />
+        <img src="https://i.imgur.com/gwDjvyq.png" alt="Brand 4" />
+        <img src="https://i.imgur.com/2eGzJ4h.png" alt="Brand 5" />
+      </div>
+      <div class="brand-strip-logos brand-strip-logos--row2">
+        <img src="https://i.imgur.com/4v1Apsk.png" alt="Brand 9" />
+        <img src="https://i.imgur.com/UPOJknH.png" alt="Brand 7" />
+        <img src="https://i.imgur.com/dBttJW1.png" alt="Brand 8" />
+        <img src="https://i.imgur.com/1e9nGnN.png" alt="Brand 6" />
+        <img src="https://i.imgur.com/MQJiIiX.png" alt="Brand 10" />
+      </div>
+    </div>
+  </div>
+
+  <div class="intro-text">
+    <p>
+      Brands at every stage benefit from clear direction and experienced support. For 15+ years we have partnered with companies across a range of industries, driving growth and producing results that matter. Big budget or bootstrapped, we deliver the services that put your brand in front of the right eyes. You provide the supply, we harness the demand.
+    </p>
+  </div>
+
+  <section class="popular" id="popular">
+    <div class="popular-head">
+      <h2>Our Most Popular Services</h2>
+    </div>
+
+    <div class="popular-row">
+      <article id="service-consulting" class="popular-card">
+        <div class="popular-icon">🔍</div>
+        <h3>consulting</h3>
+        <p>
+          Whether you need focused feedback on one area or a full brand audit, we pinpoint what is working, what is holding you back, and the exact steps to move forward. It is the most cost effective and fastest way for a brand to see immediate progress and to start building momentum.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+
+      <article id="service-influencer" class="popular-card">
+        <div class="popular-icon">📣</div>
+        <h3>influencer campaigns</h3>
+        <p>
+          Influencer campaigns take a lot of time to run the right way. We handle sourcing, outreach, communication, deliverables, and performance tracking so you stay focused on running your business while the campaign runs itself.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+
+      <article id="service-social" class="popular-card">
+        <div class="popular-icon">💻</div>
+        <h3>social media</h3>
+        <p>
+          Social media is the heartbeat of your brand and a key to scaling. We strategically optimize your presence on any platform that matters to your audience to help cut through the noise, build authentic connections, and drive measurable results where your customers already are.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+
+      <article id="service-events" class="popular-card">
+        <div class="popular-icon">📅</div>
+        <h3>community events</h3>
+        <p>
+          Community events are one of the most powerful ways to deepen connection. We help plan, organize, and deliver memorable experiences that bring your audience together and make them feel part of something bigger.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+
+      <article id="service-launching" class="popular-card">
+        <div class="popular-icon">🚀</div>
+        <h3>brand launching</h3>
+        <p>
+          Launching a brand is overwhelming and most founders waste months overthinking every detail. Whether you need only a logo, full branding, social profiles, Shopify setup, business emails, a go to market strategy, or everything at once, we jump in exactly where you need us and get you launched fast, polished, and right on schedule.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+
+      <article id="service-content" class="popular-card">
+        <div class="popular-icon">📸</div>
+        <h3>content creation</h3>
+        <p>
+          Most brands struggle to stay consistent with content because it takes too much time and building an in house media team is out of the budget. We handle everything for you and deliver ready to post videos, photos, and UGC that keep your brand active and growing with no filming or editing required from you.
+        </p>
+        <a href="contact.html" class="btn card-btn">get started</a>
+      </article>
+    </div>
+  </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var btn = document.querySelector('.actions .btn[href="#popular"]');
+      var nav = document.querySelector('.nav-services');
+      var target = document.getElementById('popular');
+
+      function scrollToPopular(e) {
+        if (e) e.preventDefault();
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      if (btn) {
+        btn.addEventListener('click', scrollToPopular);
+      }
+
+      if (nav) {
+        nav.addEventListener('click', scrollToPopular);
+      }
+    });
+  </script>
+</body>
+</html>
