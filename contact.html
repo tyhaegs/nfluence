@@ -265,10 +265,10 @@
       :root {
         --bg:
           radial-gradient(
-            circle at calc(50% + 140px) 25%,
+            circle at calc(50% + 140px) 30%,
             rgba(255,255,255,.13) 0%,
-            rgba(255,255,255,.02) 28%,
-            transparent 28%
+            rgba(255,255,255,.02) 30%,
+            transparent 50%
           ),
           linear-gradient(180deg, #040b15 0%, #070f1f 100%);
       }
@@ -278,6 +278,10 @@
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
+      }
+
+      body {
+        align-items: stretch;
       }
 
       .field-row {
