@@ -20,9 +20,9 @@
       --bg:
         radial-gradient(
           circle at calc(46% + 250px) calc(58% - 175px),
-          rgba(255,255,255,.10) 0%,
-          rgba(255,255,255,.03) 38%,
-          transparent 53%
+          rgba(255,255,255,.103) 0%,
+          rgba(255,255,255,.0309) 38%,
+          transparent 52%
         ),
         linear-gradient(180deg, #040b15 0%, #070f1f 100%);
     }
@@ -261,16 +261,14 @@
     }
 
     @media (max-width: 600px) {
-      /* Mobile radial blur override: 175px right, 10% down, 15% stronger, 15% less spread */
+      /* Mobile radial blur override: 175px right, 10% down, brighter, 53% spread */
       :root {
         --bg:
           radial-gradient(
             circle at calc(50% + 175px) 10%,
             rgba(255,255,255,.1388625) 0%,
             rgba(255,255,255,.04165875) 38%,
-            transparent 63.25%) 0%,
-            rgba(255,255,255,.039675) 38%,
-            transparent 38%
+            transparent 53%
           ),
           linear-gradient(180deg, #040b15 0%, #070f1f 100%);
       }
