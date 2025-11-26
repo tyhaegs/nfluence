@@ -37,7 +37,7 @@
 
     body {
   margin: 0;
-  min-height: 100vh;
+  min-height: auto;
   background: var(--bg);
   background-color: #040b15;
   background-size: cover;
@@ -259,6 +259,10 @@
 
     /* full-viewport background layer for desktop to kill any white at bottom */
     @media (min-width: 901px) {
+      body {
+        min-height: 100vh;
+      }
+
       body::before {
         content: "";
         position: fixed;
