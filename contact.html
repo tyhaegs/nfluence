@@ -16,7 +16,7 @@
     }
 
     :root {
-      /* Desktop background: original radial + gradient */
+      /* DESKTOP background: original radial + gradient (slightly brighter) */
       --bg:
         radial-gradient(
           circle at calc(46% + 250px) calc(58% - 175px),
@@ -261,14 +261,14 @@
     }
 
     @media (max-width: 600px) {
-      /* Mobile radial blur override: 175px right, 10% down, brighter, 53% spread */
+      /* MOBILE background override: tuned radial + gradient */
       :root {
         --bg:
           radial-gradient(
-            circle at calc(50% + 175px) 25%,
-            rgba(255,255,255,.1388625) 0%,
-            rgba(255,255,255,.04165875) 38%,
-            transparent 53%
+            circle at calc(50% + 140px) 25%,
+            rgba(255,255,255,.11) 0%,
+            rgba(255,255,255,.028) 34%,
+            transparent 46%
           ),
           linear-gradient(180deg, #040b15 0%, #070f1f 100%);
       }
