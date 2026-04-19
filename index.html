@@ -13,6 +13,14 @@
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel" src="NfluenceApp_clean-3.jsx"></script>
+  <script>
+    fetch('NfluenceApp_clean-3.jsx')
+      .then(function(r) { return r.text(); })
+      .then(function(code) {
+        var transformed = Babel.transform(code, { presets: ['react', 'env'] }).code;
+        new Function(transformed)();
+      })
+      .catch(function(err) { console.error('Failed to load app:', err); });
+  </script>
 </body>
 </html>
