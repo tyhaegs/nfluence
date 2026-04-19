@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
 // ── Data ──
 
@@ -5424,4 +5424,5 @@ function NfluenceApp() {
 
 
 
-export default NfluenceApp;
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<NfluenceApp />);
