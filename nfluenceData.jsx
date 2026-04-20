@@ -1,8 +1,5 @@
-const { useState, useEffect, useRef, useCallback, useMemo } = React;
-
 // ── Data ──
 
-// ── Data ──
 const PLATFORM_LIST = ["Instagram", "TikTok", "YouTube", "X", "Facebook"];
 const FOLLOWER_TIERS = ["Any", "5k+", "10k+", "25k+", "50k+", "100k+", "250k+", "500k+", "1M+"];
 const PLATFORM_EXAMPLES = {
@@ -92,4 +89,53 @@ const PLAT_SVGS_SMALL = {
   Facebook: <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
 };
 
+const DEMO_MESSAGES = {
+  "Alo::Mindful Movement::Tyler": [
+    { from: "brand", text: "Hey Tyler! We've been following your content for a while — your fitness and wellness niche is exactly what we're looking for. Welcome to the Mindful Movement campaign!", ts: "2026-04-14T09:00:00" },
+    { from: "creator", text: "Really excited to be part of this one. I've been wearing Alo for years so this feels very authentic for me.", ts: "2026-04-14T09:22:00" },
+    { from: "brand", text: "That's exactly why we wanted you. We're putting together your product box now — leggings, a studio top, and the new Warrior mat. Should ship out by end of week.", ts: "2026-04-14T10:05:00" },
+    { from: "creator", text: "Love the mat inclusion — I've been wanting to try it. Should I focus more on studio content or outdoor? My outdoor yoga content tends to perform better.", ts: "2026-04-14T10:30:00" },
+    { from: "brand", text: "Outdoor would be perfect. We're leaning into the 'movement in nature' angle for this campaign. Mountains, parks, rooftops — all fair game.", ts: "2026-04-14T11:00:00" },
+    { from: "creator", text: "I have a shoot planned at Runyon Canyon next week. Could be a great backdrop. Thinking a sunrise flow — golden hour lighting always hits on Instagram.", ts: "2026-04-14T11:18:00" },
+    { from: "brand", text: "Runyon Canyon sunrise sounds incredible. Make sure to tag @aloyoga and use #AloMoves and #MindfulMovement in the caption. Check the style guide we attached — there's a section on caption tone.", ts: "2026-04-14T13:45:00" },
+    { from: "creator", text: "Will do. One question — is there a minimum video length for the reel, or is shorter better?", ts: "2026-04-14T14:10:00" },
+    { from: "brand", text: "Aim for 30–60 seconds for the reel. Shorter tends to get better completion rates. The static post can be a single hero shot — clean, minimal, let the product speak.", ts: "2026-04-14T14:30:00" },
+    { from: "creator", text: "Got it. I'll plan for a 45-second reel and one strong static. Should have everything shot and ready to submit by April 25th.", ts: "2026-04-14T14:55:00" },
+    { from: "brand", text: "Perfect, that works great with our timeline. Looking forward to seeing it — your eye for composition is going to make this one stand out. Let us know if you need anything else before the shoot!", ts: "2026-04-14T15:20:00" },
+  ],
+  "Nike::Running Challenge::Alex Rivera": [
+    { from: "brand", text: "Hey Alex! We loved your running content. Welcome to the Nike Running Challenge!", ts: "2026-04-01T10:00:00" },
+    { from: "creator", text: "Thank you so much! I'm really excited to be part of this. When should I expect the product shipment?", ts: "2026-04-01T10:15:00" },
+    { from: "brand", text: "We're shipping the Pegasus 41 and Dri-FIT pack this week. You should have tracking by Thursday.", ts: "2026-04-01T11:30:00" },
+    { from: "creator", text: "Perfect! I already have some content ideas — thinking a sunrise run vlog and a gear unboxing reel.", ts: "2026-04-01T12:00:00" },
+    { from: "brand", text: "Love that. The sunrise run vlog sounds amazing. Just remember to tag @nike and use #NikeRunningChallenge. Check the style guide for the full list of dos and don'ts.", ts: "2026-04-01T14:20:00" },
+    { from: "creator", text: "Got it! Will review the guide tonight. Quick question — any preference on which colorway I feature first?", ts: "2026-04-01T15:45:00" },
+    { from: "brand", text: "Totally your call — we want it to feel authentic to your style.", ts: "2026-04-01T16:00:00" },
+  ],
+  "Nike::Running Challenge::Mia Thompson": [
+    { from: "brand", text: "Welcome Mia! Excited to have you on the Running Challenge.", ts: "2026-04-02T09:00:00" },
+    { from: "creator", text: "Thanks! Quick q — can I include my dog in the running content? He's my running partner 🐕", ts: "2026-04-02T09:30:00" },
+    { from: "brand", text: "Absolutely, that sounds adorable and on-brand. Go for it!", ts: "2026-04-02T10:00:00" },
+  ],
+  "Alani Nu::Lifestyle & Energy Campaign::Emma Davis": [
+    { from: "brand", text: "Hey Emma! Welcome to the Alani Nu fam. Your TikTok energy is exactly what we're looking for.", ts: "2026-04-03T11:00:00" },
+    { from: "creator", text: "Omg thank you! I literally drink Alani every morning so this is a dream collab.", ts: "2026-04-03T11:20:00" },
+    { from: "brand", text: "That's what we love to hear! We're sending a variety pack — 12 cans, mixed flavors. Should arrive by next week.", ts: "2026-04-03T12:00:00" },
+    { from: "creator", text: "Can't wait! I'm thinking a 'what I drink in a day' style video. Would that work?", ts: "2026-04-03T13:00:00" },
+    { from: "brand", text: "Perfect format for TikTok. Just keep it natural and fun — that's the Alani vibe.", ts: "2026-04-03T13:15:00" },
+  ],
+  "GoPro::POV Creator Program::Jake Sullivan": [
+    { from: "brand", text: "Jake! Your mountain biking footage is insane. Welcome to the POV Creator Program.", ts: "2026-04-05T08:00:00" },
+    { from: "creator", text: "Stoked to be here! I've been shooting GoPro for years — this feels full circle.", ts: "2026-04-05T08:30:00" },
+    { from: "brand", text: "We're sending you the HERO13 Black with the full accessories kit. Any trail trips coming up?", ts: "2026-04-05T09:00:00" },
+    { from: "creator", text: "Heading to Moab next month. Planning a sunrise-to-sunset edit — Slickrock trail, Porcupine Rim, the works.", ts: "2026-04-05T09:45:00" },
+    { from: "brand", text: "That's going to be incredible. Make sure to shoot some BTS too — we might feature it on GoPro's channel.", ts: "2026-04-05T10:00:00" },
+    { from: "creator", text: "Wait, seriously? That would be huge. I'll plan extra footage for sure.", ts: "2026-04-05T10:10:00" },
+    { from: "brand", text: "Dead serious. Your content quality is exactly what we showcase. Just send us the raw files along with your edit.", ts: "2026-04-05T10:30:00" },
+  ],
+};
 
+
+// ── Messages ──
+
+export { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL, DEMO_MESSAGES };

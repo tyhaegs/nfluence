@@ -1,20 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import ImageEditor from "./ImageEditor";
-import {
-  PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES,
-  COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES,
-  DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL,
-} from "./nfluenceData";
+import { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL, DEMO_MESSAGES } from "./nfluenceData";
 
 function SignIn({ onSignIn, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState("");
-  const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim());
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
         .nf-signin-input {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
@@ -36,7 +32,7 @@ function SignIn({ onSignIn, onBack }) {
       `}</style>
       <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
         <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "2.2rem", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
+          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
           <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>{isSignUp ? "create account" : "sign in"}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -45,6 +41,18 @@ function SignIn({ onSignIn, onBack }) {
           )}
           <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
           <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
+          {isSignUp && (
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)" }}>
+              <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
+              <span style={{ fontSize: ".78rem", opacity: .5, lineHeight: 1.55 }}>
+                I agree to Nfluence's{" "}
+                <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
+                {" "}and{" "}
+                <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
+                I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
+              </span>
+            </label>
+          )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
             <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : email.split("@")[0])}>
@@ -114,7 +122,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       <style>{`
         .nf-review-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 20px; }
         .nf-reply-btn { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: .78rem; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
@@ -129,17 +137,17 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".85rem", alignItems: "center" }}>
           <span style={{ opacity: .5, cursor: "pointer" }} onClick={onBack}>← back to dashboard</span>
         </div>
       </div>
 
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "20px 24px 80px" }}>
+      <div style={{ maxWidth: 780, margin: "0 auto", padding: "20px 16px 80px" }}>
         {/* Page header */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>reviews</div>
+          <div style={{ fontSize: "clamp(1.3rem, 4vw, 1.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>reviews</div>
           <div style={{ fontSize: ".9rem", opacity: .4, marginTop: 4 }}>creator feedback across all your campaigns</div>
         </div>
 
@@ -250,7 +258,8 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onOpenNotifications, onMarkAllNotifsRead, onViewAllNotifications }) {
+  const [showTray, setShowTray] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
   const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
   const STAGE_COLORS = { draft: "rgba(255,255,255,.15)", open: "rgba(100,200,255,.25)", active: "rgba(255,200,100,.25)", fulfillment: "rgba(200,100,255,.25)", wrap_up: "rgba(100,255,150,.25)" };
@@ -260,7 +269,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
   }))];
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       <style>{`
         .nf-dash-card {
           background: radial-gradient(circle at top, rgba(255,255,255,.04), rgba(4,11,21,0));
@@ -293,17 +302,19 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {/* Dashboard Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", overflow: "hidden" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", flexShrink: 0 }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 14, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+          <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onBrowse?.()}>campaigns</span>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={onSignOut}>sign out</span>
         </div>
       </div>
+      {showTray && <NotificationTray notifications={notifications} forRole="brand" onClose={() => setShowTray(false)} onMarkAllRead={() => { onMarkAllNotifsRead?.(); setShowTray(false); }} onViewAll={() => { setShowTray(false); onViewAllNotifications?.(); }} />}
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 24px 80px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 16px 80px" }}>
         {/* Welcome + New Campaign */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
           <div>
-            <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>dashboard</div>
+            <div style={{ fontSize: "clamp(1.3rem, 4vw, 1.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>dashboard</div>
             <div style={{ fontSize: ".9rem", opacity: .4, marginTop: 4 }}>manage your campaigns</div>
           </div>
           <button className="nf-new-campaign-btn" onClick={onNewCampaign}>
@@ -319,7 +330,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             { label: "total creators", value: allCampaigns.reduce((sum, c) => sum + (c.creators?.approved?.length || 0) + (c.creators?.pending?.length || 0), 0) },
           ].map((s, i) => (
             <div key={i} className="nf-stat-card">
-              <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
+              <div style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
               <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 4, textTransform: "lowercase" }}>{s.label}</div>
             </div>
           ))}
@@ -376,7 +387,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     return <span key={i} style={{ fontSize: ".85rem", color: filled || half ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>;
                   })}
                 </div>
-                <div className="nf-gold-shimmer" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1.1, marginBottom: 5 }}>{avgRating}</div>
+                <div className="nf-gold-shimmer" style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1.1, marginBottom: 5 }}>{avgRating}</div>
                 <div style={{ fontSize: ".72rem", opacity: .45, textTransform: "lowercase", marginBottom: newCount > 0 ? 8 : 0 }}>{totalReviews} review{totalReviews !== 1 ? "s" : ""}</div>
                 {newCount > 0 && (
                   <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, background: "rgba(251,191,36,.15)", border: "1px solid rgba(251,191,36,.3)", fontSize: ".7rem", fontWeight: 600, color: "#fbbf24" }}>
@@ -476,11 +487,11 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         return (
           <div onClick={() => setEditWarnCampaign(null)} style={{
             position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20,
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px",
           }}>
             <div onClick={e => e.stopPropagation()} style={{
               background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24,
-              padding: "32px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)",
+              padding: 24, maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)",
             }}>
               <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 8, textTransform: "lowercase" }}>before you edit</div>
               <div style={{ fontSize: ".9rem", opacity: .5, marginBottom: 24, lineHeight: 1.6 }}>most fields are editable anytime. a few things to know:</div>
@@ -520,54 +531,15 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
   );
 }
 
-const DEMO_MESSAGES = {
-  "Nike::Running Challenge::Alex Rivera": [
-    { from: "brand", text: "Hey Alex! We loved your running content. Welcome to the Nike Running Challenge!", ts: "2026-04-01T10:00:00" },
-    { from: "creator", text: "Thank you so much! I'm really excited to be part of this. When should I expect the product shipment?", ts: "2026-04-01T10:15:00" },
-    { from: "brand", text: "We're shipping the Pegasus 41 and Dri-FIT pack this week. You should have tracking by Thursday.", ts: "2026-04-01T11:30:00" },
-    { from: "creator", text: "Perfect! I already have some content ideas — thinking a sunrise run vlog and a gear unboxing reel.", ts: "2026-04-01T12:00:00" },
-    { from: "brand", text: "Love that. The sunrise run vlog sounds amazing. Just remember to tag @nike and use #NikeRunningChallenge. Check the style guide for the full list of dos and don'ts.", ts: "2026-04-01T14:20:00" },
-    { from: "creator", text: "Got it! Will review the guide tonight. Quick question — any preference on which colorway I feature first?", ts: "2026-04-01T15:45:00" },
-    { from: "brand", text: "Totally your call — we want it to feel authentic to your style.", ts: "2026-04-01T16:00:00" },
-  ],
-  "Nike::Running Challenge::Mia Thompson": [
-    { from: "brand", text: "Welcome Mia! Excited to have you on the Running Challenge.", ts: "2026-04-02T09:00:00" },
-    { from: "creator", text: "Thanks! Quick q — can I include my dog in the running content? He's my running partner 🐕", ts: "2026-04-02T09:30:00" },
-    { from: "brand", text: "Absolutely, that sounds adorable and on-brand. Go for it!", ts: "2026-04-02T10:00:00" },
-  ],
-  "Alani Nu::Lifestyle & Energy Campaign::Emma Davis": [
-    { from: "brand", text: "Hey Emma! Welcome to the Alani Nu fam. Your TikTok energy is exactly what we're looking for.", ts: "2026-04-03T11:00:00" },
-    { from: "creator", text: "Omg thank you! I literally drink Alani every morning so this is a dream collab.", ts: "2026-04-03T11:20:00" },
-    { from: "brand", text: "That's what we love to hear! We're sending a variety pack — 12 cans, mixed flavors. Should arrive by next week.", ts: "2026-04-03T12:00:00" },
-    { from: "creator", text: "Can't wait! I'm thinking a 'what I drink in a day' style video. Would that work?", ts: "2026-04-03T13:00:00" },
-    { from: "brand", text: "Perfect format for TikTok. Just keep it natural and fun — that's the Alani vibe.", ts: "2026-04-03T13:15:00" },
-  ],
-  "GoPro::POV Creator Program::Jake Sullivan": [
-    { from: "brand", text: "Jake! Your mountain biking footage is insane. Welcome to the POV Creator Program.", ts: "2026-04-05T08:00:00" },
-    { from: "creator", text: "Stoked to be here! I've been shooting GoPro for years — this feels full circle.", ts: "2026-04-05T08:30:00" },
-    { from: "brand", text: "We're sending you the HERO13 Black with the full accessories kit. Any trail trips coming up?", ts: "2026-04-05T09:00:00" },
-    { from: "creator", text: "Heading to Moab next month. Planning a sunrise-to-sunset edit — Slickrock trail, Porcupine Rim, the works.", ts: "2026-04-05T09:45:00" },
-    { from: "brand", text: "That's going to be incredible. Make sure to shoot some BTS too — we might feature it on GoPro's channel.", ts: "2026-04-05T10:00:00" },
-    { from: "creator", text: "Wait, seriously? That would be huge. I'll plan extra footage for sure.", ts: "2026-04-05T10:10:00" },
-    { from: "brand", text: "Dead serious. Your content quality is exactly what we showcase. Just send us the raw files along with your edit.", ts: "2026-04-05T10:30:00" },
-  ],
-};
+// ── Shared message thread renderer (used in both panes) ──
 
-
-// ── Messages ──
-
-function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand }) {
+function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compact = false, brandAvatar, creatorAvatar }) {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { if (!compact) inputRef.current?.focus(); }, [creatorName]);
 
   const handleSend = () => {
     const text = input.trim();
@@ -577,10 +549,7 @@ function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand }) 
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const formatTime = (ts) => {
@@ -591,21 +560,9 @@ function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand }) 
     const isYesterday = d.toDateString() === yesterday.toDateString();
     const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     if (isToday) return time;
-    if (isYesterday) return `yesterday ${time}`;
-    return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
+    if (isYesterday) return `yesterday · ${time}`;
+    return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} · ${time}`;
   };
-
-  // Group messages by date
-  const groupedMessages = [];
-  let lastDate = null;
-  (messages || []).forEach((m) => {
-    const d = new Date(m.ts).toDateString();
-    if (d !== lastDate) {
-      groupedMessages.push({ type: "date", date: d, ts: m.ts });
-      lastDate = d;
-    }
-    groupedMessages.push({ type: "msg", ...m });
-  });
 
   const formatDateHeader = (ts) => {
     const d = new Date(ts);
@@ -616,228 +573,452 @@ function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand }) 
     return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
   };
 
-  return (
+  // Avatar helper — renders a 32px circle
+  const Avatar = ({ src, fallback, isRight }) => (
     <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "column",
-      background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)",
-      color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif",
+      width: 30, height: 30, borderRadius: 10, flexShrink: 0,
+      overflow: "hidden", background: "rgba(255,255,255,.08)",
+      border: "1px solid rgba(255,255,255,.1)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: ".65rem", fontWeight: 700, color: "rgba(255,255,255,.5)",
+      alignSelf: "flex-end", marginBottom: 20, // align to bottom of bubble
     }}>
+      {src ? <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : fallback}
+    </div>
+  );
+
+  // Avatars: brand = logoUrl, creator = avatarUrl or pravatar
+  const avatarIdx = (name) => {
+    let h = 0;
+    for (let i = 0; i < (name || "").length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return (h % 70) + 1;
+  };
+  const resolvedCreatorAvatar = creatorAvatar || `https://i.pravatar.cc/100?img=${avatarIdx(creatorName || "")}`;
+  const resolvedBrandAvatar = brandAvatar || null;
+  const brandFallback = (campaign?.brand || "B").slice(0, 2).toUpperCase();
+
+  const grouped = [];
+  let lastDate = null;
+  (messages || []).forEach((m) => {
+    const d = new Date(m.ts).toDateString();
+    if (d !== lastDate) { grouped.push({ type: "date", ts: m.ts }); lastDate = d; }
+    grouped.push({ type: "msg", ...m });
+  });
+
+  // Group consecutive messages from same sender to only show avatar on last bubble
+  const withAvatarFlag = grouped.map((item, i) => {
+    if (item.type !== "msg") return item;
+    const next = grouped[i + 1];
+    const showAvatar = !next || next.type === "date" || next.from !== item.from;
+    return { ...item, showAvatar };
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
       <style>{`
-        .nf-msg-input:focus { border-color: rgba(255,255,255,.35); box-shadow: 0 0 0 1px rgba(255,255,255,.1); }
-        .nf-msg-input::placeholder { color: rgba(255,255,255,.3); }
-        .nf-msg-send { transition: all .12s; }
-        .nf-msg-send:hover:not(:disabled) { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); transform: translateY(-1px); }
-        .nf-msg-bubble { animation: nf-msg-in .25s ease-out; }
-        @keyframes nf-msg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .nf-msg-input { background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.12); border-radius: 22px; color: #fff; padding: 10px 16px; font-size: .9rem; outline: none; resize: none; font-family: system-ui, sans-serif; line-height: 1.5; transition: border-color .12s; width: 100%; box-sizing: border-box; }
+        .nf-msg-input:focus { border-color: rgba(255,255,255,.3); }
+        .nf-msg-input::placeholder { color: rgba(255,255,255,.28); }
+        .nf-msg-send-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,.12); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .12s; flex-shrink: 0; }
+        .nf-msg-send-btn:disabled { background: rgba(255,255,255,.04); color: rgba(255,255,255,.2); cursor: not-allowed; }
+        .nf-msg-send-btn:not(:disabled):hover { background: rgba(255,255,255,.22); transform: scale(1.08); }
+        .nf-msg-bubble { animation: nf-msg-in .18s ease-out; }
+        @keyframes nf-msg-in { from { opacity:0; transform:translateY(5px) scale(.97); } to { opacity:1; transform:none; } }
       `}</style>
 
-      {/* Header */}
-      <div style={{
-        padding: "16px 24px", display: "flex", alignItems: "center", gap: 14,
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-        background: "rgba(4,11,21,.8)", backdropFilter: "blur(20px)",
-        position: "sticky", top: 0, zIndex: 10,
-      }}>
-        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem", display: "flex", alignItems: "center", transition: "opacity .12s" }}>←</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {isBrand ? creatorName : campaign?.brand}
-          </div>
-          <div style={{ fontSize: ".75rem", opacity: .35, marginTop: 1 }}>
-            {campaign?.brand} · {campaign?.campaign}
-          </div>
+  // Shape: circle for people, rounded-square for brands
+
+
+      {/* Thread header */}
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,.07)", background: "rgba(4,11,21,.85)", backdropFilter: "blur(20px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Header avatar */}
+        <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", fontWeight: 700, color: "rgba(255,255,255,.5)" }}>
+          {isBrand
+            ? (resolvedCreatorAvatar ? <img src={resolvedCreatorAvatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (creatorName || "?").charAt(0))
+            : (resolvedBrandAvatar ? <img src={resolvedBrandAvatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : brandFallback)
+          }
         </div>
-        <div style={{
-          padding: "4px 12px", borderRadius: 20, fontSize: ".7rem", fontWeight: 600,
-          background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)",
-          color: "rgba(100,255,150,.7)", textTransform: "lowercase",
-        }}>active</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
+          <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 2 }}>{campaign?.brand} · {campaign?.campaign}</div>
+        </div>
+        <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)", flexShrink: 0 }}>active</div>
       </div>
 
-      {/* Messages area */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px 12px", maxWidth: 700, width: "100%", margin: "0 auto" }}>
-        {groupedMessages.length === 0 && (
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px 8px" }}>
+        {grouped.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .15 }}>💬</div>
-            <div style={{ fontSize: ".95rem", opacity: .3, marginBottom: 6 }}>no messages yet</div>
-            <div style={{ fontSize: ".8rem", opacity: .2 }}>start the conversation below</div>
+            <div style={{ fontSize: "2rem", marginBottom: 10, opacity: .12 }}>💬</div>
+            <div style={{ fontSize: ".88rem", opacity: .25 }}>no messages yet</div>
           </div>
         )}
-        {groupedMessages.map((item, i) => {
-          if (item.type === "date") {
-            return (
-              <div key={`date-${i}`} style={{ textAlign: "center", padding: "16px 0 8px" }}>
-                <span style={{
-                  fontSize: ".7rem", fontWeight: 600, opacity: .25, textTransform: "lowercase",
-                  padding: "4px 14px", borderRadius: 20, background: "rgba(255,255,255,.04)",
-                  letterSpacing: ".03em",
-                }}>{formatDateHeader(item.ts)}</span>
-              </div>
-            );
-          }
+        {withAvatarFlag.map((item, i) => {
+          if (item.type === "date") return (
+            <div key={`d${i}`} style={{ textAlign: "center", padding: "14px 0 8px" }}>
+              <span style={{ fontSize: ".78rem", fontWeight: 500, color: "rgba(255,255,255,.28)", letterSpacing: ".01em" }}>{formatDateHeader(item.ts)}</span>
+            </div>
+          );
           const isMe = (isBrand && item.from === "brand") || (!isBrand && item.from === "creator");
+          const fromBrand = item.from === "brand";
+          const avatarSrc = fromBrand ? resolvedBrandAvatar : resolvedCreatorAvatar;
+          const avatarFallback = fromBrand ? brandFallback : (creatorName || "?").charAt(0);
+
           return (
-            <div key={i} className="nf-msg-bubble" style={{
-              display: "flex", justifyContent: isMe ? "flex-end" : "flex-start",
-              marginBottom: 6,
-            }}>
-              <div style={{
-                maxWidth: "75%", padding: "12px 16px", borderRadius: 16,
-                borderBottomRightRadius: isMe ? 4 : 16,
-                borderBottomLeftRadius: isMe ? 16 : 4,
-                background: isMe ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.04)",
-                border: `1px solid ${isMe ? "rgba(255,255,255,.15)" : "rgba(255,255,255,.06)"}`,
-              }}>
-                <div style={{ fontSize: ".9rem", lineHeight: 1.55, opacity: .85, wordBreak: "break-word" }}>{item.text}</div>
-                <div style={{ fontSize: ".65rem", opacity: .25, marginTop: 6, textAlign: isMe ? "right" : "left" }}>
-                  {formatTime(item.ts)}
+            <div key={i} className="nf-msg-bubble" style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: 2 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 8, flexDirection: isMe ? "row-reverse" : "row" }}>
+                {/* Avatar — only on last bubble in a run */}
+                <div style={{ width: 30, flexShrink: 0, display: "flex", alignItems: "flex-end" }}>
+                  {item.showAvatar && (
+                    <div style={{ width: 30, height: 30, borderRadius: 10, overflow: "hidden", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", fontWeight: 700, color: "rgba(255,255,255,.5)" }}>
+                      {avatarSrc ? <img src={avatarSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : avatarFallback}
+                    </div>
+                  )}
                 </div>
+                <div style={{
+                  maxWidth: "68%", padding: "10px 14px", lineHeight: 1.55, wordBreak: "break-word",
+                  fontSize: ".9rem", color: "#fff",
+                  background: isMe ? "rgba(255,255,255,.14)" : "rgba(255,255,255,.07)",
+                  border: `1px solid ${isMe ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.09)"}`,
+                  borderRadius: 20,
+                  borderBottomRightRadius: isMe ? 5 : 20,
+                  borderBottomLeftRadius: isMe ? 20 : 5,
+                }}>{item.text}</div>
               </div>
+              {item.showAvatar && (
+                <div style={{ fontSize: ".72rem", color: "rgba(255,255,255,.25)", margin: "3px 0 8px", paddingLeft: isMe ? 0 : 38, paddingRight: isMe ? 38 : 0 }}>{formatTime(item.ts)}</div>
+              )}
             </div>
           );
         })}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input area */}
-      <div style={{
-        padding: "16px 24px 20px",
-        borderTop: "1px solid rgba(255,255,255,.08)",
-        background: "rgba(4,11,21,.9)", backdropFilter: "blur(20px)",
-        position: "sticky", bottom: 0,
-      }}>
-        <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", gap: 10, alignItems: "flex-end" }}>
-          <textarea
-            ref={inputRef}
-            className="nf-msg-input"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="type a message..."
-            rows={1}
-            style={{
-              flex: 1, padding: "12px 16px", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,.12)",
-              background: "rgba(0,0,0,.3)", color: "#fff",
-              fontSize: ".9rem", outline: "none", resize: "none",
-              fontFamily: "system-ui, sans-serif",
-              lineHeight: 1.5, maxHeight: 120, overflowY: "auto",
-              transition: "border-color .12s, box-shadow .12s",
-            }}
-          />
-          <button
-            className="nf-msg-send"
-            disabled={!input.trim()}
-            onClick={handleSend}
-            style={{
-              padding: "12px 20px", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,.2)",
-              background: input.trim() ? "rgba(255,255,255,.1)" : "transparent",
-              color: input.trim() ? "#fff" : "rgba(255,255,255,.25)",
-              fontSize: ".85rem", fontWeight: 600, cursor: input.trim() ? "pointer" : "not-allowed",
-              fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
-              flexShrink: 0, transition: "all .12s",
-            }}
-          >send</button>
+      {/* Input bar */}
+      <div style={{ padding: "10px 16px 14px", borderTop: "1px solid rgba(255,255,255,.07)", background: "rgba(4,11,21,.9)", backdropFilter: "blur(20px)", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <textarea ref={inputRef} className="nf-msg-input" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
+            placeholder="message..." rows={1} style={{ maxHeight: 100, overflowY: "auto" }} />
+          <button className="nf-msg-send-btn" disabled={!input.trim()} onClick={handleSend}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+  const [input, setInput] = useState("");
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { if (!compact) inputRef.current?.focus(); }, [creatorName]);
+
+  const handleSend = () => {
+    const text = input.trim();
+    if (!text) return;
+    onSend(text);
+    setInput("");
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  const formatTime = (ts) => {
+    const d = new Date(ts);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (isToday) return time;
+    if (isYesterday) return `yesterday · ${time}`;
+    return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} · ${time}`;
+  };
+
+  const formatDateHeader = (ts) => {
+    const d = new Date(ts);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) return "today";
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) return "yesterday";
+    return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+  };
+
+  const grouped = [];
+  let lastDate = null;
+  (messages || []).forEach((m) => {
+    const d = new Date(m.ts).toDateString();
+    if (d !== lastDate) { grouped.push({ type: "date", ts: m.ts }); lastDate = d; }
+    grouped.push({ type: "msg", ...m });
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <style>{`
+        .nf-msg-input { background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.12); border-radius: 22px; color: #fff; padding: 10px 16px; font-size: .9rem; outline: none; resize: none; font-family: system-ui, sans-serif; line-height: 1.5; transition: border-color .12s; width: 100%; box-sizing: border-box; }
+        .nf-msg-input:focus { border-color: rgba(255,255,255,.3); }
+        .nf-msg-input::placeholder { color: rgba(255,255,255,.28); }
+        .nf-msg-send-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,.12); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .12s; flex-shrink: 0; }
+        .nf-msg-send-btn:disabled { background: rgba(255,255,255,.04); color: rgba(255,255,255,.2); cursor: not-allowed; }
+        .nf-msg-send-btn:not(:disabled):hover { background: rgba(255,255,255,.22); transform: scale(1.08); }
+        .nf-msg-bubble { animation: nf-msg-in .18s ease-out; }
+        @keyframes nf-msg-in { from { opacity:0; transform:translateY(5px) scale(.97); } to { opacity:1; transform:none; } }
+      `}</style>
+
+      {/* Thread header */}
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,.07)", background: "rgba(4,11,21,.85)", backdropFilter: "blur(20px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
+          <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 2 }}>{campaign?.brand} · {campaign?.campaign}</div>
+        </div>
+        <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)", flexShrink: 0 }}>active</div>
+      </div>
+
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 18px 8px" }}>
+        {grouped.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: "2rem", marginBottom: 10, opacity: .12 }}>💬</div>
+            <div style={{ fontSize: ".88rem", opacity: .25 }}>no messages yet</div>
+          </div>
+        )}
+        {grouped.map((item, i) => {
+          if (item.type === "date") return (
+            <div key={`d${i}`} style={{ textAlign: "center", padding: "14px 0 8px" }}>
+              <span style={{ fontSize: ".78rem", fontWeight: 500, color: "rgba(255,255,255,.28)", letterSpacing: ".01em" }}>{formatDateHeader(item.ts)}</span>
+            </div>
+          );
+          const isMe = (isBrand && item.from === "brand") || (!isBrand && item.from === "creator");
+          return (
+            <div key={i} className="nf-msg-bubble" style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", marginBottom: 2 }}>
+              <div style={{
+                maxWidth: "72%", padding: "10px 14px", lineHeight: 1.55, wordBreak: "break-word",
+                fontSize: ".9rem", color: "#fff",
+                background: isMe ? "rgba(255,255,255,.14)" : "rgba(255,255,255,.07)",
+                border: `1px solid ${isMe ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.09)"}`,
+                borderRadius: 20,
+                borderBottomRightRadius: isMe ? 5 : 20,
+                borderBottomLeftRadius: isMe ? 20 : 5,
+              }}>{item.text}</div>
+              <div style={{ fontSize: ".72rem", color: "rgba(255,255,255,.25)", margin: "3px 4px 8px" }}>{formatTime(item.ts)}</div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input bar */}
+      <div style={{ padding: "10px 16px 14px", borderTop: "1px solid rgba(255,255,255,.07)", background: "rgba(4,11,21,.9)", backdropFilter: "blur(20px)", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <textarea ref={inputRef} className="nf-msg-input" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
+            placeholder="message..." rows={1} style={{ maxHeight: 100, overflowY: "auto" }} />
+          <button className="nf-msg-send-btn" disabled={!input.trim()} onClick={handleSend}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+// ── MessageInbox (two-pane on desktop, single-pane on mobile) ──
 
-// ── MessageInbox ──
+function MessageInbox({ conversations, campaign, onSelectThread, onBack, onSend, allMessages, isBrand, brandAvatar, creatorAvatars = {} }) {
+  const [selected, setSelected] = useState(conversations[0] || null);
 
-function MessageInbox({ conversations, campaign, onSelectThread, onBack }) {
   const avatarIdx = (name) => {
     let h = 0;
     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
     return (h % 70) + 1;
   };
 
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)",
-      color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif",
-    }}>
-      <style>{`
-        .nf-inbox-row { transition: background .12s, border-color .12s; cursor: pointer; }
-        .nf-inbox-row:hover { background: rgba(255,255,255,.04) !important; border-color: rgba(255,255,255,.15) !important; }
-      `}</style>
+  // On mobile, selecting a thread navigates away; on desktop it updates the right pane
+  const handleSelect = (conv) => {
+    setSelected(conv);
+    if (window.innerWidth < 768) onSelectThread(conv);
+  };
 
-      {/* Header */}
-      <div style={{
-        padding: "16px 24px", display: "flex", alignItems: "center", gap: 14,
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-      }}>
-        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: "1.1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>messages</div>
-          <div style={{ fontSize: ".8rem", opacity: .35, marginTop: 2 }}>
-            {campaign ? `${campaign.brand} · ${campaign.campaign}` : "all conversations"}
-          </div>
+  const ConvList = () => (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* List header */}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+        <div onClick={onBack} style={{ cursor: "pointer", opacity: .5, fontSize: "1.1rem", transition: "opacity .12s" }}>←</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>messages</div>
+          {campaign && <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 1 }}>{campaign.brand} · {campaign.campaign}</div>}
         </div>
       </div>
-
-      {/* Thread list */}
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "12px 24px" }}>
+      {/* Threads */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "8px 10px" }}>
         {conversations.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .15 }}>💬</div>
-            <div style={{ fontSize: ".95rem", opacity: .3 }}>no conversations yet</div>
-            <div style={{ fontSize: ".8rem", opacity: .2, marginTop: 6 }}>messages with creators will appear here</div>
-          </div>
+          <div style={{ textAlign: "center", padding: "40px 16px", opacity: .25, fontSize: ".85rem" }}>no conversations yet</div>
         )}
         {conversations.map((conv, i) => {
           const lastMsg = conv.messages[conv.messages.length - 1];
-          const unread = conv.unread || 0;
+          const isActive = selected?.creatorName === conv.creatorName;
           return (
-            <div key={i} className="nf-inbox-row" onClick={() => onSelectThread(conv)}
-              style={{
-                padding: "16px 18px", borderRadius: 14,
-                background: "rgba(255,255,255,.02)",
-                border: "1px solid rgba(255,255,255,.06)",
-                marginBottom: 8, display: "flex", alignItems: "center", gap: 14,
-              }}>
-              <div style={{
-                width: 46, height: 46, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
-                border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)",
-              }}>
-                <img
-                  src={`https://i.pravatar.cc/100?img=${avatarIdx(conv.creatorName)}`}
-                  alt={conv.creatorName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
+            <div key={i} onClick={() => handleSelect(conv)} style={{ padding: "12px 14px", borderRadius: 12, marginBottom: 4, display: "flex", alignItems: "center", gap: 12, cursor: "pointer", background: isActive ? "rgba(255,255,255,.08)" : "transparent", transition: "background .12s" }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, overflow: "hidden", border: `1px solid ${isActive ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.08)"}`, background: "rgba(255,255,255,.05)" }}>
+                <img src={`https://i.pravatar.cc/100?img=${avatarIdx(conv.creatorName)}`} alt={conv.creatorName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-                  <div style={{ fontWeight: 600, fontSize: ".9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {conv.creatorName}
-                  </div>
-                  <div style={{ fontSize: ".7rem", opacity: .25, flexShrink: 0 }}>
-                    {lastMsg ? new Date(lastMsg.ts).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}
-                  </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 6, marginBottom: 3 }}>
+                  <div style={{ fontWeight: 600, fontSize: ".88rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.creatorName}</div>
+                  <div style={{ fontSize: ".68rem", opacity: .25, flexShrink: 0 }}>{lastMsg ? new Date(lastMsg.ts).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}</div>
                 </div>
-                <div style={{
-                  fontSize: ".8rem", opacity: .4, overflow: "hidden",
-                  textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                }}>
+                <div style={{ fontSize: ".76rem", opacity: .4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {lastMsg ? `${lastMsg.from === "brand" ? "you: " : ""}${lastMsg.text}` : "no messages"}
                 </div>
               </div>
-              {unread > 0 && (
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(100,200,255,.2)", border: "1px solid rgba(100,200,255,.3)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: ".7rem", fontWeight: 700, color: "rgba(100,200,255,.9)",
-                }}>{unread}</div>
-              )}
+              {(conv.unread || 0) > 0 && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(100,200,255,.9)", flexShrink: 0 }} />}
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        .nf-msg-layout { display: flex; flex: 1; min-height: 0; }
+        .nf-msg-sidebar { width: 300px; min-width: 260px; border-right: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
+        .nf-msg-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .nf-msg-empty { flex: 1; display: flex; align-items: center; justify-content: center; opacity: .2; flex-direction: column; gap: 10; }
+        @media (max-width: 767px) { .nf-msg-sidebar { width: 100%; border-right: none; } .nf-msg-main { display: none; } }
+      `}</style>
+      <div className="nf-msg-layout">
+        <div className="nf-msg-sidebar"><ConvList /></div>
+        <div className="nf-msg-main">
+          {selected && allMessages ? (
+            <MessageThread
+              campaign={campaign}
+              creatorName={selected.creatorName}
+              messages={allMessages[selected.creatorName] || selected.messages || []}
+              onSend={(text) => onSend?.(selected.creatorName, text)}
+              isBrand={isBrand}
+              brandAvatar={brandAvatar}
+              creatorAvatar={creatorAvatars[selected.creatorName]}
+            />
+          ) : (
+            <div className="nf-msg-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <div style={{ fontSize: ".88rem" }}>select a conversation</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Messages (mobile thread view — used when navigating directly to a thread) ──
+
+function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand, brandAvatar, creatorAvatar }) {
+  return (
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.08)", background: "rgba(4,11,21,.8)", backdropFilter: "blur(20px)", flexShrink: 0 }}>
+        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
+          <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 1 }}>{campaign?.brand} · {campaign?.campaign}</div>
+        </div>
+        <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)" }}>active</div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <MessageThread campaign={campaign} creatorName={creatorName} messages={messages} onSend={onSend} isBrand={isBrand} brandAvatar={brandAvatar} creatorAvatar={creatorAvatar} />
+      </div>
+    </div>
+  );
+}
+
+// ── CreatorInbox (two-pane on desktop) ──
+
+function CreatorInbox({ conversations, onSelectThread, onBack, onSend, allMessages, creatorAvatar, brandAvatars = {} }) {
+  const [selected, setSelected] = useState(conversations[0] || null);
+
+  const handleSelect = (conv) => {
+    setSelected(conv);
+    if (window.innerWidth < 768) onSelectThread(conv);
+  };
+
+  const ConvList = () => (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+        <div onClick={onBack} style={{ cursor: "pointer", opacity: .5, fontSize: "1.1rem" }}>←</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>messages</div>
+          <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 1 }}>conversations with brands</div>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "8px 10px" }}>
+        {conversations.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 16px", opacity: .25, fontSize: ".85rem" }}>no messages yet</div>
+        )}
+        {conversations.map((conv, i) => {
+          const lastMsg = conv.messages[conv.messages.length - 1];
+          const isActive = selected?.key === conv.key;
+          return (
+            <div key={i} onClick={() => handleSelect(conv)} style={{ padding: "12px 14px", borderRadius: 12, marginBottom: 4, display: "flex", alignItems: "center", gap: 12, cursor: "pointer", background: isActive ? "rgba(255,255,255,.08)" : "transparent", transition: "background .12s" }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: "rgba(255,255,255,.08)", border: `1px solid ${isActive ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.08)"}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".72rem", fontWeight: 700, color: "rgba(255,255,255,.6)" }}>
+                {brandAvatars[conv.brandName]
+                  ? <img src={brandAvatars[conv.brandName]} alt={conv.brandName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  : conv.brandName?.slice(0,2).toUpperCase() || "??"
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 6, marginBottom: 2 }}>
+                  <div style={{ fontWeight: 600, fontSize: ".88rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.brandName}</div>
+                  <div style={{ fontSize: ".68rem", opacity: .25, flexShrink: 0 }}>{lastMsg ? new Date(lastMsg.ts).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}</div>
+                </div>
+                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{conv.campaignName}</div>
+                <div style={{ fontSize: ".76rem", opacity: .4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {lastMsg ? `${lastMsg.from === "creator" ? "you: " : ""}${lastMsg.text}` : "no messages yet"}
+                </div>
+              </div>
+              {(conv.unread || 0) > 0 && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(100,200,255,.9)", flexShrink: 0 }} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        .nf-msg-layout { display: flex; flex: 1; min-height: 0; }
+        .nf-msg-sidebar { width: 300px; min-width: 260px; border-right: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
+        .nf-msg-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .nf-msg-empty { flex: 1; display: flex; align-items: center; justify-content: center; opacity: .2; flex-direction: column; gap: 10; }
+        @media (max-width: 767px) { .nf-msg-sidebar { width: 100%; border-right: none; } .nf-msg-main { display: none; } }
+      `}</style>
+      <div className="nf-msg-layout">
+        <div className="nf-msg-sidebar"><ConvList /></div>
+        <div className="nf-msg-main">
+          {selected && allMessages ? (
+            <MessageThread
+              campaign={{ brand: selected.brandName, campaign: selected.campaignName }}
+              creatorName={selected.brandName}
+              messages={allMessages[selected.key] || selected.messages || []}
+              onSend={(text) => onSend?.(selected.key, text)}
+              isBrand={false}
+              brandAvatar={brandAvatars[selected.brandName]}
+              creatorAvatar={creatorAvatar}
+            />
+          ) : (
+            <div className="nf-msg-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <div style={{ fontSize: ".88rem" }}>select a conversation</div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -882,7 +1063,7 @@ function OnboardingPage({ onDone }) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at 60% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at 60% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         .nf-onboard-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 20px 22px; transition: border-color .2s; }
@@ -893,7 +1074,7 @@ function OnboardingPage({ onDone }) {
         {/* Header */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: ".85rem", opacity: .4, marginBottom: 10, textTransform: "lowercase", letterSpacing: ".04em" }}>campaign published</div>
-          <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "2rem", fontWeight: 700, lineHeight: 1.2, marginBottom: 10 }}>before you head to your dashboard</h1>
+          <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.3rem, 4vw, 2rem)", fontWeight: 700, lineHeight: 1.2, marginBottom: 10 }}>before you head to your dashboard</h1>
           <p style={{ fontSize: "1rem", opacity: .5, lineHeight: 1.65 }}>here's what you need to know to run a successful campaign on nfluence.</p>
         </div>
 
@@ -943,6 +1124,390 @@ function OnboardingPage({ onDone }) {
   );
 }
 
+// ── CreatorPublicProfile ──
+
+function CreatorPublicProfile({ creator, onBack, onMessage }) {
+  const platforms = [
+    { key: "Instagram", handle: creator.instagram, count: creator.instagramFollowers, url: "https://instagram.com/" },
+    { key: "TikTok",    handle: creator.tiktok,    count: creator.tiktokFollowers,    url: "https://tiktok.com/@" },
+    { key: "YouTube",  handle: creator.youtube,    count: creator.youtubeFollowers,   url: "https://youtube.com/@" },
+    { key: "X",        handle: creator.x,          count: creator.xFollowers,         url: "https://x.com/" },
+  ].filter(p => p.handle);
+
+  const niches = creator.niches ? creator.niches.split(",").map(n => n.trim()).filter(Boolean) : [];
+  const completedCount = typeof creator.completedCampaigns === "number" ? creator.completedCampaigns : 0;
+  const rating = creator.rating || null;
+
+  // Abbreviate large follower numbers
+  const abbrev = (n) => {
+    if (!n) return null;
+    const str = String(n).replace(/[^0-9.kmb]/gi, "");
+    if (/[kmb]/i.test(str)) return str;
+    const num = parseFloat(str);
+    if (isNaN(num)) return str;
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(num);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        @font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        .cpp-back { opacity:.5; transition:opacity .15s; cursor:pointer; }
+        .cpp-back:hover { opacity:1; }
+        .cpp-plat-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px 20px; display:flex; align-items:center; gap:14px; text-decoration:none; color:#fff; transition:transform .2s, border-color .2s, box-shadow .2s; }
+        .cpp-plat-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,.2); box-shadow:0 10px 30px rgba(0,0,0,.35); }
+        .cpp-msg-btn { transition:transform .12s, border-color .2s, box-shadow .2s, background .2s; cursor:pointer; }
+        .cpp-msg-btn:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.55) !important; box-shadow:0 0 18px rgba(255,255,255,.12) !important; background:rgba(255,255,255,.12) !important; }
+        .cpp-niche { padding:5px 14px; border-radius:20px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); font-size:.78rem; color:rgba(255,255,255,.65); }
+      `}</style>
+
+      {/* Back */}
+      <div className="cpp-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
+        <span style={{ fontSize: "1.1rem" }}>←</span> back
+      </div>
+
+      {/* Banner */}
+      <div style={{ width: "100%", maxWidth: 800, margin: "0 auto", position: "relative" }}>
+        <div style={{ width: "100%", height: "clamp(140px, 30vw, 260px)", borderRadius: 16, overflow: "hidden", background: creator.bannerUrl ? undefined : "linear-gradient(135deg, rgba(100,80,255,.25), rgba(255,80,160,.15))" }}>
+          {creator.bannerUrl && <img src={creator.bannerUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />}
+        </div>
+        {/* Avatar */}
+        <div style={{ position: "absolute", bottom: -52, left: 28, width: 104, height: 104, borderRadius: "50%", border: "4px solid #040b15", background: "#0c1424", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", fontWeight: 700 }}>
+          {creator.avatarUrl
+            ? <img src={creator.avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+            : (creator.name || "?").charAt(0).toUpperCase()
+          }
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "68px 16px 80px" }}>
+
+        {/* Header row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em", marginBottom: 6 }}>
+              {creator.name || "creator"}
+            </div>
+            {/* Meta row */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: ".85rem", opacity: .45 }}>
+              {creator.location && <span>📍 {creator.location}</span>}
+              {creator.age && <span>· {creator.age} yrs</span>}
+              {creator.languages && <span>· {creator.languages}</span>}
+            </div>
+          </div>
+          {/* Rating + stats */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            {rating && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "#fbbf24", fontSize: "1rem" }}>{"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}</span>
+                <span style={{ fontSize: ".82rem", opacity: .45 }}>{rating.toFixed(1)}</span>
+              </div>
+            )}
+            {completedCount > 0 && (
+              <div style={{ fontSize: ".78rem", opacity: .35 }}>{completedCount} campaign{completedCount !== 1 ? "s" : ""} completed</div>
+            )}
+          </div>
+        </div>
+
+        {/* Niches */}
+        {niches.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+            {niches.map((n, i) => <div key={i} className="cpp-niche">{n}</div>)}
+          </div>
+        )}
+
+        {/* Bio */}
+        {creator.bio && (
+          <div style={{ fontSize: ".95rem", lineHeight: 1.75, opacity: .65, marginBottom: 28, maxWidth: 600 }}>
+            {creator.bio}
+          </div>
+        )}
+
+        {/* Platform cards — 2-col grid */}
+        {platforms.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: ".72rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".06em", fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 12 }}>platforms</div>
+            <div className="nf-plat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+              <style>{`.nf-plat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } @media(max-width:600px){ .nf-plat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }`}</style>
+              {platforms.map(p => {
+                const handle = p.handle.startsWith("@") ? p.handle : "@" + p.handle;
+                const href = p.url + handle.replace("@", "");
+                const count = abbrev(p.count);
+                return (
+                  <a key={p.key} href={href} target="_blank" rel="noopener noreferrer" className="cpp-plat-card">
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {PLAT_SVGS_SMALL[p.key]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: ".78rem", opacity: .4, marginBottom: 2 }}>{p.key}</div>
+                      <div style={{ fontSize: ".92rem", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{handle}</div>
+                    </div>
+                    {count && (
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{count}</div>
+                        <div style={{ fontSize: ".65rem", opacity: .35, marginTop: 2 }}>followers</div>
+                      </div>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Total reach stat */}
+        {platforms.length > 0 && (() => {
+          const total = platforms.reduce((sum, p) => {
+            const raw = String(p.count || "").replace(/[^0-9.]/g, "");
+            const mult = /k/i.test(p.count || "") ? 1000 : /m/i.test(p.count || "") ? 1000000 : 1;
+            return sum + (parseFloat(raw) * mult || 0);
+          }, 0);
+          if (total < 1000) return null;
+          return (
+            <div style={{ padding: "16px 22px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: ".78rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif" }}>combined reach</div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(180,255,80,.9)" }}>
+                {abbrev(String(total))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Message CTA */}
+        {onMessage && (
+          <div className="cpp-msg-btn" onClick={onMessage} style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            width: "100%", padding: "16px 28px", borderRadius: 16,
+            fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
+            fontSize: "1rem", fontWeight: 600,
+            background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.2)",
+            color: "rgba(255,255,255,.8)", cursor: "pointer",
+            boxShadow: "0 10px 28px rgba(0,0,0,.2)",
+          }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            send a message
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+// ── Notifications ──
+
+const NOTIF_ICONS = {
+  new_application:      { icon: "👤", color: "rgba(100,180,255,.9)" },
+  content_submitted:    { icon: "📋", color: "rgba(255,160,50,.9)" },
+  call_confirmed:       { icon: "✅", color: "rgba(100,255,150,.9)" },
+  call_declined:        { icon: "❌", color: "rgba(255,100,100,.8)" },
+  application_accepted: { icon: "🎉", color: "rgba(100,255,150,.9)" },
+  application_rejected: { icon: "😔", color: "rgba(255,100,100,.8)" },
+  product_shipped:      { icon: "📦", color: "rgba(185,110,255,.9)" },
+  call_scheduled:       { icon: "📅", color: "rgba(100,180,255,.9)" },
+  content_approved:     { icon: "💰", color: "rgba(180,255,80,.9)" },
+  message_received:     { icon: "💬", color: "rgba(255,255,255,.7)" },
+};
+
+function relativeTime(ts) {
+  const diff = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function NotificationBell({ notifications, onOpen }) {
+  const unread = notifications.filter(n => !n.read).length;
+  return (
+    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+      <div onClick={onOpen} style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", transition: "all .15s", position: "relative" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        {unread > 0 && (
+          <div style={{
+            position: "absolute", top: -5, right: -5,
+            width: 18, height: 18, borderRadius: "50%",
+            background: "rgba(255,140,30,1)", border: "2px solid #040b15",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: ".6rem", fontWeight: 700, color: "#000",
+            animation: "nf-notif-pulse 2.5s ease-in-out infinite",
+          }}>{unread > 9 ? "9+" : unread}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NotificationTray({ notifications, onClose, onMarkAllRead, onViewAll, forRole }) {
+  const filtered = notifications.filter(n => n.for === forRole);
+  const unread = filtered.filter(n => !n.read);
+  const recent = filtered.slice(0, 12);
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
+      <div style={{
+        position: "fixed", top: 68, right: 16, width: "min(380px, calc(100vw - 32px))",
+        background: "#0c1525", border: "1px solid rgba(255,255,255,.14)",
+        borderRadius: 18, zIndex: 999,
+        boxShadow: "0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)",
+        overflow: "hidden", animation: "nf-tray-in .18s ease-out",
+      }}>
+        <style>{`
+          @keyframes nf-tray-in { from { opacity:0; transform:translateY(-8px) scale(.98); } to { opacity:1; transform:none; } }
+          @keyframes nf-notif-pulse { 0%,100% { box-shadow:0 0 0 0 rgba(255,140,30,.4); } 50% { box-shadow:0 0 0 5px rgba(255,140,30,0); } }
+          .nf-notif-row { transition: background .12s; cursor: default; }
+          .nf-notif-row:hover { background: rgba(255,255,255,.04) !important; }
+        `}</style>
+        <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+          <div style={{ fontWeight: 700, fontSize: ".95rem", fontFamily: "'Monda', system-ui, sans-serif" }}>notifications</div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            {unread.length > 0 && <div onClick={onMarkAllRead} style={{ fontSize: ".72rem", color: "rgba(100,180,255,.8)", cursor: "pointer" }}>mark all read</div>}
+            <div onClick={onClose} style={{ cursor: "pointer", opacity: .4, fontSize: "1rem", lineHeight: 1 }}>✕</div>
+          </div>
+        </div>
+        <div style={{ maxHeight: 420, overflowY: "auto" }}>
+          {recent.length === 0 ? (
+            <div style={{ padding: "40px 20px", textAlign: "center", opacity: .3, fontSize: ".88rem" }}>no notifications yet</div>
+          ) : recent.map((n, i) => {
+            const meta = NOTIF_ICONS[n.type] || { icon: "🔔", color: "rgba(255,255,255,.6)" };
+            return (
+              <div key={n.id} className="nf-notif-row" style={{
+                padding: "13px 18px", display: "flex", gap: 12, alignItems: "flex-start",
+                background: n.read ? "transparent" : "rgba(255,140,30,.04)",
+                borderBottom: i < recent.length - 1 ? "1px solid rgba(255,255,255,.05)" : "none",
+              }}>
+                <div style={{ fontSize: "1.1rem", flexShrink: 0, marginTop: 1 }}>{meta.icon}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: ".85rem", fontWeight: n.read ? 400 : 600, color: n.read ? "rgba(255,255,255,.6)" : "#fff", marginBottom: 2 }}>{n.title}</div>
+                  <div style={{ fontSize: ".75rem", opacity: .45, lineHeight: 1.4 }}>{n.body}</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <div style={{ fontSize: ".68rem", opacity: .3 }}>{relativeTime(n.ts)}</div>
+                  {!n.read && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,140,30,.9)" }} />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {filtered.length > 0 && (
+          <div onClick={onViewAll} style={{ padding: "12px 18px", borderTop: "1px solid rgba(255,255,255,.07)", textAlign: "center", fontSize: ".78rem", color: "rgba(100,180,255,.7)", cursor: "pointer" }}>
+            view all notifications →
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function NotificationsPage({ notifications, forRole, onBack, onMarkAllRead, onMarkRead }) {
+  const [filter, setFilter] = useState("all");
+  const filtered = notifications
+    .filter(n => n.for === forRole)
+    .filter(n => filter === "all" || (filter === "unread" && !n.read));
+  const typeLabels = {
+    new_application: "new application", content_submitted: "content submitted",
+    call_confirmed: "call confirmed", call_declined: "call declined",
+    application_accepted: "accepted", application_rejected: "rejected",
+    product_shipped: "product shipped", call_scheduled: "call scheduled",
+    content_approved: "content approved", message_received: "message",
+  };
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        @keyframes nf-notif-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,140,30,.4);}50%{box-shadow:0 0 0 5px rgba(255,140,30,0);} }
+        .nf-notif-full-row { transition: background .12s; cursor: pointer; }
+        .nf-notif-full-row:hover { background: rgba(255,255,255,.03) !important; }
+        .nf-notif-filter { padding:6px 16px; border-radius:20px; font-size:.8rem; cursor:pointer; transition:all .12s; border:1px solid transparent; }
+        .nf-notif-filter.active { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:#fff; }
+        .nf-notif-filter:not(.active) { color:rgba(255,255,255,.4); }
+        .nf-notif-filter:not(.active):hover { color:rgba(255,255,255,.7); }
+      `}</style>
+      <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", gap: 14, borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: "1.1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>notifications</div>
+          <div style={{ fontSize: ".75rem", opacity: .35, marginTop: 2 }}>{notifications.filter(n => n.for === forRole && !n.read).length} unread</div>
+        </div>
+        {notifications.some(n => n.for === forRole && !n.read) && (
+          <div onClick={onMarkAllRead} style={{ fontSize: ".78rem", color: "rgba(100,180,255,.8)", cursor: "pointer", padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(100,180,255,.2)", background: "rgba(100,180,255,.06)" }}>mark all read</div>
+        )}
+      </div>
+      <div style={{ padding: "12px 24px", display: "flex", gap: 8, borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        {["all", "unread"].map(f => (
+          <div key={f} className={`nf-notif-filter${filter === f ? " active" : ""}`} onClick={() => setFilter(f)}>{f}</div>
+        ))}
+      </div>
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "8px 16px 80px" }}>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 20px", opacity: .3, fontSize: ".9rem" }}>
+            {filter === "unread" ? "all caught up!" : "no notifications yet"}
+          </div>
+        ) : filtered.map((n) => {
+          const meta = NOTIF_ICONS[n.type] || { icon: "🔔", color: "rgba(255,255,255,.6)" };
+          const borderCol = meta.color.replace(/[\d.]+\)$/, "0.25)");
+          return (
+            <div key={n.id} className="nf-notif-full-row" onClick={() => onMarkRead?.(n.id)} style={{
+              padding: "16px 14px", display: "flex", gap: 14, alignItems: "flex-start",
+              background: n.read ? "transparent" : "rgba(255,140,30,.04)",
+              borderRadius: 12, marginBottom: 4,
+              borderLeft: n.read ? "3px solid transparent" : "3px solid rgba(255,140,30,.6)",
+            }}>
+              <div style={{ fontSize: "1.25rem", flexShrink: 0, marginTop: 2 }}>{meta.icon}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: ".9rem", fontWeight: n.read ? 400 : 600, color: n.read ? "rgba(255,255,255,.65)" : "#fff" }}>{n.title}</div>
+                  <div style={{ fontSize: ".65rem", padding: "2px 8px", borderRadius: 10, background: "rgba(255,255,255,.06)", color: meta.color, border: `1px solid ${borderCol}`, whiteSpace: "nowrap" }}>
+                    {typeLabels[n.type] || n.type}
+                  </div>
+                </div>
+                <div style={{ fontSize: ".82rem", opacity: .5, lineHeight: 1.5 }}>{n.body}</div>
+                <div style={{ fontSize: ".7rem", opacity: .3, marginTop: 6 }}>{new Date(n.ts).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NotificationToast({ message, onView, onDismiss }) {
+  return (
+    <div style={{
+      position: "fixed", bottom: 24, right: 24, zIndex: 1200,
+      background: "#0c1525", border: "1px solid rgba(255,140,30,.4)",
+      borderRadius: 14, padding: "14px 18px",
+      display: "flex", alignItems: "center", gap: 12,
+      boxShadow: "0 16px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(255,140,30,.1)",
+      animation: "nf-toast-in .25s ease-out", maxWidth: 320,
+    }}>
+      <style>{`@keyframes nf-toast-in { from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:none;} }`}</style>
+      <div style={{ fontSize: "1.2rem" }}>🔔</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: ".85rem", fontWeight: 600, color: "#fff", marginBottom: 2 }}>{message}</div>
+        <div style={{ fontSize: ".72rem", opacity: .45 }}>tap the bell to see more</div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+        <div onClick={onView} style={{ padding: "4px 12px", borderRadius: 8, background: "rgba(255,140,30,.15)", border: "1px solid rgba(255,140,30,.35)", fontSize: ".72rem", fontWeight: 600, color: "rgba(255,160,50,.95)", cursor: "pointer" }}>view</div>
+        <div onClick={onDismiss} style={{ padding: "4px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.1)", fontSize: ".72rem", color: "rgba(255,255,255,.4)", cursor: "pointer", textAlign: "center" }}>ok</div>
+      </div>
+    </div>
+  );
+}
+
 // ── BrowseCampaigns ──
 
 // ── BrandProfile ──
@@ -969,7 +1534,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       <style>{`
         @font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -994,7 +1559,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
       {/* Banner */}
       <div style={{ width: "100%", maxWidth: 860, margin: "0 auto", position: "relative" }}>
-        <div style={{ width: "100%", height: 280, background: "#0c1424", overflow: "hidden", borderRadius: 16 }}>
+        <div style={{ width: "100%", height: "clamp(140px, 30vw, 280px)", background: "#0c1424", overflow: "hidden", borderRadius: 16 }}>
           {firstCampaign.imgUrl && <img src={firstCampaign.imgUrl} alt={brand} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(.6)" }} />}
         </div>
         {/* Logo */}
@@ -1008,10 +1573,10 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
       </div>
 
       {/* Profile header */}
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 28px 0" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{brand}</div>
+            <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{brand}</div>
             {meta.tagline && <div style={{ fontSize: "1rem", opacity: .4, fontStyle: "italic" }}>{meta.tagline}</div>}
           </div>
           {/* Rating badge */}
@@ -1105,7 +1670,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
             {avgRating && (
               <div style={{ display: "flex", alignItems: "center", gap: 24, padding: "20px 24px", borderRadius: 16, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 8 }}>
                 <div style={{ textAlign: "center" }}>
-                  <div className="nf-gold-shimmer" style={{ fontSize: "3.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{avgRating.toFixed(1)}</div>
+                  <div className="nf-gold-shimmer" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{avgRating.toFixed(1)}</div>
                   <StarRow rating={avgRating} size="1.1rem" />
                   <div style={{ fontSize: ".75rem", opacity: .35, marginTop: 4 }}>{allReviews.length} reviews</div>
                 </div>
@@ -1208,7 +1773,7 @@ function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampai
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         .nf-browse-card { background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0)); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 20px 55px rgba(0,0,0,.35); cursor: pointer; display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s, border-color .25s; }
@@ -1226,7 +1791,7 @@ function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampai
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
         <div style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem" }} onClick={onBack}>← back</div>
       </div>
@@ -1370,7 +1935,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
         .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, -apple-system, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
@@ -1381,7 +1946,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
       `}</style>
       <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
         <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "2.2rem", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
+          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
           <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>sign in</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1469,7 +2034,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
   };
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1490,7 +2055,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
         <div style={{ fontSize: ".8rem", opacity: .35 }}>creator sign up</div>
       </div>
@@ -1545,6 +2110,16 @@ function CreatorOnboarding({ onComplete, onBack }) {
                   <div style={{ fontSize: ".72rem", color: "rgba(255,100,100,.8)", marginTop: 5 }}>passwords don't match</div>
                 )}
               </div>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 4 }}>
+                <input type="checkbox" checked={account.agreeTerms} onChange={e => setAccount(a => ({ ...a, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
+                <span style={{ fontSize: ".78rem", opacity: .5, lineHeight: 1.55 }}>
+                  I agree to Nfluence's{" "}
+                  <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.8)", textDecoration: "underline" }}>Terms of Service</a>
+                  {" "}and{" "}
+                  <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.8)", textDecoration: "underline" }}>Privacy Policy</a>.
+                  I confirm I am at least 18 years old.
+                </span>
+              </label>
             </div>
           </div>
         )}
@@ -1728,7 +2303,8 @@ function CreatorOnboarding({ onComplete, onBack }) {
 
 // ── CreatorDashboard ──
 
-function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse }) {
+function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse, onOpenMessages, scheduledCalls = {}, onRespondToCall, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+  const [showTray, setShowTray] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showActiveModal, setShowActiveModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
@@ -1780,19 +2356,22 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", flexShrink: 0, overflow: "hidden" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 14, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+          <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onOpenMessages?.()}>messages</span>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onBrowse?.()}>campaigns</span>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={onSignOut}>sign out</span>
         </div>
       </div>
+      {showTray && <NotificationTray notifications={notifications} forRole="creator" onClose={() => setShowTray(false)} onMarkAllRead={() => { onMarkAllNotifsRead?.(); setShowTray(false); }} onViewAll={() => { setShowTray(false); onViewAllNotifications?.(); }} />}
 
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 24px 100px" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 100px" }}>
 
         {/* Profile card */}
         <div style={{ marginBottom: 24 }}>
           {/* Banner */}
           <div style={{ width: "100%", position: "relative" }}>
-            <div style={{ width: "100%", height: 300, borderRadius: 16, overflow: "hidden", background: creatorProfile.bannerUrl ? undefined : "linear-gradient(135deg, rgba(100,80,255,.25), rgba(255,80,160,.15))" }}>
+            <div style={{ width: "100%", height: "clamp(140px, 30vw, 300px)", borderRadius: 16, overflow: "hidden", background: creatorProfile.bannerUrl ? undefined : "linear-gradient(135deg, rgba(100,80,255,.25), rgba(255,80,160,.15))" }}>
               {creatorProfile.bannerUrl && <img src={creatorProfile.bannerUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />}
             </div>
             {/* Avatar */}
@@ -1803,7 +2382,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           {/* Name + bio + edit button */}
           <div style={{ paddingTop: 68, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>{creatorProfile.name || user?.name || "your name"}</div>
+              <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>{creatorProfile.name || user?.name || "your name"}</div>
               {/* Location · age · languages */}
               {(creatorProfile.location || creatorProfile.age || creatorProfile.languages) && (
                 <div style={{ display: "flex", gap: 10, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -1830,30 +2409,46 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               {/* Bio */}
               {creatorProfile.bio && <div style={{ fontSize: ".95rem", opacity: .5, marginTop: 8, maxWidth: 480, lineHeight: 1.6 }}>{creatorProfile.bio}</div>}
               {/* Platform cards */}
-              {Object.entries({ Instagram: [creatorProfile.instagram, creatorProfile.instagramFollowers, "https://instagram.com/"], TikTok: [creatorProfile.tiktok, creatorProfile.tiktokFollowers, "https://tiktok.com/@"], YouTube: [creatorProfile.youtube, creatorProfile.youtubeFollowers, "https://youtube.com/@"] }).filter(([,v]) => v[0]).length > 0 && (
-                <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-                  {Object.entries({ Instagram: [creatorProfile.instagram, creatorProfile.instagramFollowers, "https://instagram.com/"], TikTok: [creatorProfile.tiktok, creatorProfile.tiktokFollowers, "https://tiktok.com/@"], YouTube: [creatorProfile.youtube, creatorProfile.youtubeFollowers, "https://youtube.com/@"] }).filter(([,v]) => v[0]).map(([plat, [handle, count, baseUrl]]) => (
-                    <a key={plat} href={baseUrl + handle.replace(/^@/, "")} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", transition: "all .15s", cursor: "pointer" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; e.currentTarget.style.transform = "none"; }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {PLAT_SVGS_SMALL[plat]}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: ".82rem", fontWeight: 600, color: "#fff" }}>{handle}</div>
-                        {count && <div style={{ fontSize: ".72rem", color: "rgba(255,255,255,.4)", marginTop: 1 }}>{count} followers</div>}
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const platData = [
+                  { key: "Instagram", handle: creatorProfile.instagram, count: creatorProfile.instagramFollowers, url: "https://instagram.com/" },
+                  { key: "TikTok", handle: creatorProfile.tiktok, count: creatorProfile.tiktokFollowers, url: "https://tiktok.com/@" },
+                  { key: "YouTube", handle: creatorProfile.youtube, count: creatorProfile.youtubeFollowers, url: "https://youtube.com/@" },
+                  { key: "X", handle: creatorProfile.x, count: creatorProfile.xFollowers, url: "https://x.com/" },
+                ].filter(p => p.handle);
+                if (!platData.length) return null;
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, marginTop: 16 }}
+                    className="nf-plat-grid">
+                    <style>{`.nf-plat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } @media(max-width:600px){ .nf-plat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }`}</style>
+                    {platData.map(p => (
+                      <a key={p.key} href={p.url + p.handle.replace(/^@/, "")} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", borderRadius: 20, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.12), 0 20px 55px rgba(0,0,0,.35)", transition: "transform .25s, box-shadow .25s, border-color .25s" }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px) scale(1.01)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.2), 0 28px 65px rgba(0,0,0,.5)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,.12), 0 20px 55px rgba(0,0,0,.35)"; }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            {PLAT_SVGS_SMALL[p.key]}
+                          </div>
+                          {p.count && (
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1 }}>{p.count}</div>
+                              <div style={{ fontSize: ".72rem", color: "rgba(255,255,255,.35)", marginTop: 3 }}>followers</div>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: ".9rem", color: "rgba(255,255,255,.65)", fontWeight: 500 }}>{p.handle}</div>
+                      </a>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             <button className="nf-creator-btn" onClick={() => { setEditForm({ ...creatorProfile }); setShowEditModal(true); }}>✏ edit profile</button>
           </div>
         </div>
 
         {/* Stats row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginBottom: 24 }}>
           {[
             { label: "active campaigns", value: activeCampaigns.length, onClick: () => setShowActiveModal(true) },
             { label: "pending campaigns", value: appliedCampaigns.filter(c => c.status === "applied").length, onClick: () => setShowPendingModal(true) },
@@ -1861,7 +2456,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           ].map((s, i) => (
             <div key={i} className="nf-creator-card" style={{ padding: "18px 20px", textAlign: "center", cursor: "pointer" }} onClick={s.onClick}>
               <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8, textTransform: "lowercase" }}>{s.label}</div>
-              <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
+              <div style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
             </div>
           ))}
         </div>
@@ -1908,7 +2503,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                     {c.deadline && <div style={{ fontSize: ".75rem", opacity: .3, marginTop: 10 }}>deadline: {c.deadline}</div>}
                     {/* Action buttons */}
                     <div style={{ display: "flex", gap: 8, marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,.06)", justifyContent: "center", flexWrap: "wrap" }}>
-                      <button className="nf-creator-btn" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={e => { e.stopPropagation(); }}>
+                      <button className="nf-creator-btn" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={e => { e.stopPropagation(); onOpenMessages?.(c); }}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         send message
                       </button>
@@ -1928,11 +2523,67 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           )}
         </div>
 
+        {/* Scheduled Calls */}
+        {(() => {
+          const callEntries = Object.entries(scheduledCalls).filter(([, call]) => call && !call.declined);
+          if (callEntries.length === 0) return null;
+          const formatCallTime = (iso, tz) => {
+            try {
+              return new Date(iso).toLocaleString("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+            } catch { return iso; }
+          };
+          return (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 14 }}>scheduled calls</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {callEntries.map(([key, call]) => {
+                  const [brand, campaign] = key.split("::");
+                  const isPast = new Date(call.datetime) < new Date();
+                  return (
+                    <div key={key} style={{ padding: "18px 22px", borderRadius: 16, background: call.confirmed ? "rgba(100,200,255,.05)" : "rgba(255,255,255,.03)", border: `1px solid ${call.confirmed ? "rgba(100,200,255,.2)" : "rgba(255,255,255,.1)"}` }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: ".95rem" }}>{brand}</div>
+                          <div style={{ fontSize: ".78rem", opacity: .4, marginTop: 2 }}>{campaign}</div>
+                        </div>
+                        {call.confirmed ? (
+                          <div style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.25)", fontSize: ".68rem", fontWeight: 600, color: "rgba(100,255,150,.9)", flexShrink: 0 }}>confirmed</div>
+                        ) : (
+                          <div style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(255,200,60,.08)", border: "1px solid rgba(255,200,60,.25)", fontSize: ".68rem", fontWeight: 600, color: "rgba(255,200,60,.9)", flexShrink: 0 }}>awaiting confirmation</div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: call.meetLink ? 10 : 0 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span style={{ fontSize: ".82rem", opacity: .65 }}>{formatCallTime(call.datetime, call.timezone)}</span>
+                      </div>
+                      {call.notes && <div style={{ fontSize: ".78rem", opacity: .4, marginBottom: 10, fontStyle: "italic" }}>{call.notes}</div>}
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        {call.meetLink && (
+                          <a href={call.meetLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 10, background: "rgba(100,200,255,.1)", border: "1px solid rgba(100,200,255,.25)", color: "rgba(100,200,255,.9)", fontSize: ".78rem", fontWeight: 600, textDecoration: "none" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            join call
+                          </a>
+                        )}
+                        {!call.confirmed && !isPast && (
+                          <>
+                            <div onClick={() => onRespondToCall?.(key, "confirm")} style={{ padding: "6px 14px", borderRadius: 10, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.25)", color: "rgba(100,255,150,.9)", fontSize: ".78rem", fontWeight: 600, cursor: "pointer" }}>confirm</div>
+                            <div onClick={() => onRespondToCall?.(key, "decline")} style={{ padding: "6px 14px", borderRadius: 10, background: "rgba(255,100,100,.07)", border: "1px solid rgba(255,100,100,.2)", color: "rgba(255,100,100,.7)", fontSize: ".78rem", fontWeight: 600, cursor: "pointer" }}>decline</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
       </div>
 
       {/* Active campaigns modal */}
       {showActiveModal && (
-        <div onClick={() => setShowActiveModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+        <div onClick={() => setShowActiveModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>active campaigns</div>
@@ -1980,7 +2631,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Completed campaigns modal */}
       {showCompletedModal && (
-        <div onClick={() => setShowCompletedModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+        <div onClick={() => setShowCompletedModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>completed campaigns</div>
@@ -2010,7 +2661,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Pending applications modal */}
       {showPendingModal && (
-        <div onClick={() => setShowPendingModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+        <div onClick={() => setShowPendingModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>my applications</div>
@@ -2045,7 +2696,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Upload modal */}
       {showUploadModal && (
-        <div onClick={() => setShowUploadModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+        <div onClick={() => setShowUploadModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>upload content</div>
@@ -2087,7 +2738,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Edit profile modal */}
       {showEditModal && (
-        <div onClick={() => setShowEditModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+        <div onClick={() => setShowEditModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>edit profile</div>
@@ -2109,7 +2760,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               {/* Platforms */}
               <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em", marginTop: 4 }}>platforms</div>
               <div style={{ fontSize: ".72rem", opacity: .3, marginTop: -8 }}>follower counts are self-reported — verification coming soon</div>
-              {[["instagram", "Instagram handle", "instagramFollowers", "followers"], ["tiktok", "TikTok handle", "tiktokFollowers", "followers"], ["youtube", "YouTube channel", "youtubeFollowers", "subscribers"]].map(([handleField, handlePlaceholder, countField, countLabel]) => (
+              {[["instagram", "Instagram handle", "instagramFollowers", "followers"], ["tiktok", "TikTok handle", "tiktokFollowers", "followers"], ["youtube", "YouTube channel", "youtubeFollowers", "subscribers"], ["x", "X handle", "xFollowers", "followers"]].map(([handleField, handlePlaceholder, countField, countLabel]) => (
                 <div key={handleField}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{handleField}</div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -2130,6 +2781,4 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
   );
 }
 
-// ── NfluenceApp ──
-
-export { SignIn, ReviewsPage, Dashboard, DEMO_MESSAGES, Messages, MessageInbox, OnboardingPage, BrandProfile, BrowseCampaigns, CreatorSignIn, CreatorOnboarding, CreatorDashboard };
+export { SignIn, ReviewsPage, Dashboard, Messages, MessageInbox, CreatorInbox, CreatorPublicProfile, NotificationsPage, NotificationToast, OnboardingPage, BrandProfile, BrowseCampaigns, CreatorSignIn, CreatorOnboarding, CreatorDashboard };

@@ -1,10 +1,8 @@
-// ── CampaignDetail ──
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import ImageEditor from "./ImageEditor";
+import { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL } from "./nfluenceData";
 
-
-
-// ── CampaignDetail ──
-
-function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onEditCampaign }) {
+function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
   const [c, setC] = useState(JSON.parse(JSON.stringify(initialCampaign)));
   const derivedSpotsFilled = (c.creators?.approved?.length || 0);
   const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - derivedSpotsFilled) : null;
@@ -82,6 +80,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newSpotsFilled = (prev.spotsFilled || 0) + 1;
       return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved }, spotsFilled: newSpotsFilled };
     });
+    onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted! 🎉", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
   };
 
   const rejectCreator = (creator) => {
@@ -89,6 +88,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newPending = (prev.creators?.pending || []).filter(cr => cr.name !== creator.name);
       return { ...prev, creators: { ...prev.creators, pending: newPending } };
     });
+    onNotify?.({ for: "creator", type: "application_rejected", title: "application update", body: `Your application to ${initialCampaign.brand} · ${initialCampaign.campaign} was not selected this time.` });
   };
 
   const advanceCreator = (creatorName) => {
@@ -97,12 +97,129 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
         if (cr.name !== creatorName) return cr;
         const currentIdx = INFLUENCER_STAGES.indexOf(cr.stage);
         if (currentIdx < INFLUENCER_STAGES.length - 1) {
-          return { ...cr, stage: INFLUENCER_STAGES[currentIdx + 1] };
+          const nextStage = INFLUENCER_STAGES[currentIdx + 1];
+          // Fire creator notification for content_approved → paid
+          if (nextStage === "paid") {
+            onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released! 💰", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
+          }
+          // Fire brand notification for content_submitted
+          if (nextStage === "content_submitted") {
+            onNotify?.({ for: "brand", type: "content_submitted", title: "content submitted for review", body: `${creatorName} submitted content for ${initialCampaign.brand} · ${initialCampaign.campaign}` });
+          }
+          return { ...cr, stage: nextStage };
         }
         return cr;
       });
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
+  };
+
+  const shipCreator = (creatorName, trackingNumber) => {
+    setC(prev => {
+      const newApproved = (prev.creators?.approved || []).map(cr => {
+        if (cr.name !== creatorName) return cr;
+        return { ...cr, stage: "product_shipped", trackingNumber: trackingNumber.trim() || null };
+      });
+      return { ...prev, creators: { ...prev.creators, approved: newApproved } };
+    });
+    const trackingMsg = trackingNumber.trim() ? ` Tracking: ${trackingNumber.trim()}` : "";
+    onNotify?.({ for: "creator", type: "product_shipped", title: "product shipped! 📦", body: `${initialCampaign.brand} has shipped your product for ${initialCampaign.campaign}.${trackingMsg}` });
+  };
+
+  // Schedule call modal state
+  const [scheduleTarget, setScheduleTarget] = useState(null); // creator name
+  const [scheduleForm, setScheduleForm] = useState({ date: "", time: "", timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, meetLink: "", notes: "" });
+
+  const commonTimezones = [
+    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+    "America/Anchorage", "Pacific/Honolulu", "America/Toronto", "America/Vancouver",
+    "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Madrid", "Europe/Rome",
+    "Europe/Amsterdam", "Europe/Stockholm", "Europe/Zurich", "Europe/Moscow",
+    "Asia/Dubai", "Asia/Kolkata", "Asia/Bangkok", "Asia/Singapore", "Asia/Tokyo",
+    "Asia/Seoul", "Asia/Shanghai", "Australia/Sydney", "Pacific/Auckland",
+  ];
+  const tzLabel = (tz) => tz.replace(/_/g, " ").replace(/\//g, " · ");
+
+  const submitSchedule = () => {
+    if (!scheduleForm.date || !scheduleForm.time) return;
+    const datetime = new Date(`${scheduleForm.date}T${scheduleForm.time}`).toISOString();
+    onScheduleCall?.({
+      creatorName: scheduleTarget,
+      campaign: c,
+      datetime,
+      timezone: scheduleForm.timezone,
+      meetLink: scheduleForm.meetLink.trim(),
+      notes: scheduleForm.notes.trim(),
+    });
+    setScheduleTarget(null);
+    setScheduleForm({ date: "", time: "", timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, meetLink: "", notes: "" });
+  };
+
+  const ScheduleCallModal = () => {
+    if (!scheduleTarget) return null;
+    const isValid = scheduleForm.date && scheduleForm.time;
+    return (
+      <div onClick={() => setScheduleTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }}>
+        <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, padding: "28px", maxWidth: 500, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+            <div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>schedule a call</div>
+              <div style={{ fontSize: ".78rem", opacity: .4, marginTop: 3 }}>{scheduleTarget}</div>
+            </div>
+            <div onClick={() => setScheduleTarget(null)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+          </div>
+
+          {/* Date + Time row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>date</div>
+              <input type="date" value={scheduleForm.date} onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
+            </div>
+            <div>
+              <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>time</div>
+              <input type="time" value={scheduleForm.time} onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
+            </div>
+          </div>
+
+          {/* Timezone */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>timezone</div>
+            <select value={scheduleForm.timezone} onChange={e => setScheduleForm(f => ({ ...f, timezone: e.target.value }))}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "#0a1322", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif" }}>
+              {commonTimezones.map(tz => (
+                <option key={tz} value={tz}>{tzLabel(tz)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Zoom / Meet link */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>zoom / meet link (optional)</div>
+            <input type="url" value={scheduleForm.meetLink} onChange={e => setScheduleForm(f => ({ ...f, meetLink: e.target.value }))}
+              placeholder="https://zoom.us/j/... or meet.google.com/..."
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
+          </div>
+
+          {/* Notes */}
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>notes for creator (optional)</div>
+            <textarea value={scheduleForm.notes} onChange={e => setScheduleForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="e.g. we'll discuss content requirements and brand guidelines"
+              rows={3}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", resize: "vertical", lineHeight: 1.5, boxSizing: "border-box" }} />
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <div onClick={() => setScheduleTarget(null)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.03)", color: "rgba(255,255,255,.5)", fontSize: ".85rem", fontWeight: 600, cursor: "pointer", textAlign: "center", fontFamily: "'Monda', system-ui, sans-serif" }}>cancel</div>
+            <div onClick={isValid ? submitSchedule : undefined} style={{ flex: 2, padding: "12px", borderRadius: 12, border: `1px solid ${isValid ? "rgba(100,200,255,.4)" : "rgba(255,255,255,.08)"}`, background: isValid ? "rgba(100,200,255,.1)" : "rgba(255,255,255,.02)", color: isValid ? "rgba(100,200,255,.9)" : "rgba(255,255,255,.2)", fontSize: ".85rem", fontWeight: 600, cursor: isValid ? "pointer" : "not-allowed", textAlign: "center", fontFamily: "'Monda', system-ui, sans-serif", transition: "all .12s" }}>
+              send invite
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const sectionStyle = { marginBottom: 28 };
@@ -111,7 +228,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
   const dividerStyle = { height: 1, background: "rgba(255,255,255,.08)", margin: "24px 0" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
         .nf-cta-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s !important; }
         .nf-cta-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 18px rgba(255,255,255,.12) !important; background: rgba(255,255,255,.12) !important; }
@@ -136,7 +253,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
 
       {/* Banner */}
       <div style={{ width: "100%", maxWidth: 800, margin: "0 auto", position: "relative" }}>
-        <div style={{ width: "100%", height: 300, borderRadius: 16, overflow: "hidden", background: "#0c1424" }}>
+        <div style={{ width: "100%", height: "clamp(160px, 35vw, 300px)", borderRadius: 16, overflow: "hidden", background: "#0c1424" }}>
           {c.imgUrl && <img src={c.imgUrl} alt={c.campaign} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         </div>
         {/* Logo */}
@@ -150,11 +267,11 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "68px 24px 60px" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "68px 16px 60px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>{c.brand}</div>
+          <div style={{ fontSize: "clamp(1.3rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>{c.brand}</div>
           <div style={{ fontSize: "1.2rem", opacity: .5, marginTop: 4, textTransform: "lowercase" }}>{c.campaign}</div>
         </div>
 
@@ -218,7 +335,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           const totalCreators = INFLUENCER_STAGES.reduce((sum, s) => sum + counts[s], 0);
 
           const StageTracker = ({ stages, labels, currentIdx, label }) => (
-            <div style={{ padding: "20px 24px", borderRadius: 16, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 16 }}>
+            <div style={{ padding: "16px", borderRadius: 16, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 16 }}>
               <div style={{ fontSize: "1rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 18 }}>{label}</div>
               <div style={{ display: "grid", gridTemplateColumns: `repeat(${stages.length}, 1fr)`, alignItems: "start" }}>
                 {stages.map((s, i) => {
@@ -250,7 +367,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         zIndex: 1,
                       }} />
                       <div style={{
-                        fontSize: ".75rem", marginTop: 10, textAlign: "center",
+                        fontSize: "clamp(.5rem, 1.5vw, .75rem)", marginTop: 8, textAlign: "center",
                         opacity: isCurrent ? .9 : isActive ? .45 : .2,
                         fontWeight: isCurrent ? 600 : 400,
                         lineHeight: 1.2,
@@ -306,7 +423,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                   {/* 3x2 grid: row1 = accepted, waiting for approval, product shipped | row2 = content submitted, content approved, paid */}
                   {/* Rule: accepted = approvedTotal (all creators in approved array regardless of sub-stage).
                       Fraction stages are only meaningful when approvedTotal > 0 — zeroed out otherwise. */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
                     {/* Tile: accepted — total approved creators */}
                     <div className="nf-apply-btn" style={{
                       padding: "10px 14px 14px", borderRadius: 12,
@@ -315,7 +432,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                       display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", minHeight: 90,
                     }}>
                       <div style={{ fontSize: ".92rem", opacity: .35, textTransform: "lowercase", alignSelf: "flex-start" }}>accepted</div>
-                      <div style={{ fontSize: "2.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{approvedTotal}</div>
+                      <div style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{approvedTotal}</div>
                     </div>
                     {/* Tile: awaiting review — clickable, gold shimmer border */}
                     <div onClick={() => setShowPendingModal(true)} className="nf-apply-btn nf-awaiting-tile" style={{
@@ -329,7 +446,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,150,40,.9)", flexShrink: 0 }} />
                         <span style={{ fontSize: ".92rem", opacity: .55, textTransform: "lowercase" }}>awaiting review →</span>
                       </div>
-                      <span style={{ fontSize: "2.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{c.creators.pending?.length || 0}</span>
+                      <span style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{c.creators.pending?.length || 0}</span>
                     </div>
                     {/* Tile: product shipped — only meaningful if approvedTotal > 0. Glows red if any accepted creator > 3 business days unshipped */}
                     {(() => {
@@ -345,8 +462,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         }}>
                           <div style={{ fontSize: ".92rem", opacity: .35, textTransform: "lowercase", alignSelf: "flex-start" }}>{INFLUENCER_LABELS[s]}{shippingOverdue ? " ⚠" : ""}</div>
                           <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                            <span style={{ fontSize: "2.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{numerator}</span>
-                            <span style={{ fontSize: "2.8rem", opacity: .25, fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>/{approvedTotal}</span>
+                            <span style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{numerator}</span>
+                            <span style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", opacity: .25, fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>/{approvedTotal}</span>
                           </div>
                         </div>
                       );
@@ -363,8 +480,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         }}>
                           <div style={{ fontSize: ".92rem", opacity: .35, textTransform: "lowercase", alignSelf: "flex-start" }}>{INFLUENCER_LABELS[s]}</div>
                           <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                            <span style={{ fontSize: "2.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{numerator}</span>
-                            <span style={{ fontSize: "2.8rem", opacity: .25, fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>/{approvedTotal}</span>
+                            <span style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{numerator}</span>
+                            <span style={{ fontSize: "clamp(1.6rem, 4vw, 2.8rem)", opacity: .25, fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>/{approvedTotal}</span>
                           </div>
                         </div>
                       );
@@ -386,7 +503,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           {/* Compensation — compact */}
           <div style={{ padding: "16px 22px", borderRadius: 16, background: "linear-gradient(135deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 100%)", border: "1px solid rgba(255,255,255,.15)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 160 }}>
             <div style={{ fontSize: ".75rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>creators get</div>
-            <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>
+            <div style={{ fontSize: "clamp(1.3rem, 4vw, 1.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>
               {c.comp}
             </div>
             {c.compType === "product+paid" && <div style={{ fontSize: ".8rem", fontWeight: 500, opacity: .5, marginTop: 4 }}>+ product</div>}
@@ -431,11 +548,16 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
         )}
 
         {/* Requirements — bullet list */}
-        {c.requirements && (
+        {(c.requirements || c.ageMin) && (() => {
+          const reqs = [
+            ...(c.ageMin ? [`Must be ${c.ageMin}`] : []),
+            ...(c.requirements ? c.requirements.split(". ").filter(Boolean) : []),
+          ].filter((r, i, arr) => arr.indexOf(r) === i); // dedupe in case ageMin also in requirements string
+          return (
           <div style={{ padding: "16px 22px", borderRadius: 16, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 12 }}>
             <div style={{ fontSize: ".75rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 8 }}>requirements</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {c.requirements.split(". ").filter(Boolean).map((req, i) => (
+              {reqs.map((req, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, fontSize: ".85rem", opacity: .65, lineHeight: 1.4 }}>
                   <span style={{ opacity: .4, flexShrink: 0 }}>•</span>
                   <span>{req.replace(/\.$/, "")}</span>
@@ -443,7 +565,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
               ))}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Style guide */}
         {c.hasStyleGuide && (
@@ -474,13 +597,17 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
             return STAGE_LABELS[INFLUENCER_STAGES[idx + 1]];
           };
 
-          const CreatorCard = ({ creator, showStatus, showActions, showAdvance, showMessage }) => (
-            <div className="nf-apply-btn" style={{
+          const CreatorCard = ({ creator, showStatus, showActions, showAdvance, showMessage }) => {
+            const [trackingInput, setTrackingInput] = React.useState("");
+            const clickable = !!onViewCreatorProfile;
+            return (
+            <div className="nf-apply-btn" onClick={clickable ? () => onViewCreatorProfile(creator) : undefined} style={{
               padding: "18px 20px", borderRadius: 16,
               background: "rgba(255,255,255,.03)",
               border: "1px solid rgba(255,255,255,.3)",
               display: "flex", alignItems: "center", gap: 14,
               position: "relative", overflow: "hidden",
+              cursor: clickable ? "pointer" : "default",
             }}>
               <div style={{
                 width: 50, height: 50, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
@@ -535,6 +662,41 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     </div>
                   ))}
                 </div>
+                {/* Tracking number chip — visible once shipped */}
+                {creator.trackingNumber && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, padding: "4px 10px", borderRadius: 10, background: "rgba(160,80,255,.1)", border: "1px solid rgba(160,80,255,.3)" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(185,110,255,.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <span style={{ fontSize: ".68rem", color: "rgba(185,110,255,.9)", fontWeight: 600, letterSpacing: ".02em" }}>tracking: {creator.trackingNumber}</span>
+                  </div>
+                )}
+                {/* Ship product row — shown to owner when stage is accepted */}
+                {showAdvance && creator.stage === "accepted" && (
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                    <input
+                      value={trackingInput}
+                      onChange={e => setTrackingInput(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      placeholder="tracking # (optional)"
+                      style={{
+                        flex: 1, minWidth: 120, padding: "5px 10px", borderRadius: 8,
+                        background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)",
+                        color: "#fff", fontSize: ".72rem", outline: "none",
+                        fontFamily: "system-ui, sans-serif",
+                      }}
+                    />
+                    <div
+                      onClick={(e) => { e.stopPropagation(); shipCreator(creator.name, trackingInput); }}
+                      style={{
+                        padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600,
+                        background: "rgba(160,80,255,.12)", border: "1px solid rgba(160,80,255,.35)",
+                        color: "rgba(185,110,255,.95)", cursor: "pointer", whiteSpace: "nowrap",
+                        transition: "all .12s",
+                      }}
+                    >
+                      mark shipped
+                    </div>
+                  </div>
+                )}
                 {/* Approve / Reject buttons for pending creators */}
                 {showActions && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -553,7 +715,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                 {/* Advance + Message buttons row */}
                 {(showAdvance || showMessage) && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {showAdvance && creator.stage !== "paid" && nextStageLabel(creator.stage) && (
+                    {showAdvance && creator.stage !== "paid" && creator.stage !== "accepted" && nextStageLabel(creator.stage) && (
                       <div onClick={(e) => { e.stopPropagation(); advanceCreator(creator.name); }} style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "6px 14px", borderRadius: 10, fontSize: ".75rem", fontWeight: 600,
@@ -574,11 +736,23 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         message
                       </div>
                     )}
+                    {showAdvance && (
+                      <div onClick={(e) => { e.stopPropagation(); setScheduleTarget(creator.name); }} style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "6px 14px", borderRadius: 10, fontSize: ".75rem", fontWeight: 600,
+                        background: "rgba(100,200,255,.06)", border: "1px solid rgba(100,200,255,.18)",
+                        color: "rgba(100,200,255,.7)", cursor: "pointer", transition: "all .12s",
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        schedule call
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          );
+            );
+          };
           return (
             <div style={{ marginBottom: 32 }}>
               {/* Approved */}
@@ -588,7 +762,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     <div style={{ fontSize: "1rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif", flex: 1 }}>approved influencers</div>
                     <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", opacity: .8 }}>{c.creators.approved.length}</div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
                     {c.creators.approved.map((cr, i) => <CreatorCard key={i} creator={cr} showStatus showAdvance={isOwner} showMessage={isOwner} />)}
                   </div>
                 </div>
@@ -618,7 +792,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         background: "rgba(255,255,255,.06)", fontSize: "1rem", opacity: .7,
                       }}>✕</div>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
                       {c.creators.pending.map((cr, i) => <CreatorCard key={i} creator={cr} showActions={isOwner} />)}
                     </div>
                     {c.creators.pending.length === 0 && (
@@ -715,7 +889,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
             <div onClick={(e) => e.stopPropagation()} style={{
               background: "#0a1322",
               border: "1px solid rgba(255,255,255,.12)",
-              borderRadius: 24, padding: "32px 32px 28px",
+              borderRadius: 24, padding: 24,
               maxWidth: 520, width: "100%", maxHeight: "85vh", overflowY: "auto",
               boxShadow: "0 40px 80px rgba(0,0,0,.6)",
             }}>
@@ -890,28 +1064,44 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                       type="checkbox"
                       checked={applyForm.agreeTerms}
                       onChange={e => setApplyForm(f => ({ ...f, agreeTerms: e.target.checked }))}
-                      style={{ marginTop: 2, accentColor: "#fff" }}
+                      style={{ marginTop: 2, accentColor: "#fff", flexShrink: 0 }}
                     />
                     <span style={{ fontSize: ".8rem", opacity: .55, lineHeight: 1.5 }}>
-                      I confirm my info is accurate and I agree to follow the brand's content guidelines if accepted.
+                      I confirm all information in my application is accurate, and I agree to Nfluence's{" "}
+                      <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
+                      {" "}and{" "}
+                      <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
                     </span>
                   </label>
+                  {(c.ageMin || (c.requirements || "").includes("18+") || (c.requirements || "").includes("21+")) && (
+                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,140,30,.04)", border: "1px solid rgba(255,140,30,.2)" }}>
+                      <input
+                        type="checkbox"
+                        checked={applyForm.agreeAge || false}
+                        onChange={e => setApplyForm(f => ({ ...f, agreeAge: e.target.checked }))}
+                        style={{ marginTop: 2, accentColor: "rgba(255,160,50,.9)", flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: ".8rem", color: "rgba(255,160,50,.8)", lineHeight: 1.5 }}>
+                        I confirm I meet the minimum age requirement for this campaign ({c.ageMin || "18+"}) and am legally permitted to receive the stated compensation. I understand that misrepresentation of my age may result in removal from the platform.
+                      </span>
+                    </label>
+                  )}
                   <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
                     <button
                       onClick={() => setApplyStep(1)}
                       style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", fontSize: ".85rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase" }}
                     >← back</button>
                     <button
-                      disabled={!applyForm.pitch.trim() || !applyForm.agreeTerms}
+                      disabled={!applyForm.pitch.trim() || !applyForm.agreeTerms || ((c.ageMin || (c.requirements || "").includes("18+") || (c.requirements || "").includes("21+")) && !applyForm.agreeAge)}
                       onClick={submitApplication}
                       style={{
                         flex: 2, padding: "14px", borderRadius: 12,
-                        border: applyForm.pitch.trim() && applyForm.agreeTerms ? "1px solid rgba(100,255,150,.35)" : "1px solid rgba(255,255,255,.15)",
-                        background: applyForm.pitch.trim() && applyForm.agreeTerms ? "rgba(100,255,150,.1)" : "transparent",
-                        color: applyForm.pitch.trim() && applyForm.agreeTerms ? "rgba(100,255,150,.9)" : "rgba(255,255,255,.3)",
+                        border: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "1px solid rgba(100,255,150,.35)" : "1px solid rgba(255,255,255,.15)",
+                        background: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "rgba(100,255,150,.1)" : "transparent",
+                        color: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "rgba(100,255,150,.9)" : "rgba(255,255,255,.3)",
                         fontSize: ".95rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif",
                         textTransform: "lowercase",
-                        cursor: applyForm.pitch.trim() && applyForm.agreeTerms ? "pointer" : "not-allowed",
+                        cursor: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "pointer" : "not-allowed",
                         transition: "all .15s",
                       }}
                     >submit application</button>
@@ -968,15 +1158,12 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           </div>
         )}
 
+        <ScheduleCallModal />
+
       </div>
     </div>
   );
 }
-
-
-
-
-// ── CampaignEditor ──
 
 function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const [c, setC] = useState(() => { const init = JSON.parse(JSON.stringify(initialCampaign)); if (init.spotsTotal === undefined) init.spotsTotal = null; return init; });
@@ -1024,7 +1211,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const totalDue = (c.featured ? featuredPrice : 0) + escrowDelta;
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1062,14 +1249,20 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
         .ce-feat-pill.selected { background: rgba(160,80,255,.18); border-color: rgba(185,110,255,.7); color: rgba(210,160,255,.95); }
         @keyframes nf-gold-shimmer2 { 0%,100%{background-position:200% center}50%{background-position:0% center} }
         .ce-feat-name { background: linear-gradient(90deg,#fbbf24,#fef3c7,#f59e0b,#fbbf24); background-size: 200% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; animation: nf-gold-shimmer2 3s linear infinite; }
+        .ce-field-row { display: flex; gap: 12px; }
+        @media (max-width: 600px) {
+          .ce-field-row { flex-direction: column; }
+          .ce-feat-pill { padding: 10px 10px; font-size: .82rem; }
+          .ce-input { font-size: 16px; }
+        }
       `}</style>
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
         <div className="ce-action-btn" style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem", padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.1)" }} onClick={onBack}>← back</div>
       </div>
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 24px 100px" }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 16px 100px" }}>
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>edit campaign</div>
+          <div style={{ fontSize: "clamp(1.3rem, 4vw, 1.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>edit campaign</div>
           <div style={{ fontSize: ".88rem", opacity: .4 }}>{c.brand} · {c.campaign}</div>
           {hasAccepted && <div style={{ marginTop: 12, padding: "10px 16px", borderRadius: 12, background: "rgba(255,140,30,.08)", border: "1px solid rgba(255,140,30,.5)", fontSize: ".82rem", color: "rgba(255,165,50,.95)", display: "flex", alignItems: "center", gap: 8, animation: "ce-lock-pulse 2.5s ease-in-out infinite" }}><span>⚠</span> some fields are locked because creators have been accepted</div>}
         </div>
@@ -1078,6 +1271,27 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
           <div style={{ marginBottom: 14 }}><label className="ce-label">campaign name</label><input className="ce-input" value={c.campaign} onChange={e => setField("campaign", e.target.value)} /></div>
           <div style={{ marginBottom: 14 }}><label className="ce-label">description</label><textarea className="ce-input" value={c.description} onChange={e => setField("description", e.target.value)} rows={5} style={{ resize: "vertical", lineHeight: 1.55 }} /></div>
           <div style={{ marginBottom: 14 }}><label className="ce-label">requirements</label><textarea className="ce-input" value={c.requirements} onChange={e => setField("requirements", e.target.value)} rows={3} style={{ resize: "vertical", lineHeight: 1.55 }} /></div>
+          <div style={{ marginBottom: 14 }}>
+            <label className="ce-label">min. age</label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+              {["any", "18+", "21+"].map(opt => {
+                const val = opt === "any" ? "" : opt;
+                const active = (c.ageMin || "") === val;
+                return (
+                  <div key={opt} onClick={() => setField("ageMin", val)}
+                    style={{
+                      padding: "6px 18px", borderRadius: 20, cursor: "pointer", fontSize: ".82rem", fontWeight: 600,
+                      transition: "all .12s",
+                      background: active ? "rgba(255,255,255,.15)" : "rgba(255,255,255,.04)",
+                      border: `1px solid ${active ? "rgba(255,255,255,.45)" : "rgba(255,255,255,.12)"}`,
+                      color: active ? "#fff" : "rgba(255,255,255,.45)",
+                    }}>
+                    {opt}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1 }}>
               <label className="ce-label">deadline</label>
@@ -1106,7 +1320,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
               {c.deadline && <div style={{ fontSize: ".68rem", opacity: .3, marginTop: 4 }}>{c.deadline}</div>}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 12 }}>
+          <div className="ce-field-row" style={{ marginBottom: 14 }}>
             <div style={{ flex: 1 }}>
               <label className="ce-label">city</label>
               <input className="ce-input" value={c.locationCity || ""} onChange={e => { setField("locationCity", e.target.value); setField("location", [e.target.value, c.locationCountry].filter(Boolean).join(", ")); }} placeholder="e.g. Los Angeles" />
@@ -1266,8 +1480,8 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
 
       {/* Payment modal */}
       {showPayModal && (
-        <div onClick={() => setShowPayModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: "32px", maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)", animation: "ce-feat-pulse 2.5s ease-in-out infinite" }}>
+        <div onClick={() => setShowPayModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)", animation: "ce-feat-pulse 2.5s ease-in-out infinite" }}>
             <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>review charges</div>
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>the following will be charged when you confirm</div>
 
@@ -1393,7 +1607,7 @@ function CampaignBuilder({ onBack, onPublish }) {
   })), []);
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
         @font-face {
           font-family: 'Monda';
@@ -2292,12 +2506,20 @@ function CampaignBuilder({ onBack, onPublish }) {
             <div className="nf-field-row">
               <div className="nf-field">
                 <div className="nf-label">min. age</div>
-                <select className="nf-select" value={terms.ageMin}
-                  onChange={e => setTerms(p => ({...p, ageMin: e.target.value}))}>
-                  <option value="">any</option>
-                  <option value="18+">18+</option>
-                  <option value="21+">21+</option>
-                </select>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                  {["any", "18+", "21+"].map(opt => (
+                    <div key={opt} onClick={() => setTerms(p => ({...p, ageMin: opt === "any" ? "" : opt}))}
+                      style={{
+                        padding: "6px 16px", borderRadius: 20, cursor: "pointer", fontSize: ".82rem", fontWeight: 600,
+                        transition: "all .12s",
+                        background: (terms.ageMin === (opt === "any" ? "" : opt)) ? "rgba(255,255,255,.15)" : "rgba(255,255,255,.04)",
+                        border: `1px solid ${(terms.ageMin === (opt === "any" ? "" : opt)) ? "rgba(255,255,255,.45)" : "rgba(255,255,255,.12)"}`,
+                        color: (terms.ageMin === (opt === "any" ? "" : opt)) ? "#fff" : "rgba(255,255,255,.45)",
+                      }}>
+                      {opt}
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="nf-field">
                 <div className="nf-label">language</div>
@@ -2655,840 +2877,4 @@ function Preview({ brand, campaign, platforms, terms }) {
 
 // ── SignIn ──
 
-function SignIn({ onSignIn, onBack }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState("");
-  const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim());
-
-  return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <style>{`
-        .nf-signin-input {
-          border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
-          background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px;
-          font-size: .95rem; width: 100%; outline: none;
-          font-family: system-ui, -apple-system, sans-serif;
-          transition: border-color .12s, box-shadow .12s, background .12s;
-        }
-        .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
-        .nf-signin-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
-        .nf-signin-btn {
-          width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28);
-          background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff;
-          font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase;
-          cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25);
-        }
-        .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
-        .nf-signin-btn:disabled { opacity: .3; cursor: not-allowed; }
-      `}</style>
-      <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "2.2rem", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
-          <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>{isSignUp ? "create account" : "sign in"}</div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {isSignUp && (
-            <input className="nf-signin-input" value={name} onChange={e => setName(e.target.value)} placeholder="brand or company name" />
-          )}
-          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
-          <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
-          <div style={{ display: "flex", gap: 12 }}>
-            <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : email.split("@")[0])}>
-              {isSignUp ? "create account" : "sign in"}
-            </button>
-          </div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
-          {isSignUp ? "already have an account?" : "don't have an account?"}{" "}
-          <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? "sign in" : "sign up for free!"}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Dashboard ──
-
-// ── ReviewsPage ──
-
-function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
-  const [replyDrafts, setReplyDrafts] = useState({}); // key "campaignIdx:reviewIdx" → draft text
-  const [editingKey, setEditingKey] = useState(null); // key being edited
-
-  // Flatten all reviews across all campaigns
-  const allCampaigns = [
-    ...campaigns.map(c => ({ ...c, _source: "user" })),
-    ...demoCampaigns.map((d, i) => ({ ...d, id: `demo-${i}`, _source: "demo", _demoIdx: i })),
-  ];
-
-  const allReviews = [];
-  allCampaigns.forEach((c) => {
-    (c.reviews || []).forEach((r, rIdx) => {
-      allReviews.push({ campaign: c, review: r, reviewIdx: rIdx });
-    });
-  });
-
-  // Sort newest first
-  allReviews.sort((a, b) => new Date(b.review.submittedAt || 0) - new Date(a.review.submittedAt || 0));
-
-  // Group by campaign
-  const grouped = {};
-  allReviews.forEach(item => {
-    const key = item.campaign.brand + "::" + item.campaign.campaign;
-    if (!grouped[key]) grouped[key] = { campaign: item.campaign, reviews: [] };
-    grouped[key].reviews.push(item);
-  });
-  const groups = Object.values(grouped);
-
-  const avgRating = (reviews) => reviews.length ? (reviews.reduce((s, r) => s + r.review.rating, 0) / reviews.length).toFixed(1) : null;
-
-  const replyKey = (campaignKey, reviewIdx) => campaignKey + "::" + reviewIdx;
-
-  const handlePostReply = (campaignKey, reviewIdx, campaign, text) => {
-    if (!text.trim()) return;
-    onUpdateReview(campaign, reviewIdx, text.trim());
-    setEditingKey(null);
-    setReplyDrafts(prev => { const next = { ...prev }; delete next[replyKey(campaignKey, reviewIdx)]; return next; });
-  };
-
-  const formatDate = (iso) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
-      <style>{`
-        .nf-review-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 20px; }
-        .nf-reply-btn { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: .78rem; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
-        .nf-reply-btn:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.09); color: #fff; }
-        .nf-reply-submit { padding: 9px 20px; border-radius: 10px; border: 1px solid rgba(251,191,36,.3); background: rgba(251,191,36,.1); color: #fbbf24; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
-        .nf-reply-submit:hover { background: rgba(251,191,36,.18); }
-        .nf-reply-submit:disabled { opacity: .3; cursor: not-allowed; }
-        .nf-reply-textarea { width: 100%; padding: 12px 14px; border-radius: 11px; border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.3); color: #fff; font-size: .88rem; outline: none; font-family: system-ui, sans-serif; resize: vertical; line-height: 1.5; transition: border-color .12s; }
-        .nf-reply-textarea:focus { border-color: rgba(251,191,36,.35); }
-        @keyframes nf-gold-shimmer { 0%,100% { background-position: 200% center } 50% { background-position: 0% center } }
-        .nf-gold-shimmer { background: linear-gradient(90deg,#fbbf24,#fef3c7,#f59e0b,#fbbf24); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: nf-gold-shimmer 3s linear infinite; }
-      `}</style>
-
-      {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".85rem", alignItems: "center" }}>
-          <span style={{ opacity: .5, cursor: "pointer" }} onClick={onBack}>← back to dashboard</span>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "20px 24px 80px" }}>
-        {/* Page header */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>reviews</div>
-          <div style={{ fontSize: ".9rem", opacity: .4, marginTop: 4 }}>creator feedback across all your campaigns</div>
-        </div>
-
-        {allReviews.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 20px", opacity: .3 }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: 16 }}>★</div>
-            <div style={{ fontSize: "1.1rem", marginBottom: 8 }}>no reviews yet</div>
-            <div style={{ fontSize: ".85rem" }}>reviews from creators will appear here once campaigns complete</div>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-            {groups.map((group) => {
-              const campaignKey = group.campaign.brand + "::" + group.campaign.campaign;
-              const avg = avgRating(group.reviews);
-              return (
-                <div key={campaignKey}>
-                  {/* Campaign header */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#0c1424", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {group.campaign.logoUrl ? <img src={group.campaign.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>{group.campaign.brand}</div>
-                      <div style={{ fontSize: ".8rem", opacity: .4 }}>{group.campaign.campaign}</div>
-                    </div>
-                    {avg && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        <span style={{ color: "#fbbf24", fontSize: "1rem" }}>★</span>
-                        <span style={{ fontWeight: 700, fontSize: "1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>{avg}</span>
-                        <span style={{ fontSize: ".8rem", opacity: .35 }}>({group.reviews.length})</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Reviews */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {group.reviews.map(({ review: r, reviewIdx }) => {
-                      const key = replyKey(campaignKey, reviewIdx);
-                      const isEditing = editingKey === key;
-                      const draft = replyDrafts[key] || "";
-                      return (
-                        <div key={reviewIdx} className="nf-review-card">
-                          {/* Creator + rating row */}
-                          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".88rem", fontWeight: 600, flexShrink: 0 }}>
-                              {r.creator.charAt(0)}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                <div style={{ fontWeight: 600, fontSize: ".95rem" }}>{r.creator}</div>
-                                <div style={{ color: "#fbbf24", fontSize: ".82rem", letterSpacing: 1 }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
-                              </div>
-                              {r.submittedAt && <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 2 }}>{formatDate(r.submittedAt)}</div>}
-                            </div>
-                          </div>
-                          <div style={{ fontSize: ".95rem", opacity: .65, lineHeight: 1.6, marginBottom: r.brandResponse || isEditing ? 14 : 0 }}>{r.text}</div>
-
-                          {/* Existing brand response */}
-                          {r.brandResponse && !isEditing && (
-                            <div style={{ paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-                              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(251,191,36,.12)", border: "1px solid rgba(251,191,36,.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: ".6rem", fontWeight: 700, color: "#fbbf24" }}>B</div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 5, textTransform: "lowercase", letterSpacing: ".03em" }}>your response</div>
-                                  <div style={{ fontSize: ".9rem", opacity: .75, lineHeight: 1.55 }}>{r.brandResponse}</div>
-                                  <button className="nf-reply-btn" style={{ marginTop: 10, fontSize: ".72rem", padding: "5px 12px" }} onClick={() => { setEditingKey(key); setReplyDrafts(prev => ({ ...prev, [key]: r.brandResponse })); }}>edit response</button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Reply compose area */}
-                          {isEditing && (
-                            <div style={{ paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-                              <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 8, textTransform: "lowercase", letterSpacing: ".03em" }}>responding as {group.campaign.brand}</div>
-                              <textarea
-                                className="nf-reply-textarea"
-                                rows={3}
-                                value={draft}
-                                onChange={e => setReplyDrafts(prev => ({ ...prev, [key]: e.target.value }))}
-                                placeholder="Write a public response to this review..."
-                                autoFocus
-                              />
-                              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                                <button className="nf-reply-btn" onClick={() => { setEditingKey(null); setReplyDrafts(prev => { const n = { ...prev }; delete n[key]; return n; }); }}>cancel</button>
-                                <button className="nf-reply-submit" disabled={!draft.trim()} onClick={() => handlePostReply(campaignKey, reviewIdx, group.campaign, draft)}>post response</button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Reply button — only show if no response and not editing */}
-                          {!r.brandResponse && !isEditing && (
-                            <div style={{ marginTop: 10 }}>
-                              <button className="nf-reply-btn" onClick={() => setEditingKey(key)}>reply</button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt }) {
-  const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
-  const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
-  const STAGE_COLORS = { draft: "rgba(255,255,255,.15)", open: "rgba(100,200,255,.25)", active: "rgba(255,200,100,.25)", fulfillment: "rgba(200,100,255,.25)", wrap_up: "rgba(100,255,150,.25)" };
-
-  const allCampaigns = [...campaigns, ...demoCampaigns.map((d, i) => ({
-    ...d, id: `demo-${i}`, createdAt: new Date(Date.now() - (i + 1) * 86400000 * 7).toISOString(),
-  }))];
-
-  return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
-      <style>{`
-        .nf-dash-card {
-          background: radial-gradient(circle at top, rgba(255,255,255,.04), rgba(4,11,21,0));
-          border: 1px solid rgba(255,255,255,.1); border-radius: 18px;
-          padding: 22px 24px; cursor: pointer;
-          transition: transform .2s, border-color .2s, box-shadow .2s;
-        }
-        .nf-dash-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); box-shadow: 0 12px 35px rgba(0,0,0,.35); }
-        .nf-stat-card {
-          background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
-          border-radius: 16px; padding: 20px 22px; text-align: center;
-        }
-        .nf-reviews-card {
-          background: rgba(255,255,255,.03); border: 1px solid rgba(251,191,36,.18);
-          border-radius: 16px; padding: 20px 22px; cursor: pointer;
-          transition: all .15s; text-align: center;
-        }
-        .nf-reviews-card:hover { border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.04); transform: translateY(-2px); }
-        @keyframes nf-gold-shimmer { 0%,100% { background-position: 200% center } 50% { background-position: 0% center } }
-        .nf-gold-shimmer { background: linear-gradient(90deg,#fbbf24,#fef3c7,#f59e0b,#fbbf24); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: nf-gold-shimmer 3s linear infinite; }
-        .nf-new-campaign-btn {
-          padding: 12px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28);
-          background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff;
-          font-size: .9rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase;
-          cursor: pointer; transition: all .12s; display: inline-flex; align-items: center; gap: 8;
-        }
-        .nf-new-campaign-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
-      `}</style>
-
-      {/* Dashboard Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center" }}>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignOut}>sign out</span>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 24px 80px" }}>
-        {/* Welcome + New Campaign */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>dashboard</div>
-            <div style={{ fontSize: ".9rem", opacity: .4, marginTop: 4 }}>manage your campaigns</div>
-          </div>
-          <button className="nf-new-campaign-btn" onClick={onNewCampaign}>
-            <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>+</span> new campaign
-          </button>
-        </div>
-
-        {/* Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 32 }}>
-          {[
-            { label: "total campaigns", value: allCampaigns.length },
-            { label: "active", value: allCampaigns.filter(c => c.stage === "open" || c.stage === "active" || c.stage === "shipped" || c.stage === "delivered" || c.stage === "accepted").length },
-            { label: "total creators", value: allCampaigns.reduce((sum, c) => sum + (c.creators?.approved?.length || 0) + (c.creators?.pending?.length || 0), 0) },
-          ].map((s, i) => (
-            <div key={i} className="nf-stat-card">
-              <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 4, textTransform: "lowercase" }}>{s.label}</div>
-            </div>
-          ))}
-          {/* Needs attention card */}
-          {(() => {
-            const businessDaysSince = (dateStr) => {
-              if (!dateStr) return 0;
-              const start = new Date(dateStr);
-              const now = new Date();
-              let count = 0;
-              const cur = new Date(start);
-              while (cur < now) {
-                cur.setDate(cur.getDate() + 1);
-                const day = cur.getDay();
-                if (day !== 0 && day !== 6) count++;
-              }
-              return count;
-            };
-            const pendingCount = allCampaigns.reduce((sum, c) => sum + (c.creators?.pending?.length || 0), 0);
-            const overdueCount = allCampaigns.reduce((sum, c) => sum + (c.creators?.approved || []).filter(cr => cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3).length, 0);
-            const total = pendingCount + overdueCount;
-            return (
-              <div className="nf-stat-card" style={{ borderColor: total > 0 ? "rgba(255,100,100,.25)" : "rgba(255,255,255,.08)" }}>
-                <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: total > 0 ? "rgba(255,100,100,.9)" : "#fff" }}>{total}</div>
-                <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 4, textTransform: "lowercase" }}>needs attention</div>
-                {total > 0 && (
-                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
-                    {overdueCount > 0 && <div style={{ fontSize: ".62rem", color: "rgba(255,100,100,.7)" }}>{overdueCount} overdue shipment{overdueCount !== 1 ? "s" : ""}</div>}
-                    {pendingCount > 0 && <div style={{ fontSize: ".62rem", color: "rgba(255,200,100,.7)" }}>{pendingCount} awaiting approval</div>}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-          {/* Reviews summary card */}
-          {(() => {
-            const allReviews = allCampaigns.flatMap(c => (c.reviews || []).map(r => ({ ...r, _campaign: c })));
-            const totalReviews = allReviews.length;
-            const avgRating = totalReviews ? (allReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1) : null;
-            const newCount = allReviews.filter(r => r.submittedAt && (!lastReviewsVisitedAt || new Date(r.submittedAt) > new Date(lastReviewsVisitedAt))).length;
-            if (totalReviews === 0) return (
-              <div className="nf-reviews-card" onClick={onViewReviews}>
-                <div style={{ fontSize: "1.8rem", marginBottom: 4, opacity: .25 }}>★</div>
-                <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase" }}>no reviews yet</div>
-              </div>
-            );
-            return (
-              <div className="nf-reviews-card" onClick={onViewReviews}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 6 }}>
-                  {[1,2,3,4,5].map(i => {
-                    const rating = parseFloat(avgRating);
-                    const filled = i <= Math.floor(rating);
-                    const half = !filled && i === Math.ceil(rating) && rating % 1 >= 0.5;
-                    return <span key={i} style={{ fontSize: ".85rem", color: filled || half ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>;
-                  })}
-                </div>
-                <div className="nf-gold-shimmer" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1.1, marginBottom: 5 }}>{avgRating}</div>
-                <div style={{ fontSize: ".72rem", opacity: .45, textTransform: "lowercase", marginBottom: newCount > 0 ? 8 : 0 }}>{totalReviews} review{totalReviews !== 1 ? "s" : ""}</div>
-                {newCount > 0 && (
-                  <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, background: "rgba(251,191,36,.15)", border: "1px solid rgba(251,191,36,.3)", fontSize: ".7rem", fontWeight: 600, color: "#fbbf24" }}>
-                    {newCount} new
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Campaign List */}
-        <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {allCampaigns.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px 20px", opacity: .3, gridColumn: "1/-1" }}>
-              <div style={{ fontSize: "1.1rem", marginBottom: 8 }}>no campaigns yet</div>
-              <div style={{ fontSize: ".85rem" }}>create your first campaign to get started</div>
-            </div>
-          ) : (
-            allCampaigns.map((c, i) => {
-              const isUserCampaign = !String(c.id).startsWith("demo-");
-              const approvedCount = c.creators?.approved?.length || 0;
-              const pendingCount = c.creators?.pending?.length || 0;
-              const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - approvedCount) : null;
-              return (
-                <div key={c.id || i} className="nf-campaign-card" style={{ position: "relative" }} onClick={() => onSelectCampaign(c)}>
-                  {/* Banner */}
-                  <div style={{ position: "relative" }}>
-                    <div style={{ height: 150, background: c.imgBg || "#0c1424", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
-                      {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ fontSize: "2.8rem", opacity: .1 }}>📷</div>}
-                    </div>
-                    {/* Logo */}
-                    {c.logoUrl ? (
-                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
-                    ) : (
-                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
-                    )}
-                    {/* Edit button top-right */}
-                    {isUserCampaign && (
-                      <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
-                    )}
-                  </div>
-                  {/* Brand name + campaign */}
-                  <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div style={{ paddingTop: 34 }}>
-                      <div className={c.featured ? "nf-featured-name" : ""} style={{ fontSize: "1.7rem", fontWeight: 700, color: c.featured ? undefined : "#fff", lineHeight: 1.15 }}>{c.brand}</div>
-                      <div style={{ fontSize: "1.05rem", opacity: .5, marginTop: 4 }}>{c.campaign}</div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
-                        {spotsLeft != null ? `${spotsLeft} spots left` : "open"}
-                      </div>
-                      <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
-                      <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
-                        {(c.platforms || []).map(p => (
-                          <div key={p} style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PLAT_SVGS_SMALL[p]}</div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Details */}
-                  <div style={{ padding: "8px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
-                    <div style={{ flex: 1 }}>
-                      {[["following:", c.following], ["deadline:", c.deadline]].map(([label, val]) => val ? (
-                        <div key={label} style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
-                          <div style={{ opacity: .35, minWidth: 105 }}>{label}</div>
-                          <div style={{ opacity: .85 }}>{val}</div>
-                        </div>
-                      ) : null)}
-                    </div>
-                    {/* Footer */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-                      <div>
-                        <div style={{ fontSize: ".85rem", opacity: .4, textTransform: "lowercase", marginBottom: 3 }}>creators get</div>
-                        <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-                          {c.comp || "—"}
-                          {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                        <div style={{ fontSize: ".75rem", color: "rgba(100,200,255,.8)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
-                        {pendingCount > 0 && <div style={{ fontSize: ".72rem", color: "rgba(255,200,100,.8)" }}>{pendingCount} pending</div>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Edit warning modal */}
-      {editWarnCampaign && (() => {
-        const hasAccepted = (editWarnCampaign.creators?.approved?.length || 0) > 0;
-        return (
-          <div onClick={() => setEditWarnCampaign(null)} style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20,
-          }}>
-            <div onClick={e => e.stopPropagation()} style={{
-              background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24,
-              padding: "32px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)",
-            }}>
-              <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 8, textTransform: "lowercase" }}>before you edit</div>
-              <div style={{ fontSize: ".9rem", opacity: .5, marginBottom: 24, lineHeight: 1.6 }}>most fields are editable anytime. a few things to know:</div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-                {[
-                  { icon: "✓", color: "rgba(100,255,150,.8)", text: "campaign name, description, banner, deadline, location, creator cap, products, and requirements are always editable." },
-                  { icon: "✓", color: "rgba(100,255,150,.8)", text: "featured placement can be added or removed at any time, even after creators have joined." },
-                  hasAccepted && { icon: "⚠", color: "rgba(255,200,60,.8)", text: "platforms and deliverables are locked — creators applied based on these terms and cannot be changed." },
-                  hasAccepted && { icon: "⚠", color: "rgba(255,200,60,.8)", text: "you can upgrade compensation (product → paid) but you cannot reduce it once creators have been accepted." },
-                  !hasAccepted && { icon: "✓", color: "rgba(100,255,150,.8)", text: "no creators have been accepted yet, so all fields including platforms, deliverables, and compensation are editable." },
-                ].filter(Boolean).map((item, i) => (
-                  <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
-                    <span style={{ color: item.color, flexShrink: 0, fontWeight: 700, marginTop: 1 }}>{item.icon}</span>
-                    <span style={{ fontSize: ".85rem", opacity: .7, lineHeight: 1.55 }}>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setEditWarnCampaign(null)} style={{
-                  flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)",
-                  background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer",
-                  fontSize: ".9rem", fontFamily: "system-ui, sans-serif",
-                }}>cancel</button>
-                <button onClick={() => { onEditCampaign(editWarnCampaign); setEditWarnCampaign(null); }} style={{
-                  flex: 2, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.28)",
-                  background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer",
-                  fontSize: ".9rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
-                }}>got it, edit campaign</button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-    </div>
-  );
-}
-
-const DEMO_MESSAGES = {
-  "Nike::Running Challenge::Alex Rivera": [
-    { from: "brand", text: "Hey Alex! We loved your running content. Welcome to the Nike Running Challenge!", ts: "2026-04-01T10:00:00" },
-    { from: "creator", text: "Thank you so much! I'm really excited to be part of this. When should I expect the product shipment?", ts: "2026-04-01T10:15:00" },
-    { from: "brand", text: "We're shipping the Pegasus 41 and Dri-FIT pack this week. You should have tracking by Thursday.", ts: "2026-04-01T11:30:00" },
-    { from: "creator", text: "Perfect! I already have some content ideas — thinking a sunrise run vlog and a gear unboxing reel.", ts: "2026-04-01T12:00:00" },
-    { from: "brand", text: "Love that. The sunrise run vlog sounds amazing. Just remember to tag @nike and use #NikeRunningChallenge. Check the style guide for the full list of dos and don'ts.", ts: "2026-04-01T14:20:00" },
-    { from: "creator", text: "Got it! Will review the guide tonight. Quick question — any preference on which colorway I feature first?", ts: "2026-04-01T15:45:00" },
-    { from: "brand", text: "Totally your call — we want it to feel authentic to your style.", ts: "2026-04-01T16:00:00" },
-  ],
-  "Nike::Running Challenge::Mia Thompson": [
-    { from: "brand", text: "Welcome Mia! Excited to have you on the Running Challenge.", ts: "2026-04-02T09:00:00" },
-    { from: "creator", text: "Thanks! Quick q — can I include my dog in the running content? He's my running partner 🐕", ts: "2026-04-02T09:30:00" },
-    { from: "brand", text: "Absolutely, that sounds adorable and on-brand. Go for it!", ts: "2026-04-02T10:00:00" },
-  ],
-  "Alani Nu::Lifestyle & Energy Campaign::Emma Davis": [
-    { from: "brand", text: "Hey Emma! Welcome to the Alani Nu fam. Your TikTok energy is exactly what we're looking for.", ts: "2026-04-03T11:00:00" },
-    { from: "creator", text: "Omg thank you! I literally drink Alani every morning so this is a dream collab.", ts: "2026-04-03T11:20:00" },
-    { from: "brand", text: "That's what we love to hear! We're sending a variety pack — 12 cans, mixed flavors. Should arrive by next week.", ts: "2026-04-03T12:00:00" },
-    { from: "creator", text: "Can't wait! I'm thinking a 'what I drink in a day' style video. Would that work?", ts: "2026-04-03T13:00:00" },
-    { from: "brand", text: "Perfect format for TikTok. Just keep it natural and fun — that's the Alani vibe.", ts: "2026-04-03T13:15:00" },
-  ],
-  "GoPro::POV Creator Program::Jake Sullivan": [
-    { from: "brand", text: "Jake! Your mountain biking footage is insane. Welcome to the POV Creator Program.", ts: "2026-04-05T08:00:00" },
-    { from: "creator", text: "Stoked to be here! I've been shooting GoPro for years — this feels full circle.", ts: "2026-04-05T08:30:00" },
-    { from: "brand", text: "We're sending you the HERO13 Black with the full accessories kit. Any trail trips coming up?", ts: "2026-04-05T09:00:00" },
-    { from: "creator", text: "Heading to Moab next month. Planning a sunrise-to-sunset edit — Slickrock trail, Porcupine Rim, the works.", ts: "2026-04-05T09:45:00" },
-    { from: "brand", text: "That's going to be incredible. Make sure to shoot some BTS too — we might feature it on GoPro's channel.", ts: "2026-04-05T10:00:00" },
-    { from: "creator", text: "Wait, seriously? That would be huge. I'll plan extra footage for sure.", ts: "2026-04-05T10:10:00" },
-    { from: "brand", text: "Dead serious. Your content quality is exactly what we showcase. Just send us the raw files along with your edit.", ts: "2026-04-05T10:30:00" },
-  ],
-};
-
-
-// ── Messages ──
-
-function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand }) {
-  const [input, setInput] = useState("");
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleSend = () => {
-    const text = input.trim();
-    if (!text) return;
-    onSend(text);
-    setInput("");
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const formatTime = (ts) => {
-    const d = new Date(ts);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    const isYesterday = d.toDateString() === yesterday.toDateString();
-    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    if (isToday) return time;
-    if (isYesterday) return `yesterday ${time}`;
-    return `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
-  };
-
-  // Group messages by date
-  const groupedMessages = [];
-  let lastDate = null;
-  (messages || []).forEach((m) => {
-    const d = new Date(m.ts).toDateString();
-    if (d !== lastDate) {
-      groupedMessages.push({ type: "date", date: d, ts: m.ts });
-      lastDate = d;
-    }
-    groupedMessages.push({ type: "msg", ...m });
-  });
-
-  const formatDateHeader = (ts) => {
-    const d = new Date(ts);
-    const now = new Date();
-    if (d.toDateString() === now.toDateString()) return "today";
-    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    if (d.toDateString() === yesterday.toDateString()) return "yesterday";
-    return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
-  };
-
-  return (
-    <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "column",
-      background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)",
-      color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif",
-    }}>
-      <style>{`
-        .nf-msg-input:focus { border-color: rgba(255,255,255,.35); box-shadow: 0 0 0 1px rgba(255,255,255,.1); }
-        .nf-msg-input::placeholder { color: rgba(255,255,255,.3); }
-        .nf-msg-send { transition: all .12s; }
-        .nf-msg-send:hover:not(:disabled) { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); transform: translateY(-1px); }
-        .nf-msg-bubble { animation: nf-msg-in .25s ease-out; }
-        @keyframes nf-msg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
-
-      {/* Header */}
-      <div style={{
-        padding: "16px 24px", display: "flex", alignItems: "center", gap: 14,
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-        background: "rgba(4,11,21,.8)", backdropFilter: "blur(20px)",
-        position: "sticky", top: 0, zIndex: 10,
-      }}>
-        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem", display: "flex", alignItems: "center", transition: "opacity .12s" }}>←</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {isBrand ? creatorName : campaign?.brand}
-          </div>
-          <div style={{ fontSize: ".75rem", opacity: .35, marginTop: 1 }}>
-            {campaign?.brand} · {campaign?.campaign}
-          </div>
-        </div>
-        <div style={{
-          padding: "4px 12px", borderRadius: 20, fontSize: ".7rem", fontWeight: 600,
-          background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)",
-          color: "rgba(100,255,150,.7)", textTransform: "lowercase",
-        }}>active</div>
-      </div>
-
-      {/* Messages area */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px 12px", maxWidth: 700, width: "100%", margin: "0 auto" }}>
-        {groupedMessages.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .15 }}>💬</div>
-            <div style={{ fontSize: ".95rem", opacity: .3, marginBottom: 6 }}>no messages yet</div>
-            <div style={{ fontSize: ".8rem", opacity: .2 }}>start the conversation below</div>
-          </div>
-        )}
-        {groupedMessages.map((item, i) => {
-          if (item.type === "date") {
-            return (
-              <div key={`date-${i}`} style={{ textAlign: "center", padding: "16px 0 8px" }}>
-                <span style={{
-                  fontSize: ".7rem", fontWeight: 600, opacity: .25, textTransform: "lowercase",
-                  padding: "4px 14px", borderRadius: 20, background: "rgba(255,255,255,.04)",
-                  letterSpacing: ".03em",
-                }}>{formatDateHeader(item.ts)}</span>
-              </div>
-            );
-          }
-          const isMe = (isBrand && item.from === "brand") || (!isBrand && item.from === "creator");
-          return (
-            <div key={i} className="nf-msg-bubble" style={{
-              display: "flex", justifyContent: isMe ? "flex-end" : "flex-start",
-              marginBottom: 6,
-            }}>
-              <div style={{
-                maxWidth: "75%", padding: "12px 16px", borderRadius: 16,
-                borderBottomRightRadius: isMe ? 4 : 16,
-                borderBottomLeftRadius: isMe ? 16 : 4,
-                background: isMe ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.04)",
-                border: `1px solid ${isMe ? "rgba(255,255,255,.15)" : "rgba(255,255,255,.06)"}`,
-              }}>
-                <div style={{ fontSize: ".9rem", lineHeight: 1.55, opacity: .85, wordBreak: "break-word" }}>{item.text}</div>
-                <div style={{ fontSize: ".65rem", opacity: .25, marginTop: 6, textAlign: isMe ? "right" : "left" }}>
-                  {formatTime(item.ts)}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Input area */}
-      <div style={{
-        padding: "16px 24px 20px",
-        borderTop: "1px solid rgba(255,255,255,.08)",
-        background: "rgba(4,11,21,.9)", backdropFilter: "blur(20px)",
-        position: "sticky", bottom: 0,
-      }}>
-        <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", gap: 10, alignItems: "flex-end" }}>
-          <textarea
-            ref={inputRef}
-            className="nf-msg-input"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="type a message..."
-            rows={1}
-            style={{
-              flex: 1, padding: "12px 16px", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,.12)",
-              background: "rgba(0,0,0,.3)", color: "#fff",
-              fontSize: ".9rem", outline: "none", resize: "none",
-              fontFamily: "system-ui, sans-serif",
-              lineHeight: 1.5, maxHeight: 120, overflowY: "auto",
-              transition: "border-color .12s, box-shadow .12s",
-            }}
-          />
-          <button
-            className="nf-msg-send"
-            disabled={!input.trim()}
-            onClick={handleSend}
-            style={{
-              padding: "12px 20px", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,.2)",
-              background: input.trim() ? "rgba(255,255,255,.1)" : "transparent",
-              color: input.trim() ? "#fff" : "rgba(255,255,255,.25)",
-              fontSize: ".85rem", fontWeight: 600, cursor: input.trim() ? "pointer" : "not-allowed",
-              fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
-              flexShrink: 0, transition: "all .12s",
-            }}
-          >send</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-// ── MessageInbox ──
-
-function MessageInbox({ conversations, campaign, onSelectThread, onBack }) {
-  const avatarIdx = (name) => {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-    return (h % 70) + 1;
-  };
-
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)",
-      color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif",
-    }}>
-      <style>{`
-        .nf-inbox-row { transition: background .12s, border-color .12s; cursor: pointer; }
-        .nf-inbox-row:hover { background: rgba(255,255,255,.04) !important; border-color: rgba(255,255,255,.15) !important; }
-      `}</style>
-
-      {/* Header */}
-      <div style={{
-        padding: "16px 24px", display: "flex", alignItems: "center", gap: 14,
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-      }}>
-        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: "1.1rem", fontFamily: "'Monda', system-ui, sans-serif" }}>messages</div>
-          <div style={{ fontSize: ".8rem", opacity: .35, marginTop: 2 }}>
-            {campaign ? `${campaign.brand} · ${campaign.campaign}` : "all conversations"}
-          </div>
-        </div>
-      </div>
-
-      {/* Thread list */}
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "12px 24px" }}>
-        {conversations.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .15 }}>💬</div>
-            <div style={{ fontSize: ".95rem", opacity: .3 }}>no conversations yet</div>
-            <div style={{ fontSize: ".8rem", opacity: .2, marginTop: 6 }}>messages with creators will appear here</div>
-          </div>
-        )}
-        {conversations.map((conv, i) => {
-          const lastMsg = conv.messages[conv.messages.length - 1];
-          const unread = conv.unread || 0;
-          return (
-            <div key={i} className="nf-inbox-row" onClick={() => onSelectThread(conv)}
-              style={{
-                padding: "16px 18px", borderRadius: 14,
-                background: "rgba(255,255,255,.02)",
-                border: "1px solid rgba(255,255,255,.06)",
-                marginBottom: 8, display: "flex", alignItems: "center", gap: 14,
-              }}>
-              <div style={{
-                width: 46, height: 46, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
-                border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.05)",
-              }}>
-                <img
-                  src={`https://i.pravatar.cc/100?img=${avatarIdx(conv.creatorName)}`}
-                  alt={conv.creatorName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-                  <div style={{ fontWeight: 600, fontSize: ".9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {conv.creatorName}
-                  </div>
-                  <div style={{ fontSize: ".7rem", opacity: .25, flexShrink: 0 }}>
-                    {lastMsg ? new Date(lastMsg.ts).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}
-                  </div>
-                </div>
-                <div style={{
-                  fontSize: ".8rem", opacity: .4, overflow: "hidden",
-                  textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                }}>
-                  {lastMsg ? `${lastMsg.from === "brand" ? "you: " : ""}${lastMsg.text}` : "no messages"}
-                </div>
-              </div>
-              {unread > 0 && (
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(100,200,255,.2)", border: "1px solid rgba(100,200,255,.3)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: ".7rem", fontWeight: 700, color: "rgba(100,200,255,.9)",
-                }}>{unread}</div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
+export { CampaignDetail, CampaignEditor, CampaignBuilder, Toggle, Preview };

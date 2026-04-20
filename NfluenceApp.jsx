@@ -1,7 +1,11 @@
-// ── NfluenceApp ──
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL, DEMO_MESSAGES } from "./nfluenceData";
+import ImageEditor from "./ImageEditor";
+import { CampaignDetail, CampaignEditor, CampaignBuilder, Toggle, Preview } from "./CampaignCore";
+import { SignIn, ReviewsPage, Dashboard, Messages, MessageInbox, CreatorInbox, CreatorPublicProfile, NotificationsPage, NotificationToast, OnboardingPage, BrandProfile, BrowseCampaigns, CreatorSignIn, CreatorOnboarding, CreatorDashboard } from "./AppViews";
 
 function NfluenceApp() {
-  const [view, setView] = useState("landing"); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews
+  const [view, setView] = useState("landing"); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications
   const [selectedBrand, setSelectedBrand] = useState("Nike");
   const [pendingCampaign, setPendingCampaign] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(DEMO_CAMPAIGNS[0]);
@@ -10,14 +14,14 @@ function NfluenceApp() {
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
   const [signInRedirect, setSignInRedirect] = useState(null); // campaign to redirect back to after sign in
-  const [detailSource, setDetailSource] = useState("landing"); // "landing" | "dashboard"
+  const [detailSource, setDetailSource] = useState("landing"); // "landing" | "dashboard" | "browse"
   const [autoApply, setAutoApply] = useState(false);
   const [lastReviewsVisitedAt, setLastReviewsVisitedAt] = useState(null); // ISO string — when brand last opened reviews page
   const [demoCampaignReviewOverrides, setDemoCampaignReviewOverrides] = useState({}); // demoIdx → { reviewIdx → brandResponse }
 
   // Creator state
   const [creatorUser, setCreatorUser] = useState({ email: "tyler@nfluenceagency.com", name: "Tyler" });
-  const [creatorProfile, setCreatorProfile] = useState({ name: "Tyler", bio: "Partner at Nfluence. Building the future of creator-brand collaboration.", location: "Los Angeles, CA", age: "40", languages: "English", niches: "fitness, wellness, lifestyle", rating: 5.0, instagram: "@tyler", tiktok: "@tyler", tiktokFollowers: "42k", youtube: "", instagramFollowers: "18k", youtubeFollowers: "", bannerUrl: null, avatarUrl: null, platforms: {} });
+  const [creatorProfile, setCreatorProfile] = useState({ name: "Tyler", bio: "Partner at Nfluence. Building the future of creator-brand collaboration.", location: "Los Angeles, CA", age: "40", languages: "English", niches: "fitness, wellness, lifestyle", rating: 5.0, instagram: "@tylerhaegele", tiktok: "@tylerhaegele", tiktokFollowers: "42k", youtube: "@tylerhaegele", instagramFollowers: "113k", youtubeFollowers: "1.1M", x: "@tylerhaegele", xFollowers: "8.5k", bannerUrl: null, avatarUrl: null, platforms: {} });
   const [creatorUploads, setCreatorUploads] = useState([]);
   const [creatorApplied, setCreatorApplied] = useState([
     { brand: "Nike", campaign: "Running Challenge", logoUrl: "/assets/logo_nike.jpg", status: "applied" },
@@ -32,6 +36,40 @@ function NfluenceApp() {
   const [allMessages, setAllMessages] = useState(DEMO_MESSAGES); // key → message[]
   const [messageCreator, setMessageCreator] = useState(null); // creator name for current thread
   const [messageReturnView, setMessageReturnView] = useState("detail"); // where to go back from messages
+
+  // Scheduled calls state — key: "brand::campaign::creatorName"
+  const [scheduledCalls, setScheduledCalls] = useState({});
+
+  // Creator messaging state
+  const [creatorMessageThread, setCreatorMessageThread] = useState(null); // { brandName, campaignName, key }
+
+  // Creator public profile state
+  const [selectedCreatorProfile, setSelectedCreatorProfile] = useState(null);
+  const [creatorProfileReturnView, setCreatorProfileReturnView] = useState("detail");
+
+  // Notifications state
+  const [notifications, setNotifications] = useState([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [notifReturnView, setNotifReturnView] = useState("dashboard");
+  const notifIdRef = React.useRef(0);
+
+  const addNotification = React.useCallback((n) => {
+    const id = ++notifIdRef.current;
+    setNotifications(prev => [{ ...n, id, ts: new Date().toISOString(), read: false }, ...prev]);
+    setToastMessage(n.title);
+    setShowToast(true);
+  }, []);
+
+  const markAllNotifsRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markNotifRead = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+  // Auto-dismiss toast after 5 seconds
+  useEffect(() => {
+    if (!showToast) return;
+    const t = setTimeout(() => setShowToast(false), 5000);
+    return () => clearTimeout(t);
+  }, [showToast, toastMessage]);
 
   // Merged demo campaigns with any overrides (from applications or review responses)
   const mergedDemos = DEMO_CAMPAIGNS.map((d, i) => {
@@ -125,7 +163,6 @@ function NfluenceApp() {
   const handleApply = (campaign, applicationData) => {
     const key = campaign.brand + "::" + campaign.campaign;
     setAppliedCampaigns(prev => [...prev, key]);
-    // If it's a demo campaign, update the override
     const demoIdx = DEMO_CAMPAIGNS.findIndex(d => d.brand === campaign.brand && d.campaign === campaign.campaign);
     if (demoIdx >= 0) {
       setDemoCampaignOverrides(prev => {
@@ -143,7 +180,6 @@ function NfluenceApp() {
         };
       });
     }
-    // If it's a user campaign, update myCampaigns
     const userIdx = myCampaigns.findIndex(c => c.brand === campaign.brand && c.campaign === campaign.campaign);
     if (userIdx >= 0) {
       setMyCampaigns(prev => prev.map((c, i) => {
@@ -151,6 +187,8 @@ function NfluenceApp() {
         return { ...c, creators: { ...c.creators, pending: [...(c.creators?.pending || []), applicationData] } };
       }));
     }
+    // Notify brand of new application
+    addNotification({ for: "brand", type: "new_application", title: "new application received", body: `${applicationData.name} applied to ${campaign.brand} · ${campaign.campaign}` });
   };
 
   const handleSignInRedirect = () => {
@@ -224,20 +262,90 @@ function NfluenceApp() {
     return convs;
   };
 
+  // Schedule call handler (brand schedules with a creator)
+  const handleScheduleCall = ({ creatorName, campaign, datetime, timezone, meetLink, notes }) => {
+    const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`;
+    setScheduledCalls(prev => ({
+      ...prev,
+      [key]: { datetime, timezone, meetLink, notes, confirmed: false, declined: false },
+    }));
+    const formatted = new Date(datetime).toLocaleString("en-US", { timeZone: timezone, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    addNotification({ for: "creator", type: "call_scheduled", title: "call scheduled", body: `${campaign.brand} scheduled a call with you for ${formatted}` });
+  };
+
+  // Creator responds to a scheduled call
+  const handleRespondToCall = (key, action) => {
+    setScheduledCalls(prev => ({
+      ...prev,
+      [key]: { ...prev[key], confirmed: action === "confirm", declined: action === "decline" },
+    }));
+    const [brand, campaign] = key.split("::");
+    if (action === "confirm") {
+      addNotification({ for: "brand", type: "call_confirmed", title: "call confirmed", body: `A creator confirmed your scheduled call for ${brand} · ${campaign}` });
+    } else {
+      addNotification({ for: "brand", type: "call_declined", title: "call declined", body: `A creator declined your scheduled call for ${brand} · ${campaign}` });
+    }
+  };
+
+  // Creator messaging — get all conversations the creator is part of
+  const getCreatorConversations = () => {
+    if (!creatorUser) return [];
+    const creatorName = creatorProfile?.name || creatorUser?.name || "";
+    const convs = [];
+    Object.entries(allMessages).forEach(([key, msgs]) => {
+      const parts = key.split("::");
+      if (parts.length === 3 && parts[2] === creatorName) {
+        convs.push({ key, brandName: parts[0], campaignName: parts[1], messages: msgs, unread: 0 });
+      }
+    });
+    convs.sort((a, b) => {
+      const aLast = a.messages[a.messages.length - 1]?.ts || "";
+      const bLast = b.messages[b.messages.length - 1]?.ts || "";
+      return bLast.localeCompare(aLast);
+    });
+    return convs;
+  };
+
+  // Creator sends a message
+  const handleCreatorSendMessage = (text) => {
+    if (!creatorMessageThread) return;
+    const newMsg = { from: "creator", text, ts: new Date().toISOString() };
+    setAllMessages(prev => ({
+      ...prev,
+      [creatorMessageThread.key]: [...(prev[creatorMessageThread.key] || []), newMsg],
+    }));
+  };
+
+  if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, profileData) => { handleCreatorSignIn(email, name); setCreatorProfile(prev => ({ ...prev, ...profileData })); }} />;
-  if (view === "creatordashboard") return <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} />;
+  if (view === "creatordashboard") return <>
+    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+    {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
+  </>;
+  if (view === "creatorinbox") {
+    const brandAvatarMap = Object.fromEntries(DEMO_CAMPAIGNS.map(c => [c.brand, c.logoUrl || null]));
+    return <CreatorInbox conversations={getCreatorConversations()} onSelectThread={(conv) => { setCreatorMessageThread({ key: conv.key, brandName: conv.brandName, campaignName: conv.campaignName }); setView("creatormessages"); }} onBack={() => setView("creatordashboard")} allMessages={allMessages} onSend={(key, text) => { const newMsg = { from: "creator", text, ts: new Date().toISOString() }; setAllMessages(prev => ({ ...prev, [key]: [...(prev[key] || []), newMsg] })); }} creatorAvatar={creatorProfile?.avatarUrl || null} brandAvatars={brandAvatarMap} />;
+  }
+  if (view === "creatormessages" && creatorMessageThread) {
+    const brandAvatarMap = Object.fromEntries(DEMO_CAMPAIGNS.map(c => [c.brand, c.logoUrl || null]));
+    return <Messages campaign={{ brand: creatorMessageThread.brandName, campaign: creatorMessageThread.campaignName }} creatorName={creatorProfile?.name || creatorUser?.name || ""} messages={allMessages[creatorMessageThread.key] || []} onSend={handleCreatorSendMessage} onBack={() => setView("creatorinbox")} isBrand={false} brandAvatar={brandAvatarMap[creatorMessageThread.brandName] || null} creatorAvatar={creatorProfile?.avatarUrl || null} />;
+  }
+  if (view === "creatorprofile" && selectedCreatorProfile) return <CreatorPublicProfile creator={selectedCreatorProfile} onBack={() => setView(creatorProfileReturnView)} onMessage={selectedCampaign ? () => handleOpenMessage(selectedCampaign, selectedCreatorProfile.name, "creatorprofile") : null} />;
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
-  if (view === "dashboard") return <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} />;
+  if (view === "dashboard") return <>
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+    {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
+  </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} />;
   if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} onSave={(updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
     setView("dashboard");
   }} />;
-  if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setView("detail"); }} />;
-  if (view === "browse") return <BrowseCampaigns onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} />;
+  if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
+  if (view === "browse") return <BrowseCampaigns onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages
@@ -247,26 +355,36 @@ function NfluenceApp() {
       onSend={handleSendMessage}
       onBack={() => setView(messageReturnView)}
       isBrand={true}
+      brandAvatar={selectedCampaign.logoUrl || null}
+      creatorAvatar={`https://i.pravatar.cc/100?img=${(() => { let h=0; for(let i=0;i<messageCreator.length;i++) h=(h*31+messageCreator.charCodeAt(i))>>>0; return (h%70)+1; })()}`}
     />;
   }
   if (view === "inbox" && selectedCampaign) {
     const convs = getConversationsForCampaign(selectedCampaign);
+    const msgKeyMap = Object.fromEntries(convs.map(c => [c.creatorName, allMessages[getMessageKey(selectedCampaign, c.creatorName)] || []]));
+    const avatarIdx = (name) => { let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0; return (h%70)+1; };
+    const creatorAvatarMap = Object.fromEntries(convs.map(c => [c.creatorName, `https://i.pravatar.cc/100?img=${avatarIdx(c.creatorName)}`]));
     return <MessageInbox
       conversations={convs}
       campaign={selectedCampaign}
       onSelectThread={(conv) => handleOpenMessage(selectedCampaign, conv.creatorName, "inbox")}
       onBack={() => setView(messageReturnView)}
+      allMessages={msgKeyMap}
+      onSend={(creatorName, text) => { const key = getMessageKey(selectedCampaign, creatorName); const newMsg = { from: "brand", text, ts: new Date().toISOString() }; setAllMessages(prev => ({ ...prev, [key]: [...(prev[key] || []), newMsg] })); }}
+      isBrand={true}
+      brandAvatar={selectedCampaign.logoUrl || null}
+      creatorAvatars={creatorAvatarMap}
     />;
   }
   if (view === "detail" && selectedCampaign) {
     const isOwnCampaign = myCampaigns.some(c => c.id === selectedCampaign.id);
     const isDemoFromDashboard = user && DEMO_CAMPAIGNS.some(d => d.brand === selectedCampaign.brand && d.campaign === selectedCampaign.campaign) && detailSource === "dashboard";
     const isOwner = isOwnCampaign || isDemoFromDashboard;
-    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); user ? setView(detailSource === "dashboard" ? "dashboard" : "landing") : setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} />;
+    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style>{`
         @font-face {
           font-family: 'Monda';
@@ -276,6 +394,8 @@ function NfluenceApp() {
           font-display: swap;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow-x: hidden; max-width: 100%; }
+        img { max-width: 100%; }
         .nf-campaign-card {
           background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0));
           border: 1px solid rgba(255,255,255,.12);
@@ -316,7 +436,7 @@ function NfluenceApp() {
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
       `}</style>
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85 }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
@@ -334,14 +454,14 @@ function NfluenceApp() {
 
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "50px 24px 20px", maxWidth: 700, margin: "0 auto" }}>
-        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.8rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
+        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
           launch <span style={{ color: "rgba(255,255,255,.5)" }}>creator campaigns</span><br />that run on autopilot
         </h1>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
-          <button onClick={() => setView("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 180, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
+          <button onClick={() => setView("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
             start a campaign
           </button>
-          <button onClick={() => setView(creatorUser ? "creatordashboard" : "creatorsignin")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 180, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
+          <button onClick={() => setView(creatorUser ? "creatordashboard" : "creatorsignin")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
             i'm a creator
           </button>
         </div>
@@ -351,7 +471,7 @@ function NfluenceApp() {
       <div style={{ width: "min(58%, 520px)", height: 1, background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%)", opacity: .6, margin: "20px auto 32px" }} />
 
       {/* Open Campaigns */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 80px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
         <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 28, fontWeight: 600 }}>featured campaigns</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {mergedDemos.map((c, i) => {
@@ -450,3 +570,5 @@ function NfluenceApp() {
 
 
 
+
+export default NfluenceApp;
