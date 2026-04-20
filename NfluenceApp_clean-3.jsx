@@ -3142,12 +3142,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {/* Dashboard Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", flexWrap: "wrap" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center" }}>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
-          <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }}>dashboard</span>
-          <span style={{ opacity: .5, cursor: "pointer", fontSize: ".8rem" }} onClick={onSignOut}>sign out</span>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignOut}>sign out</span>
         </div>
       </div>
 
@@ -4632,12 +4629,9 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", flexWrap: "wrap" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center" }}>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
-          <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }}>dashboard</span>
-          <span style={{ opacity: .5, cursor: "pointer", fontSize: ".8rem" }} onClick={onSignOut}>sign out</span>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignOut}>sign out</span>
         </div>
       </div>
 
