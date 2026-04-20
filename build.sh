@@ -42,6 +42,7 @@ cat > "$OUT" <<HTMLEOF
 <body>
   <div id="root"></div>
   <script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
 ${COMBINED}
 ReactDOM.createRoot(document.getElementById('root')).render(<NfluenceApp />);
   </script>
