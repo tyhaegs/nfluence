@@ -1861,7 +1861,7 @@ function CampaignBuilder({ onBack, onPublish }) {
     featured: false, featuredWeeks: 7,
   });
   const [account, setAccount] = useState({
-    email: "", password: "", confirmPassword: "", agreeTerms: false,
+    email: "", password: "", confirmPassword: "", agreeTerms: false, plan: "campaign", // "campaign" | "annual"
   });
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -2954,19 +2954,46 @@ function CampaignBuilder({ onBack, onPublish }) {
           <div className="nf-wrap">
             <div className="nf-section-title">create your account</div>
 
-            <div className="nf-account-pricing">
-              <div className="nf-account-price">$299</div>
-              <div className="nf-account-price-label">one time campaign fee</div>
-              <div className="nf-account-price-line" />
-              <div className="nf-account-includes">
-                <div className="nf-account-includes-title">what's included</div>
-                <div className="nf-account-include-item">brand exposure to our network of creators</div>
-                <div className="nf-account-include-item">campaign listing on nfluence</div>
-                <div className="nf-account-include-item">creator matching & applications</div>
-                <div className="nf-account-include-item">applicant management dashboard</div>
-                <div className="nf-account-include-item">content tracking & approval workflow</div>
-                <div className="nf-account-include-item">built-in creator messaging</div>
-                <div className="nf-account-include-item">payment processing & escrow</div>
+            <div style={{ marginBottom: 24 }}>
+              <style>{`
+                @keyframes nf-ann-shimmer { 0%,100% { border-color: rgba(180,255,80,.25); box-shadow: 0 0 8px rgba(180,255,80,.08); } 50% { border-color: rgba(180,255,80,.85); box-shadow: 0 0 18px rgba(180,255,80,.3); } }
+                @keyframes nf-val-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 6px rgba(255,140,30,.08); } 50% { border-color: rgba(255,140,30,.9); box-shadow: 0 0 14px rgba(255,140,30,.35); } }
+                .nf-plan-ann-selected { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-val-badge { animation: nf-val-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-best-badge { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-unsel:hover { border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.04) !important; transform: translateY(-2px); }
+              `}</style>
+              {/* Per-campaign */}
+              <div className={account.plan !== "campaign" ? "nf-plan-unsel" : ""} onClick={() => setAccount(p => ({ ...p, plan: "campaign" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "campaign" ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.1)"}`, background: account.plan === "campaign" ? "rgba(255,255,255,.06)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>per campaign</div>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem" }}>$299</div>
+                </div>
+                <div style={{ fontSize: ".78rem", opacity: .45, lineHeight: 1.5 }}>one-time fee per campaign. no commitment.</div>
+              </div>
+              {/* Annual */}
+              <div className={account.plan === "annual" ? "nf-plan-ann-selected" : "nf-plan-unsel"} onClick={() => setAccount(p => ({ ...p, plan: "annual" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "annual" ? "rgba(180,255,80,.5)" : "rgba(255,255,255,.1)"}`, background: account.plan === "annual" ? "rgba(180,255,80,.05)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>annual plan</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem", color: "rgba(180,255,80,.9)" }}>$1,999</div>
+                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: ".8rem", color: "rgba(180,255,80,.7)", letterSpacing: 1 }}>/ yr</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
+                  {["unlimited campaigns for 12 months", "up to 3 active simultaneously", "all platform features included"].map((item, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65, flexWrap: "wrap" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>1 free 30-day featured campaign per month</span>
+                    <span className="nf-plan-val-badge" style={{ padding: "1px 7px", borderRadius: 20, background: "rgba(255,140,30,.1)", border: "1px solid rgba(255,140,30,.3)", fontSize: ".68rem", fontWeight: 700, color: "rgba(255,140,30,.95)", marginLeft: 2 }}>$600 value!</span>
+                  </div>
+                </div>
+                <div className="nf-plan-best-badge" style={{ display: "inline-block", padding: "3px 12px", borderRadius: 20, background: "rgba(180,255,80,.1)", border: "1px solid rgba(180,255,80,.3)", fontSize: ".72rem", fontWeight: 700, color: "rgba(180,255,80,.9)" }}>best value</div>
               </div>
             </div>
 
@@ -3305,7 +3332,7 @@ function SignIn({ onSignIn, onBack }) {
           )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : email.split("@")[0])}>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : email.split("@")[0], password)}>
               {isSignUp ? "create account" : "sign in"}
             </button>
           </div>
@@ -3550,37 +3577,45 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         .nf-new-campaign-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
       `}</style>
 
-      {/* Dashboard Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", overflow: "hidden" }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", flexShrink: 0 }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+      {/* Nav */}
+      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)", fontFamily: "'Monda', system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <span style={{ fontSize: ".85rem", opacity: .6, cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
-          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onBrowse?.()}>campaigns</span>
-          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={onSignOut}>sign out</span>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }} onClick={() => setShowTray(false)}>
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+          </div>
         </div>
       </div>
       {showTray && <NotificationTray notifications={notifications} forRole="brand" onClose={() => setShowTray(false)} onMarkAllRead={() => { onMarkAllNotifsRead?.(); setShowTray(false); }} onViewAll={() => { setShowTray(false); onViewAllNotifications?.(); }} />}
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "20px 16px 80px" }}>
-        {/* Welcome */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: "clamp(1.3rem, 4vw, 1.8rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>dashboard</div>
-          <div style={{ fontSize: ".9rem", opacity: .4, marginTop: 4 }}>manage your campaigns</div>
+      {/* Banner */}
+      <div style={{ width: "100%", height: 160, background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))", position: "relative" }}>
+        <div style={{ position: "absolute", bottom: -52, left: 24, width: 104, height: 104, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
+          {(user?.name || "B").charAt(0).toUpperCase()}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 80px" }}>
+        {/* Profile info */}
+        <div style={{ paddingTop: 64, marginBottom: 24 }}>
+          <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || "your brand"}</div>
+          <div style={{ display: "flex", gap: 10, marginTop: 10, fontSize: ".88rem", opacity: .5, alignItems: "center", flexWrap: "wrap" }}>
+            {user?.email && <span>{user.email}</span>}
+          </div>
         </div>
 
-        {/* Stats Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 32 }}>
-          {[
-            { label: "total campaigns", value: allCampaigns.length },
-            { label: "active", value: allCampaigns.filter(c => c.stage === "open" || c.stage === "active" || c.stage === "shipped" || c.stage === "delivered" || c.stage === "accepted").length },
-            { label: "total creators", value: allCampaigns.reduce((sum, c) => sum + (c.creators?.approved?.length || 0) + (c.creators?.pending?.length || 0), 0) },
-          ].map((s, i) => (
-            <div key={i} className="nf-stat-card">
-              <div style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{s.value}</div>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 4, textTransform: "lowercase" }}>{s.label}</div>
-            </div>
-          ))}
-          {/* Needs attention card */}
+        {/* Stats Row — 3 col: active · needs attention · total creators, then reviews */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
+          {/* active campaigns */}
+          <div className="nf-stat-card">
+            <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{allCampaigns.filter(c => ["open","active","shipped","delivered","accepted"].includes(c.stage)).length}</div>
+            <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 4 }}>active campaigns</div>
+          </div>
+          {/* needs attention */}
           {(() => {
             const businessDaysSince = (dateStr) => {
               if (!dateStr) return 0;
@@ -3605,39 +3640,34 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               </div>
             );
           })()}
-          {/* Reviews summary card */}
-          {(() => {
-            const allReviews = allCampaigns.flatMap(c => (c.reviews || []).map(r => ({ ...r, _campaign: c })));
-            const totalReviews = allReviews.length;
-            const avgRating = totalReviews ? (allReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1) : null;
-            const newCount = allReviews.filter(r => r.submittedAt && (!lastReviewsVisitedAt || new Date(r.submittedAt) > new Date(lastReviewsVisitedAt))).length;
-            if (totalReviews === 0) return (
-              <div className="nf-reviews-card" onClick={onViewReviews}>
-                <div style={{ fontSize: "1.8rem", marginBottom: 4, opacity: .25 }}>★</div>
-                <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase" }}>no reviews yet</div>
-              </div>
-            );
-            return (
-              <div className="nf-reviews-card" onClick={onViewReviews}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 6 }}>
-                  {[1,2,3,4,5].map(i => {
-                    const rating = parseFloat(avgRating);
-                    const filled = i <= Math.floor(rating);
-                    const half = !filled && i === Math.ceil(rating) && rating % 1 >= 0.5;
-                    return <span key={i} style={{ fontSize: ".85rem", color: filled || half ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>;
-                  })}
-                </div>
-                <div className="nf-gold-shimmer" style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1.1, marginBottom: 5 }}>{avgRating}</div>
-                <div style={{ fontSize: ".72rem", opacity: .45, textTransform: "lowercase", marginBottom: newCount > 0 ? 8 : 0 }}>{totalReviews} review{totalReviews !== 1 ? "s" : ""}</div>
-                {newCount > 0 && (
-                  <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, background: "rgba(251,191,36,.15)", border: "1px solid rgba(251,191,36,.3)", fontSize: ".7rem", fontWeight: 600, color: "#fbbf24" }}>
-                    {newCount} new
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {/* Total creators */}
+          <div className="nf-stat-card">
+            <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{allCampaigns.reduce((sum, c) => sum + (c.creators?.approved?.length || 0) + (c.creators?.pending?.length || 0), 0)}</div>
+            <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 4 }}>total creators</div>
+          </div>
         </div>
+        {/* Reviews card — full width row */}
+        {(() => {
+          const allReviews = allCampaigns.flatMap(c => (c.reviews || []).map(r => ({ ...r, _campaign: c })));
+          const totalReviews = allReviews.length;
+          const avgRating = totalReviews ? (allReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1) : null;
+          const newCount = allReviews.filter(r => r.submittedAt && (!lastReviewsVisitedAt || new Date(r.submittedAt) > new Date(lastReviewsVisitedAt))).length;
+          return (
+            <div className="nf-reviews-card" onClick={onViewReviews} style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 20, textAlign: "left", padding: "18px 22px" }}>
+              <div style={{ textAlign: "center", minWidth: 60 }}>
+                <div className="nf-gold-shimmer" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{avgRating || "—"}</div>
+                <div style={{ display: "flex", gap: 1, justifyContent: "center", marginTop: 4 }}>
+                  {[1,2,3,4,5].map(i => { const r = parseFloat(avgRating); return <span key={i} style={{ fontSize: ".75rem", color: i <= Math.floor(r) ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>; })}
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: ".85rem", fontWeight: 600 }}>{totalReviews > 0 ? `${totalReviews} review${totalReviews !== 1 ? "s" : ""}` : "no reviews yet"}</div>
+                <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>creator reviews of your brand</div>
+              </div>
+              {newCount > 0 && <div style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(251,191,36,.15)", border: "1px solid rgba(251,191,36,.3)", fontSize: ".7rem", fontWeight: 600, color: "#fbbf24", flexShrink: 0 }}>{newCount} new</div>}
+            </div>
+          );
+        })()}
 
         {/* Campaign List */}
         {allCampaigns.length > 0 && <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>}
@@ -3663,9 +3693,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     </div>
                     {/* Logo */}
                     {c.logoUrl ? (
-                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
+                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
                     ) : (
-                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
+                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                     )}
                     {/* Edit button top-right */}
                     {isUserCampaign && (
@@ -3709,9 +3739,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                           {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                         </div>
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                        <div style={{ fontSize: ".75rem", color: "rgba(100,200,255,.8)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
-                        {pendingCount > 0 && <div style={{ fontSize: ".72rem", color: "rgba(255,200,100,.8)" }}>{pendingCount} pending</div>}
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(100,180,255,.1)", border: "1px solid rgba(100,180,255,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(100,180,255,.9)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
+                        {pendingCount > 0 && <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(255,200,60,.08)", border: "1px solid rgba(255,200,60,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(255,200,60,.9)" }}>{pendingCount} pending</div>}
                       </div>
                     </div>
                   </div>
@@ -4425,23 +4455,7 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
           </div>
         )}
 
-        {/* Total reach stat */}
-        {platforms.length > 0 && (() => {
-          const total = platforms.reduce((sum, p) => {
-            const raw = String(p.count || "").replace(/[^0-9.]/g, "");
-            const mult = /k/i.test(p.count || "") ? 1000 : /m/i.test(p.count || "") ? 1000000 : 1;
-            return sum + (parseFloat(raw) * mult || 0);
-          }, 0);
-          if (total < 1000) return null;
-          return (
-            <div style={{ padding: "16px 22px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: ".78rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif" }}>combined reach</div>
-              <div style={{ fontSize: "1.4rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(180,255,80,.9)" }}>
-                {abbrev(String(total))}
-              </div>
-            </div>
-          );
-        })()}
+
 
         {/* Message CTA */}
         {onMessage && (
@@ -4756,11 +4770,11 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
         {/* Meta row */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20, fontSize: ".85rem", opacity: .45 }}>
-          {meta.location && <span>📍 {meta.location}</span>}
-          {meta.website && <a href={`https://${meta.website}`} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>🌐 {meta.website}</a>}
-          {meta.founded && <span>📅 est. {meta.founded}</span>}
-          {meta.totalCampaigns && <span>🎯 {meta.totalCampaigns} campaigns run</span>}
-          {meta.totalCreators && <span>👥 {meta.totalCreators.toLocaleString()} creators worked with</span>}
+          {meta.location && <span>{meta.location}</span>}
+          {meta.website && <a href={`https://${meta.website}`} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,.25)" }}>{meta.website}</a>}
+          {meta.founded && <span>est. {meta.founded}</span>}
+          {meta.totalCampaigns && <span>{meta.totalCampaigns} campaigns run</span>}
+          {meta.totalCreators && <span>{meta.totalCreators.toLocaleString()} creators worked with</span>}
         </div>
 
         {/* Bio */}
@@ -5034,7 +5048,7 @@ function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampai
         {/* Campaign grid */}
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 0", opacity: .35 }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12 }}>🔍</div>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <div style={{ fontSize: "1rem" }}>no campaigns match your filters</div>
             <div style={{ fontSize: ".85rem", marginTop: 6 }}>try adjusting or clearing your filters</div>
           </div>
@@ -5143,7 +5157,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
           <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, email.split("@")[0])}>sign in</button>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, email.split("@")[0], password)}>sign in</button>
           </div>
         </div>
         <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
@@ -6052,7 +6066,8 @@ function FAQPage({ onBack, onStart }) {
       heading: "about nfluence",
       items: [
         { q: "what is nfluence?", a: "Nfluence is a digital marketing agency. Part of what we do is bring creators and brands together — so we built this platform to simplify the entire process. Instead of DMing influencers one by one, brands create a campaign, set their requirements, and our network of 5,000+ creators comes to you. We used to charge $1,500+ per campaign to source influencers, collect deliverables, and manage everything. Nfluence automates all of that for a flat $299 per campaign." },
-        { q: "how much does it cost?", a: "$299 per campaign for brands. Free for creators. Any creator budget you offer is separate — that's your call, not a platform fee." },
+        { q: "how much does it cost?", a: "$299 per campaign for brands, or $1,999/year for unlimited campaigns (up to 3 active at once). Free for creators. Any creator budget you offer is separate — that's your call, not a platform fee." },
+        { q: "what is the annual plan?", a: "The annual plan is $1,999/year and gives you unlimited campaigns with up to 3 running simultaneously for 12 months — no per-campaign fees. It also includes 1 free 30-day featured campaign per month (a $600 value). You break even at 7 campaigns. If you're running more than 7 campaigns a year, the annual plan pays for itself." },
         { q: "what do I get for $299?", a: "Your campaign is pushed to our network of 5,000+ creators via email blasts and social promotion. The platform manages your entire pipeline: applications, approvals, shipping tracking, content submission, revision requests, and payment tracking. On qualifying paid campaigns, we also manually headhunt creators if your campaign doesn't fill organically." },
       ],
     },
@@ -6106,9 +6121,18 @@ function FAQPage({ onBack, onStart }) {
         .nf-faq-cta:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45) !important; background: rgba(255,255,255,.12) !important; }
       `}</style>
 
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem" }} onClick={onBack}>← back</div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }} onClick={onBack}>
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+          </div>
+        </div>
       </div>
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 100px" }}>

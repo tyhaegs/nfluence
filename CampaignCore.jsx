@@ -1600,7 +1600,7 @@ function CampaignBuilder({ onBack, onPublish }) {
     featured: false, featuredWeeks: 7,
   });
   const [account, setAccount] = useState({
-    email: "", password: "", confirmPassword: "", agreeTerms: false,
+    email: "", password: "", confirmPassword: "", agreeTerms: false, plan: "campaign", // "campaign" | "annual"
   });
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -2693,19 +2693,46 @@ function CampaignBuilder({ onBack, onPublish }) {
           <div className="nf-wrap">
             <div className="nf-section-title">create your account</div>
 
-            <div className="nf-account-pricing">
-              <div className="nf-account-price">$299</div>
-              <div className="nf-account-price-label">one time campaign fee</div>
-              <div className="nf-account-price-line" />
-              <div className="nf-account-includes">
-                <div className="nf-account-includes-title">what's included</div>
-                <div className="nf-account-include-item">brand exposure to our network of creators</div>
-                <div className="nf-account-include-item">campaign listing on nfluence</div>
-                <div className="nf-account-include-item">creator matching & applications</div>
-                <div className="nf-account-include-item">applicant management dashboard</div>
-                <div className="nf-account-include-item">content tracking & approval workflow</div>
-                <div className="nf-account-include-item">built-in creator messaging</div>
-                <div className="nf-account-include-item">payment processing & escrow</div>
+            <div style={{ marginBottom: 24 }}>
+              <style>{`
+                @keyframes nf-ann-shimmer { 0%,100% { border-color: rgba(180,255,80,.25); box-shadow: 0 0 8px rgba(180,255,80,.08); } 50% { border-color: rgba(180,255,80,.85); box-shadow: 0 0 18px rgba(180,255,80,.3); } }
+                @keyframes nf-val-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 6px rgba(255,140,30,.08); } 50% { border-color: rgba(255,140,30,.9); box-shadow: 0 0 14px rgba(255,140,30,.35); } }
+                .nf-plan-ann-selected { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-val-badge { animation: nf-val-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-best-badge { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
+                .nf-plan-unsel:hover { border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.04) !important; transform: translateY(-2px); }
+              `}</style>
+              {/* Per-campaign */}
+              <div className={account.plan !== "campaign" ? "nf-plan-unsel" : ""} onClick={() => setAccount(p => ({ ...p, plan: "campaign" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "campaign" ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.1)"}`, background: account.plan === "campaign" ? "rgba(255,255,255,.06)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>per campaign</div>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem" }}>$299</div>
+                </div>
+                <div style={{ fontSize: ".78rem", opacity: .45, lineHeight: 1.5 }}>one-time fee per campaign. no commitment.</div>
+              </div>
+              {/* Annual */}
+              <div className={account.plan === "annual" ? "nf-plan-ann-selected" : "nf-plan-unsel"} onClick={() => setAccount(p => ({ ...p, plan: "annual" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "annual" ? "rgba(180,255,80,.5)" : "rgba(255,255,255,.1)"}`, background: account.plan === "annual" ? "rgba(180,255,80,.05)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>annual plan</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem", color: "rgba(180,255,80,.9)" }}>$1,999</div>
+                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: ".8rem", color: "rgba(180,255,80,.7)", letterSpacing: 1 }}>/ yr</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
+                  {["unlimited campaigns for 12 months", "up to 3 active simultaneously", "all platform features included"].map((item, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65, flexWrap: "wrap" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>1 free 30-day featured campaign per month</span>
+                    <span className="nf-plan-val-badge" style={{ padding: "1px 7px", borderRadius: 20, background: "rgba(255,140,30,.1)", border: "1px solid rgba(255,140,30,.3)", fontSize: ".68rem", fontWeight: 700, color: "rgba(255,140,30,.95)", marginLeft: 2 }}>$600 value!</span>
+                  </div>
+                </div>
+                <div className="nf-plan-best-badge" style={{ display: "inline-block", padding: "3px 12px", borderRadius: 20, background: "rgba(180,255,80,.1)", border: "1px solid rgba(180,255,80,.3)", fontSize: ".72rem", fontWeight: 700, color: "rgba(180,255,80,.9)" }}>best value</div>
               </div>
             </div>
 
