@@ -1,7 +1,8 @@
+// ═══════════════════════════════════════════════
 // ── Data ──
 
 const PLATFORM_LIST = ["Instagram", "TikTok", "YouTube", "X", "Facebook"];
-const FOLLOWER_TIERS = ["Any", "5k+", "10k+", "25k+", "50k+", "100k+", "250k+", "500k+", "1M+"];
+const FOLLOWER_TIERS = ["all", "25k", "50k", "100k", "250k", "500k", "1M+"];
 const PLATFORM_EXAMPLES = {
   Instagram: "(1) reel + (1) story",
   TikTok: "(1) tiktok video",
@@ -138,4 +139,6 @@ const DEMO_MESSAGES = {
 
 // ── Messages ──
 
-export { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL, DEMO_MESSAGES };
+
+
+// ═══════════════════════════════════════════════

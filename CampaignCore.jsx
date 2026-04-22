@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import ImageEditor from "./ImageEditor";
-import { PLATFORM_LIST, FOLLOWER_TIERS, PLATFORM_EXAMPLES, LANGUAGES, INDUSTRIES, COMP_OPTIONS, STEPS, VIBES, SOCIAL_OPTIONS, REGION_CODES, US_STATES, DEMO_CAMPAIGNS, BRAND_META, PLAT_SVGS_SMALL } from "./nfluenceData";
+// ═══════════════════════════════════════════════
 
 function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
   const [c, setC] = useState(JSON.parse(JSON.stringify(initialCampaign)));
@@ -1170,10 +1168,20 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const [showPayModal, setShowPayModal] = useState(false);
   const [customSpots, setCustomSpots] = useState(false);
   const hasAccepted = (c.creators?.approved?.length || 0) > 0;
-  const PRICES = { 1: 19.99, 2: 39.98, 4: 79.96 };
-  const featuredWeeks = c.featuredWeeks || 1;
-  const featuredPrice = PRICES[featuredWeeks] || 19.99;
+  const PRICES = { 1: 2.99, 7: 14.99, 30: 49.99 };
+  const featuredWeeks = c.featuredWeeks || 7;
+  const featuredPrice = PRICES[featuredWeeks] || 2.99;
   const containerRef = useRef(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
+    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  };
   useEffect(() => { window.scrollTo?.({ top: 0, behavior: "smooth" }); }, []);
   const setField = (field, value) => setC(prev => ({ ...prev, [field]: value }));
   const updateProduct = (i, key, value) => setC(prev => { const products = [...(prev.products || [])]; products[i] = { ...products[i], [key]: value }; return { ...prev, products }; });
@@ -1208,7 +1216,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
     else onSave(c);
   };
 
-  const totalDue = (c.featured ? featuredPrice : 0) + escrowDelta;
+  const totalDue = ((c.featured ? featuredPrice : 0) + escrowDelta) * (1 - promoDiscount);
 
   return (
     <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -1464,9 +1472,9 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
           {c.featured && (
             <>
               <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                {[{w:1,price:"$19.99"},{w:2,price:"$39.98"},{w:4,price:"$79.96"}].map(({w,price}) => (
+                {[{w:1,price:"$2.99"},{w:7,price:"$14.99"},{w:30,price:"$49.99"}].map(({w,price}) => (
                   <div key={w} className={"ce-feat-pill" + (c.featuredWeeks === w ? " selected" : "")} onClick={() => setField("featuredWeeks", w)}>
-                    <span className="ce-feat-name" style={{ fontWeight: 600 }}>{w * 7} days</span>
+                    <span className="ce-feat-name" style={{ fontWeight: 600 }}>{w} {w === 1 ? "day" : "days"}</span>
                     <span style={{ color: "#fff", opacity: .9 }}>{price}</span>
                   </div>
                 ))}
@@ -1503,7 +1511,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                     <div>
                       <div style={{ fontSize: ".9rem", fontWeight: 600 }}>featured placement</div>
-                      <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{featuredWeeks * 7} days · gold shimmer + priority</div>
+                      <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{featuredWeeks} {featuredWeeks === 1 ? "day" : "days"} · gold shimmer + priority</div>
                     </div>
                     <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${featuredPrice.toFixed(2)}</div>
                   </div>
@@ -1512,8 +1520,26 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
               )}
               <div style={{ padding: "14px 20px", background: "rgba(255,255,255,.03)", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: ".85rem", opacity: .5 }}>total due now</span>
-                <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div style={{ textAlign: "right" }}>
+                  {promoDiscount > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${((c.featured ? featuredPrice : 0) + escrowDelta).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
+                  <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Promo code */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={promoCode}
+                  onChange={e => { setPromoCode(e.target.value); setPromoApplied(false); setPromoError(""); }}
+                  placeholder="promo code"
+                  style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${promoApplied ? "rgba(100,255,150,.4)" : promoError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }}
+                />
+                <button onClick={applyPromo} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
+              </div>
+              {promoApplied && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(promoDiscount * 100)}% off</div>}
+              {promoError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{promoError}</div>}
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
@@ -1537,6 +1563,18 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
 
 function CampaignBuilder({ onBack, onPublish }) {
   const [step, setStep] = useState(0);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [pendingCampaignData, setPendingCampaignData] = useState(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
+    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  };
   const [brand, setBrand] = useState({
     name: "", bio: "", manager: "", phone: "", email: "", phoneCode: "+1",
     vibes: [], logoPreview: null, logoTransform: null, logoEditing: false,
@@ -1559,7 +1597,7 @@ function CampaignBuilder({ onBack, onPublish }) {
     deadlineAmount: "", deadlineUnit: "days", country: "", usState: "",
     stateSpecific: false, contiguousUS: false, ageMin: "", language: "",
     niches: "", publicRequired: false, approvalRequired: false, perApplicantApproval: false,
-    featured: false, featuredWeeks: 1,
+    featured: false, featuredWeeks: 7,
   });
   const [account, setAccount] = useState({
     email: "", password: "", confirmPassword: "", agreeTerms: false,
@@ -2604,9 +2642,9 @@ function CampaignBuilder({ onBack, onPublish }) {
                   {/* Week selector — only shown when opted in */}
                   {terms.featured && (
                     <div onClick={e => e.stopPropagation()} style={{ marginTop: 4 }}>
-                      <div style={{ fontSize: ".75rem", opacity: .45, marginBottom: 10, textTransform: "lowercase" }}>how many weeks?</div>
+                      <div style={{ fontSize: ".75rem", opacity: .45, marginBottom: 10, textTransform: "lowercase" }}>how long?</div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {[1, 2, 4, 8].map(w => (
+                        {[{w:1,price:"$2.99"},{w:7,price:"$14.99"},{w:30,price:"$49.99"}].map(({w,price}) => (
                           <div
                             key={w}
                             onClick={() => setTerms(p => ({ ...p, featuredWeeks: w }))}
@@ -2618,10 +2656,10 @@ function CampaignBuilder({ onBack, onPublish }) {
                             }}
                           >
                             <div style={{ fontSize: ".85rem", fontWeight: 700, color: terms.featuredWeeks === w ? "rgba(255,200,60,.95)" : "rgba(255,255,255,.7)" }}>
-                              {w} {w === 1 ? "week" : "weeks"}
+                              {w} days
                             </div>
                             <div style={{ fontSize: ".7rem", opacity: .5, marginTop: 2 }}>
-                              ${w * 20}
+                              {price}
                             </div>
                           </div>
                         ))}
@@ -2632,10 +2670,10 @@ function CampaignBuilder({ onBack, onPublish }) {
                         display: "flex", justifyContent: "space-between", alignItems: "center",
                       }}>
                         <span style={{ fontSize: ".82rem", opacity: .55 }}>
-                          {terms.featuredWeeks} {terms.featuredWeeks === 1 ? "week" : "weeks"} featured placement
+                          {terms.featuredWeeks} days featured placement
                         </span>
                         <span style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(255,200,60,.9)" }}>
-                          ${terms.featuredWeeks * 20}
+                          ${terms.featuredWeeks === 1 ? "2.99" : terms.featuredWeeks === 7 ? "14.99" : "49.99"}
                         </span>
                       </div>
                       <div style={{ fontSize: ".7rem", opacity: .3, marginTop: 8 }}>
@@ -2743,11 +2781,81 @@ function CampaignBuilder({ onBack, onPublish }) {
               featured: terms.featured,
               featuredWeeks: terms.featured ? terms.featuredWeeks : 0,
             };
-            if (onPublish) onPublish(campaignData);
+            const isPaid = terms.compType === "paid" || terms.compType === "product+paid";
+            const perCreator = parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) || 0;
+            const capCount = campaign.spotsTotal || 0;
+            const escrow = isPaid && capCount > 0 ? perCreator * capCount : 0;
+            const PRICES = { 1: 2.99, 7: 14.99, 30: 49.99 };
+            const featuredPrice = PRICES[terms.featuredWeeks || 7] || 2.99;
+            const needsPayment = terms.featured || escrow > 0;
+            if (needsPayment) { setPendingCampaignData({ ...campaignData, _escrow: escrow, _featuredPrice: terms.featured ? featuredPrice : 0 }); setShowPayModal(true); }
+            else if (onPublish) onPublish(campaignData);
             else alert("campaign published! (demo)");
           }}>publish</button>
         )}
       </div>
+      {showPayModal && pendingCampaignData && (() => {
+        const escrow = pendingCampaignData._escrow || 0;
+        const featuredPrice = pendingCampaignData._featuredPrice || 0;
+        const subtotal = escrow + featuredPrice;
+        const totalDue = subtotal * (1 - promoDiscount);
+        return (
+          <div onClick={() => setShowPayModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
+              <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>review charges</div>
+              <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>the following will be charged when you confirm</div>
+              <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
+                {escrow > 0 && (
+                  <div style={{ padding: "14px 20px", borderBottom: featuredPrice > 0 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                      <div>
+                        <div style={{ fontSize: ".9rem", fontWeight: 600 }}>escrow deposit</div>
+                        <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{pendingCampaignData.spotsTotal} creators × ${parseFloat((pendingCampaignData.comp || "").replace(/[^0-9.]/g, "")).toLocaleString()}</div>
+                      </div>
+                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(180,255,80,.9)" }}>${escrow.toLocaleString()}</div>
+                    </div>
+                    <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 6 }}>held securely · released to creators on completion</div>
+                  </div>
+                )}
+                {featuredPrice > 0 && (
+                  <div style={{ padding: "14px 20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                      <div>
+                        <div style={{ fontSize: ".9rem", fontWeight: 600 }}>featured placement</div>
+                        <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{pendingCampaignData.featuredWeeks || 7} {(pendingCampaignData.featuredWeeks || 7) === 1 ? "day" : "days"} · gold shimmer + priority</div>
+                      </div>
+                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${featuredPrice.toFixed(2)}</div>
+                    </div>
+                    <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 6 }}>charged immediately · non-refundable</div>
+                  </div>
+                )}
+                <div style={{ padding: "14px 20px", background: "rgba(255,255,255,.03)", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: ".85rem", opacity: .5 }}>total due now</span>
+                  <div style={{ textAlign: "right" }}>
+                    {promoDiscount > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
+                    <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input value={promoCode} onChange={e => { setPromoCode(e.target.value); setPromoApplied(false); setPromoError(""); }} placeholder="promo code"
+                    style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${promoApplied ? "rgba(100,255,150,.4)" : promoError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
+                  <button onClick={applyPromo} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
+                </div>
+                {promoApplied && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(promoDiscount * 100)}% off</div>}
+                {promoError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{promoError}</div>}
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setShowPayModal(false)} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: ".9rem", fontFamily: "system-ui, sans-serif" }}>cancel</button>
+                <button onClick={() => { setShowPayModal(false); if (onPublish) onPublish(pendingCampaignData); }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase" }}>
+                  pay ${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & publish
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -2877,4 +2985,6 @@ function Preview({ brand, campaign, platforms, terms }) {
 
 // ── SignIn ──
 
-export { CampaignDetail, CampaignEditor, CampaignBuilder, Toggle, Preview };
+
+
+// ═══════════════════════════════════════════════
