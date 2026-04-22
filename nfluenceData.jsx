@@ -115,7 +115,7 @@ const DEMO_MESSAGES = {
   ],
   "Nike::Running Challenge::Mia Thompson": [
     { from: "brand", text: "Welcome Mia! Excited to have you on the Running Challenge.", ts: "2026-04-02T09:00:00" },
-    { from: "creator", text: "Thanks! Quick q — can I include my dog in the running content? He's my running partner 🐕", ts: "2026-04-02T09:30:00" },
+    { from: "creator", text: "Thanks! Quick q — can I include my dog in the running content? He's my running partner!", ts: "2026-04-02T09:30:00" },
     { from: "brand", text: "Absolutely, that sounds adorable and on-brand. Go for it!", ts: "2026-04-02T10:00:00" },
   ],
   "Alani Nu::Lifestyle & Energy Campaign::Emma Davis": [

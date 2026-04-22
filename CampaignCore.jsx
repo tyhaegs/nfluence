@@ -36,7 +36,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
 
   useEffect(() => {
     if (autoApply) handleApplyClick();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoApply]);
 
   const submitApplication = () => {
     const platformData = {};
@@ -78,7 +79,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newSpotsFilled = (prev.spotsFilled || 0) + 1;
       return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved }, spotsFilled: newSpotsFilled };
     });
-    onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted! 🎉", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
+    onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted!", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
   };
 
   const rejectCreator = (creator) => {
@@ -98,7 +99,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           const nextStage = INFLUENCER_STAGES[currentIdx + 1];
           // Fire creator notification for content_approved → paid
           if (nextStage === "paid") {
-            onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released! 💰", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
+            onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
           }
           // Fire brand notification for content_submitted
           if (nextStage === "content_submitted") {
@@ -121,7 +122,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
     const trackingMsg = trackingNumber.trim() ? ` Tracking: ${trackingNumber.trim()}` : "";
-    onNotify?.({ for: "creator", type: "product_shipped", title: "product shipped! 📦", body: `${initialCampaign.brand} has shipped your product for ${initialCampaign.campaign}.${trackingMsg}` });
+    onNotify?.({ for: "creator", type: "product_shipped", title: "product shipped!", body: `${initialCampaign.brand} has shipped your product for ${initialCampaign.campaign}.${trackingMsg}` });
   };
 
   // Schedule call modal state
@@ -298,7 +299,6 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
         {(() => {
           // Influencer journey — each creator moves through these in order.
           // A campaign is just an aggregate of creators at various points.
-          const INFLUENCER_STAGES = ["accepted", "product_shipped", "content_submitted", "approved", "paid"];
           const INFLUENCER_LABELS = {
             applied: "applied",
             accepted: "accepted",
@@ -761,7 +761,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", opacity: .8 }}>{c.creators.approved.length}</div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
-                    {c.creators.approved.map((cr, i) => <CreatorCard key={i} creator={cr} showStatus showAdvance={isOwner} showMessage={isOwner} />)}
+                    {c.creators.approved.map((cr, i) => <CreatorCard key={cr.userId || cr.name || i} creator={cr} showStatus showAdvance={isOwner} showMessage={isOwner} />)}
                   </div>
                 </div>
               )}
@@ -791,7 +791,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                       }}>✕</div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
-                      {c.creators.pending.map((cr, i) => <CreatorCard key={i} creator={cr} showActions={isOwner} />)}
+                      {c.creators.pending.map((cr, i) => <CreatorCard key={cr.userId || cr.name || i} creator={cr} showActions={isOwner} />)}
                     </div>
                     {c.creators.pending.length === 0 && (
                       <div style={{ textAlign: "center", padding: "30px 0", opacity: .3, fontSize: ".9rem" }}>all caught up!</div>
@@ -1182,7 +1182,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
     if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
     else { setPromoError("invalid promo code"); setPromoApplied(false); }
   };
-  useEffect(() => { window.scrollTo?.({ top: 0, behavior: "smooth" }); }, []);
+  useLayoutEffect(() => { window.scrollTo?.({ top: 0, behavior: "smooth" }); }, []);
   const setField = (field, value) => setC(prev => ({ ...prev, [field]: value }));
   const updateProduct = (i, key, value) => setC(prev => { const products = [...(prev.products || [])]; products[i] = { ...products[i], [key]: value }; return { ...prev, products }; });
   const addProduct = () => setC(prev => ({ ...prev, products: [...(prev.products || []), { name: "", variant: "" }] }));
