@@ -14,6 +14,7 @@ function NfluenceApp() {
   const [pendingCampaign, setPendingCampaign] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(DEMO_CAMPAIGNS[0]);
   const [user, setUser] = useState(null); // { email, name }
+  const [authSession, setAuthSession] = useState(null);
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
@@ -78,6 +79,7 @@ function NfluenceApp() {
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
+      setAuthSession(session);
       const u = session.user;
       const role = u.user_metadata?.role;
       const name = u.user_metadata?.name || u.email;
@@ -152,6 +154,7 @@ function NfluenceApp() {
     // Listen for auth state changes (sign in / sign out)
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
+        setAuthSession(null);
         setUser(null);
         setCreatorUser(null);
         setMyCampaigns([]);
@@ -291,6 +294,7 @@ function NfluenceApp() {
         if (error) throw error;
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
+        setAuthSession(data.session);
         setUser({ id: u.id, email: u.email, name: resolvedName });
         // Load brand campaigns
         const { data: campaigns } = await _sb.from('campaigns').select('*').eq('brand_id', u.id).order('created_at', { ascending: false });
@@ -535,9 +539,9 @@ function NfluenceApp() {
     <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
-  if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} />;
+  if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
   if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={(gig) => { addNotification({ for: "brand", type: "gig_published", title: "gig listing published", body: `Your ${gig.title || "gig"} listing is now live.` }); setView("dashboard"); }} />;
-  if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} onSave={(updated) => {
+  if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={(updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCampaign(updated);
     setView("dashboard");
