@@ -2190,7 +2190,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
 
 // ── CreatorDashboard ──
 
-function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse, onOpenMessages, scheduledCalls = {}, onRespondToCall, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse, onOpenMessages, onViewOwnProfile, scheduledCalls = {}, onRespondToCall, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showCreatorReviews, setShowCreatorReviews] = useState(false);
@@ -2260,7 +2260,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                 <div onClick={() => setShowMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
                 <div style={{ position: "absolute", top: 44, right: 0, width: 200, background: "#0c1525", border: "1px solid rgba(255,255,255,.14)", borderRadius: 14, zIndex: 999, overflow: "hidden", boxShadow: "0 16px 48px rgba(0,0,0,.5)", animation: "nf-tray-in .15s ease-out" }}>
                   {[
-                    { label: "view profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>', action: () => { setShowMenu(false); setEditForm({ ...creatorProfile }); setShowEditModal(true); } },
+                    { label: "view profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>', action: () => { setShowMenu(false); onViewOwnProfile?.(); } },
                     { label: "messages", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', action: () => { setShowMenu(false); onOpenMessages?.(); } },
                     { label: "edit profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action: () => { setShowMenu(false); setEditForm({ ...creatorProfile }); setShowEditModal(true); } },
                     { label: "sign out", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>', action: () => { setShowMenu(false); onSignOut(); } },
