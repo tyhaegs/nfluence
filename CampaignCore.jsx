@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 
-function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
+function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onAutoApplyConsumed, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
   const [c, setC] = useState(JSON.parse(JSON.stringify(initialCampaign)));
   const derivedSpotsFilled = (c.creators?.approved?.length || 0);
   const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - derivedSpotsFilled) : null;
@@ -35,7 +35,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
   };
 
   useEffect(() => {
-    if (autoApply) handleApplyClick();
+    if (autoApply) { handleApplyClick(); onAutoApplyConsumed?.(); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoApply]);
 
@@ -101,9 +101,9 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           if (nextStage === "paid") {
             onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
           }
-          // Fire brand notification for content_submitted
+          // Notify creator their content stage has been updated
           if (nextStage === "content_submitted") {
-            onNotify?.({ for: "brand", type: "content_submitted", title: "content submitted for review", body: `${creatorName} submitted content for ${initialCampaign.brand} · ${initialCampaign.campaign}` });
+            onNotify?.({ for: "creator", type: "content_submitted", title: "content marked as submitted", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} is now under review.` });
           }
           return { ...cr, stage: nextStage };
         }
@@ -397,19 +397,6 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                 }).length;
               };
 
-              // Count how many accepted creators have been waiting > 3 business days without shipping
-              const businessDaysSince = (dateStr) => {
-                if (!dateStr) return 0;
-                const start = new Date(dateStr);
-                const now = new Date();
-                let count = 0;
-                const cur = new Date(start);
-                while (cur < now) {
-                  cur.setDate(cur.getDate() + 1);
-                  if (cur.getDay() !== 0 && cur.getDay() !== 6) count++;
-                }
-                return count;
-              };
               const shippingOverdue = approvedTotal > 0 && (c.creators?.approved || []).some(cr =>
                 cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3
               );
@@ -1156,7 +1143,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           </div>
         )}
 
-        <ScheduleCallModal />
+        {ScheduleCallModal()}
 
       </div>
     </div>
@@ -1175,7 +1162,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+
   const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
   const applyPromo = () => {
     const code = promoCode.trim().toUpperCase();
@@ -1568,7 +1555,7 @@ function CampaignBuilder({ onBack, onPublish }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+
   const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
   const applyPromo = () => {
     const code = promoCode.trim().toUpperCase();
@@ -3023,7 +3010,7 @@ function GigListingBuilder({ onBack, onPublish }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+
   const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
   const applyPromo = () => {
     const code = promoCode.trim().toUpperCase();

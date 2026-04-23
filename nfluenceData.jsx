@@ -223,5 +223,20 @@ const DEMO_MESSAGES = {
 // ── Messages ──
 
 
+const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+
+function businessDaysSince(dateStr) {
+  if (!dateStr) return 0;
+  const start = new Date(dateStr);
+  const now = new Date();
+  let count = 0;
+  const cur = new Date(start);
+  while (cur < now) {
+    cur.setDate(cur.getDate() + 1);
+    const day = cur.getDay();
+    if (day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
 
 // ═══════════════════════════════════════════════

@@ -1,5 +1,13 @@
 // ═══════════════════════════════════════════════
 
+let _sbClient = null;
+function getSB() {
+  if (_sbClient) return _sbClient;
+  if (typeof window === 'undefined' || !window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
+  _sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  return _sbClient;
+}
+
 function NfluenceApp() {
   const [view, setView] = useState("landing"); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [selectedBrand, setSelectedBrand] = useState("Nike");
@@ -16,8 +24,8 @@ function NfluenceApp() {
   const [demoCampaignReviewOverrides, setDemoCampaignReviewOverrides] = useState({}); // demoIdx → { reviewIdx → brandResponse }
 
   // Creator state
-  const [creatorUser, setCreatorUser] = useState({ email: "tyler@nfluenceagency.com", name: "Tyler" });
-  const [creatorProfile, setCreatorProfile] = useState({ name: "Tyler", bio: "Partner at Nfluence. Building the future of creator-brand collaboration.", location: "Los Angeles, CA", age: "40", languages: "English", niches: "fitness, wellness, lifestyle", rating: 5.0, instagram: "@tylerhaegele", tiktok: "@tylerhaegele", tiktokFollowers: "42k", youtube: "@tylerhaegele", instagramFollowers: "113k", youtubeFollowers: "1.1M", x: "@tylerhaegele", xFollowers: "8.5k", bannerUrl: null, avatarUrl: null, platforms: {} });
+  const [creatorUser, setCreatorUser] = useState(null);
+  const [creatorProfile, setCreatorProfile] = useState({});
   const [creatorUploads, setCreatorUploads] = useState([]);
   const [creatorApplied, setCreatorApplied] = useState([
     { brand: "Nike", campaign: "Running Challenge", logoUrl: "/assets/logo_nike.jpg", status: "applied" },
@@ -64,12 +72,10 @@ function NfluenceApp() {
   // When the app loads, check if the user already has a session.
   // If so, restore their state without requiring them to sign in again.
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.supabase) return; // not wired yet — demo mode
+    const sb = getSB();
+    if (!sb) return; // not wired yet — demo mode
 
-    const { createClient } = window.supabase;
-    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
-
-    const sb = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    const channelRef = { current: null };
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
@@ -93,7 +99,7 @@ function NfluenceApp() {
           .limit(50)
           .then(({ data }) => { if (data) setNotifications(data); });
         // Subscribe to new notifications in real-time
-        const channel = sb.channel(`notifications:${u.id}`)
+        channelRef.current = sb.channel(`notifications:${u.id}`)
           .on('postgres_changes', {
             event: 'INSERT', schema: 'public', table: 'notifications',
             filter: `user_id=eq.${u.id}`,
@@ -103,8 +109,6 @@ function NfluenceApp() {
             setShowToast(true);
           })
           .subscribe();
-        // Cleanup on unmount
-        return () => sb.removeChannel(channel);
 
       } else if (role === 'creator') {
         setCreatorUser({ id: u.id, email: u.email, name });
@@ -156,7 +160,10 @@ function NfluenceApp() {
         setView('landing');
       }
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (channelRef.current) sb.removeChannel(channelRef.current);
+    };
   }, []);
 
   // Auto-dismiss toast after 5 seconds
@@ -164,10 +171,10 @@ function NfluenceApp() {
     if (!showToast) return;
     const t = setTimeout(() => setShowToast(false), 5000);
     return () => clearTimeout(t);
-  }, [showToast, toastMessage]);
+  }, [showToast]);
 
   // Merged demo campaigns with any overrides (from applications or review responses)
-  const mergedDemos = (() => {
+  const mergedDemos = React.useMemo(() => {
     const mapped = DEMO_CAMPAIGNS.map((d, i) => {
       const base = demoCampaignOverrides[i] ? { ...d, ...demoCampaignOverrides[i] } : d;
       const reviewOverrides = demoCampaignReviewOverrides[i];
@@ -188,7 +195,7 @@ function NfluenceApp() {
     const featured = shuffle(mapped.filter(c => c.featured), 0);
     const regular = shuffle(mapped.filter(c => !c.featured), 1000);
     return [...featured, ...regular];
-  })();
+  }, [demoCampaignOverrides, demoCampaignReviewOverrides]);
 
   const handlePublish = async (campaignData) => {
     const newCampaign = {
@@ -201,9 +208,9 @@ function NfluenceApp() {
     };
 
     // Persist to Supabase if signed in and configured
-    if (user?.id && typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
+    const sb = getSB();
+    if (user?.id && sb) {
       try {
-        const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
         const { data, error } = await sb.from('campaigns').insert({
           brand_id: user.id,
           brand_name: campaignData.brand,
@@ -273,16 +280,16 @@ function NfluenceApp() {
 
   const handleSignIn = async (email, name, password) => {
     // Try Supabase auth if available, otherwise demo mode
-    if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
+    const _sb = getSB();
+    if (_sb) {
       try {
-        const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        const { data, error } = await _sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
         setUser({ id: u.id, email: u.email, name: resolvedName });
         // Load brand campaigns
-        const { data: campaigns } = await sb.from('campaigns').select('*').eq('brand_id', u.id).order('created_at', { ascending: false });
+        const { data: campaigns } = await _sb.from('campaigns').select('*').eq('brand_id', u.id).order('created_at', { ascending: false });
         if (campaigns) setMyCampaigns(campaigns);
       } catch (err) {
         console.error('Supabase sign in failed, falling back to demo mode:', err);
@@ -302,10 +309,8 @@ function NfluenceApp() {
   };
 
   const handleSignOut = async () => {
-    if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
-      const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      await sb.auth.signOut().catch(console.error);
-    }
+    const sb = getSB();
+    if (sb) await sb.auth.signOut().catch(console.error);
     setUser(null);
     setMyCampaigns([]);
     setNotifications([]);
@@ -313,16 +318,16 @@ function NfluenceApp() {
   };
 
   const handleCreatorSignIn = async (email, name, password) => {
-    if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
+    const _sb = getSB();
+    if (_sb) {
       try {
-        const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        const { data, error } = await _sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
         setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
         // Load creator profile
-        const { data: profile } = await sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
+        const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
         if (profile) setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName });
       } catch (err) {
         console.error('Supabase creator sign in failed, demo mode:', err);
@@ -337,11 +342,10 @@ function NfluenceApp() {
   };
 
   const handleCreatorSignOut = async () => {
-    if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
-      const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      await sb.auth.signOut().catch(console.error);
-    }
+    const sb = getSB();
+    if (sb) await sb.auth.signOut().catch(console.error);
     setCreatorUser(null);
+    setCreatorProfile({});
     setView('landing');
   };
 
@@ -505,7 +509,7 @@ function NfluenceApp() {
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
-  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, profileData) => { handleCreatorSignIn(email, name); setCreatorProfile(prev => ({ ...prev, ...profileData })); }} />;
+  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password); setCreatorProfile(prev => ({ ...prev, ...profileData })); }} />;
   if (view === "creatordashboard") return <>
     <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
@@ -526,12 +530,14 @@ function NfluenceApp() {
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} />;
+  if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={(gig) => { addNotification({ for: "brand", type: "gig_published", title: "gig listing published", body: `Your ${gig.title || "gig"} listing is now live.` }); setView("dashboard"); }} />;
   if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} onSave={(updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setSelectedCampaign(updated);
     setView("dashboard");
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
-  if (view === "browse") return <BrowseCampaigns onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
+  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages
@@ -566,7 +572,7 @@ function NfluenceApp() {
     const isOwnCampaign = myCampaigns.some(c => c.id === selectedCampaign.id);
     const isDemoFromDashboard = user && DEMO_CAMPAIGNS.some(d => d.brand === selectedCampaign.brand && d.campaign === selectedCampaign.campaign) && detailSource === "dashboard";
     const isOwner = isOwnCampaign || isDemoFromDashboard;
-    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
+    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
 
   return (

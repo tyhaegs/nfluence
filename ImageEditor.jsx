@@ -37,16 +37,6 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
     lastPos.current = { x: t.clientX, y: t.clientY };
   }, []);
 
-  const onTouchMove = useCallback((e) => {
-    if (!dragging.current) return;
-    const t = e.touches[0];
-    setPos(p => ({
-      x: p.x + (t.clientX - lastPos.current.x),
-      y: p.y + (t.clientY - lastPos.current.y),
-    }));
-    lastPos.current = { x: t.clientX, y: t.clientY };
-  }, []);
-
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -55,6 +45,24 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [onMouseMove, onMouseUp]);
+
+  // Must be non-passive to call preventDefault and prevent page scroll during drag
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e) => {
+      if (!dragging.current) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      setPos(p => ({
+        x: p.x + (t.clientX - lastPos.current.x),
+        y: p.y + (t.clientY - lastPos.current.y),
+      }));
+      lastPos.current = { x: t.clientX, y: t.clientY };
+    };
+    el.addEventListener("touchmove", handler, { passive: false });
+    return () => el.removeEventListener("touchmove", handler);
+  }, []);
 
   const zoomPct = Math.round(((scale - 0.5) / (3 - 0.5)) * 100);
 
@@ -68,7 +76,6 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
       }}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
         onTouchEnd={() => { dragging.current = false; }}
       >
         <img src={src} alt="edit" draggable={false} style={{

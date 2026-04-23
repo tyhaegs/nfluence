@@ -54,7 +54,7 @@ function SignIn({ onSignIn, onBack }) {
           )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : email.split("@")[0], password)}>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : null, password)}>
               {isSignUp ? "create account" : "sign in"}
             </button>
           </div>
@@ -257,7 +257,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onOpenNotifications, onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showAttentionModal, setShowAttentionModal] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
@@ -339,19 +339,6 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           </div>
           {/* needs attention */}
           {(() => {
-            const businessDaysSince = (dateStr) => {
-              if (!dateStr) return 0;
-              const start = new Date(dateStr);
-              const now = new Date();
-              let count = 0;
-              const cur = new Date(start);
-              while (cur < now) {
-                cur.setDate(cur.getDate() + 1);
-                const day = cur.getDay();
-                if (day !== 0 && day !== 6) count++;
-              }
-              return count;
-            };
             const pendingCount = allCampaigns.reduce((sum, c) => sum + (c.creators?.pending?.length || 0), 0);
             const overdueCount = allCampaigns.reduce((sum, c) => sum + (c.creators?.approved || []).filter(cr => cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3).length, 0);
             const total = pendingCount + overdueCount;
@@ -486,15 +473,6 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Needs attention modal */}
       {showAttentionModal && (() => {
-        const businessDaysSince = (dateStr) => {
-          if (!dateStr) return 0;
-          const start = new Date(dateStr);
-          const now = new Date();
-          let count = 0;
-          const cur = new Date(start);
-          while (cur < now) { cur.setDate(cur.getDate() + 1); const day = cur.getDay(); if (day !== 0 && day !== 6) count++; }
-          return count;
-        };
         const pendingItems = allCampaigns.flatMap(c => (c.creators?.pending || []).map(cr => ({ type: "pending", campaign: c.campaign, brand: c.brand, creator: cr.name })));
         const overdueItems = allCampaigns.flatMap(c => (c.creators?.approved || []).filter(cr => cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3).map(cr => ({ type: "overdue", campaign: c.campaign, brand: c.brand, creator: cr.name, days: businessDaysSince(cr.acceptedAt) })));
         const allItems = [...overdueItems, ...pendingItems];
@@ -586,7 +564,7 @@ function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compa
   const inputRef = useRef(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-  useEffect(() => { if (!compact) inputRef.current?.focus(); }, [creatorName]);
+  useEffect(() => { if (!compact) inputRef.current?.focus(); }, [creatorName, compact]);
 
   const handleSend = () => {
     const text = input.trim();
@@ -823,7 +801,7 @@ function MessageInbox({ conversations, campaign, onSelectThread, onBack, onSend,
         @media (max-width: 767px) { .nf-msg-sidebar { width: 100%; border-right: none; } .nf-msg-main { display: none; } }
       `}</style>
       <div className="nf-msg-layout">
-        <div className="nf-msg-sidebar"><ConvList /></div>
+        <div className="nf-msg-sidebar">{ConvList()}</div>
         <div className="nf-msg-main">
           {selected && allMessages ? (
             <MessageThread
@@ -858,7 +836,7 @@ function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand, br
           <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
           <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 1 }}>{campaign?.brand} · {campaign?.campaign}</div>
         </div>
-        <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)" }}>active</div>
+        {campaign?.stage && <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)" }}>{campaign.stage}</div>}
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <MessageThread campaign={campaign} creatorName={creatorName} messages={messages} onSend={onSend} isBrand={isBrand} brandAvatar={brandAvatar} creatorAvatar={creatorAvatar} />
@@ -931,7 +909,7 @@ function CreatorInbox({ conversations, onSelectThread, onBack, onSend, allMessag
         @media (max-width: 767px) { .nf-msg-sidebar { width: 100%; border-right: none; } .nf-msg-main { display: none; } }
       `}</style>
       <div className="nf-msg-layout">
-        <div className="nf-msg-sidebar"><ConvList /></div>
+        <div className="nf-msg-sidebar">{ConvList()}</div>
         <div className="nf-msg-main">
           {selected && allMessages ? (
             <MessageThread
@@ -1137,7 +1115,7 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
 
         {/* Bio */}
         {creator.bio && (
-          <div style={{ fontSize: ".95rem", opacity: .5, marginTop: 10, lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div style={{ fontSize: ".95rem", opacity: .5, marginTop: 10, lineHeight: 1.6 }}>
             {creator.bio}
           </div>
         )}
@@ -1627,7 +1605,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
 // ── BrowseCampaigns ──
 
-function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [] }) {
+function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [] }) {
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
@@ -1655,7 +1633,7 @@ function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampai
       }
       return a;
     };
-    const results = DEMO_CAMPAIGNS.filter(c => {
+    const results = campaigns.filter(c => {
       if (search.trim()) {
         const q = search.toLowerCase();
         const haystack = `${c.brand} ${c.campaign} ${c.description} ${c.location}`.toLowerCase();
@@ -1681,7 +1659,7 @@ function BrowseCampaigns({ onBack, onSelectCampaign, onApplyClick, appliedCampai
     const featured = shuffle(results.filter(c => c.featured), 0);
     const regular = shuffle(results.filter(c => !c.featured), 1000);
     return [...featured, ...regular];
-  }, [search, filterPlatform, filterComp, filterTier, filterIndustry]);
+  }, [campaigns, search, filterPlatform, filterComp, filterTier, filterIndustry]);
 
   const hasActiveFilters = search.trim() || filterPlatform !== "All" || filterComp !== "All" || filterTier !== "Any" || filterIndustry !== "All";
   const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterTier("Any"); setFilterIndustry("All"); };
@@ -1884,7 +1862,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
           <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, email.split("@")[0], password)}>sign in</button>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, null, password)}>sign in</button>
           </div>
         </div>
         <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
@@ -1950,7 +1928,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
       youtubeFollowers: platforms.followers["YouTube"] || "",
       rating: null,
     };
-    onComplete(account.email, account.name, profileData);
+    onComplete(account.email, account.name, account.password, profileData);
   };
 
   const NICHE_OPTIONS = ["fitness & training", "wellness & supplements", "beauty & skincare", "fashion & apparel", "outdoors & adventure", "health & nutrition", "tech & gadgets", "gaming", "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment", "travel", "pets", "automotive", "finance & investing", "education & coaching"];
