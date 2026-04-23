@@ -305,7 +305,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <span style={{ fontSize: ".85rem", opacity: .6, cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }} onClick={() => setShowTray(false)}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }} onClick={() => setShowTray(v => !v)}>
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -558,7 +558,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
 // ── Shared message thread renderer (used in both panes) ──
 
-function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compact = false, brandAvatar, creatorAvatar }) {
+function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compact = false, brandAvatar, creatorAvatar, onBack = null }) {
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -642,6 +642,7 @@ function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compa
 
       {/* Thread header */}
       <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,.07)", background: "rgba(4,11,21,.85)", backdropFilter: "blur(20px)", flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
+        {onBack && <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem", flexShrink: 0 }}>←</div>}
         {/* Header avatar */}
         <div style={{ width: 36, height: 36, borderRadius: 10, overflow: "hidden", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", fontWeight: 700, color: "rgba(255,255,255,.5)" }}>
           {isBrand
@@ -816,17 +817,7 @@ function MessageInbox({ conversations, campaign, onSelectThread, onBack, onSend,
 function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand, brandAvatar, creatorAvatar }) {
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.08)", background: "rgba(4,11,21,.8)", backdropFilter: "blur(20px)", flexShrink: 0 }}>
-        <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
-          <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 1 }}>{campaign?.brand} · {campaign?.campaign}</div>
-        </div>
-        {campaign?.stage && <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)" }}>{campaign.stage}</div>}
-      </div>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <MessageThread campaign={campaign} creatorName={creatorName} messages={messages} onSend={onSend} isBrand={isBrand} brandAvatar={brandAvatar} creatorAvatar={creatorAvatar} />
-      </div>
+      <MessageThread campaign={campaign} creatorName={creatorName} messages={messages} onSend={onSend} isBrand={isBrand} brandAvatar={brandAvatar} creatorAvatar={creatorAvatar} onBack={onBack} />
     </div>
   );
 }
@@ -1631,7 +1622,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         const tierOrder = ["25k", "50k", "100k", "250k", "500k", "1M+"];
         const campaignFollowing = (c.following || "").replace(/[k+]/gi, s => s === "k" ? "k" : "").replace("M+","M+");
         // normalize both to compare
-        const normalize = (t) => t.replace(/[k+]/gi, s => s).toLowerCase().replace("m+","M+");
+        const normalize = (t) => t.toLowerCase().replace(/\+$/, "");
         const campaignIdx = tierOrder.findIndex(t => normalize(t) === normalize(c.following || ""));
         const filterIdx = tierOrder.findIndex(t => normalize(t) === normalize(filterTier));
         if (campaignIdx === -1 || campaignIdx > filterIdx) return false;
@@ -1909,9 +1900,13 @@ function CreatorOnboarding({ onComplete, onBack }) {
       instagram: platforms.handles["Instagram"] || "",
       tiktok: platforms.handles["TikTok"] || "",
       youtube: platforms.handles["YouTube"] || "",
+      x: platforms.handles["X"] || "",
+      facebook: platforms.handles["Facebook"] || "",
       instagramFollowers: platforms.followers["Instagram"] || "",
       tiktokFollowers: platforms.followers["TikTok"] || "",
       youtubeFollowers: platforms.followers["YouTube"] || "",
+      xFollowers: platforms.followers["X"] || "",
+      facebookFollowers: platforms.followers["Facebook"] || "",
       rating: null,
     };
     onComplete(account.email, account.name, account.password, profileData);
@@ -1920,10 +1915,10 @@ function CreatorOnboarding({ onComplete, onBack }) {
   const NICHE_OPTIONS = ["fitness & training", "wellness & supplements", "beauty & skincare", "fashion & apparel", "outdoors & adventure", "health & nutrition", "tech & gadgets", "gaming", "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment", "travel", "pets", "automotive", "finance & investing", "education & coaching"];
   const [selectedNiches, setSelectedNiches] = useState([]);
   const toggleNiche = (n) => {
-    setSelectedNiches(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n]);
-    setProfile(p => {
-      const current = selectedNiches.includes(n) ? selectedNiches.filter(x => x !== n) : [...selectedNiches, n];
-      return { ...p, niches: current.join(", ") };
+    setSelectedNiches(prev => {
+      const next = prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n];
+      setProfile(p => ({ ...p, niches: next.join(", ") }));
+      return next;
     });
   };
 
@@ -2319,7 +2314,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               </div>
             ) : null}
             {/* Bio — above pills, single line */}
-            {creatorProfile.bio && <div style={{ fontSize: ".95rem", opacity: .5, marginTop: 10, lineHeight: 1.6, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{creatorProfile.bio}</div>}
+            {creatorProfile.bio && <div style={{ fontSize: ".95rem", opacity: .5, marginTop: 10, lineHeight: 1.6 }}>{creatorProfile.bio}</div>}
             {/* Niche tags */}
             {creatorProfile.niches && (
               <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>

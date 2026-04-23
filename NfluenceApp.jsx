@@ -156,6 +156,11 @@ function NfluenceApp() {
         setCreatorUser(null);
         setMyCampaigns([]);
         setNotifications([]);
+        setCreatorApplied([]);
+        setCreatorActive([]);
+        setAllMessages(DEMO_MESSAGES);
+        setMessageCreator(null);
+        setSignInRedirect(null);
         setView('landing');
       }
     });
