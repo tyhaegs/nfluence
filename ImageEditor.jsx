@@ -1,8 +1,5 @@
 // ── ImageEditor ──
 
-
-// ── ImageEditor ──
-
 function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos }) {
   const [scale, setScale] = useState(initialScale || 1);
   const [pos, setPos] = useState(initialPos || { x: 0, y: 0 });

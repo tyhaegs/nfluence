@@ -174,8 +174,8 @@ const PLAT_SVGS_SMALL = {
 };
 
 const DEMO_MESSAGES = {
-  "Alo::Mindful Movement::Tyler": [
-    { from: "brand", text: "Hey Tyler! We've been following your content for a while — your fitness and wellness niche is exactly what we're looking for. Welcome to the Mindful Movement campaign!", ts: "2026-04-14T09:00:00" },
+  "Alo::Mindful Movement::Marcus Johnson": [
+    { from: "brand", text: "Hey Marcus! We've been following your content for a while — your fitness and wellness niche is exactly what we're looking for. Welcome to the Mindful Movement campaign!", ts: "2026-04-14T09:00:00" },
     { from: "creator", text: "Really excited to be part of this one. I've been wearing Alo for years so this feels very authentic for me.", ts: "2026-04-14T09:22:00" },
     { from: "brand", text: "That's exactly why we wanted you. We're putting together your product box now — leggings, a studio top, and the new Warrior mat. Should ship out by end of week.", ts: "2026-04-14T10:05:00" },
     { from: "creator", text: "Love the mat inclusion — I've been wanting to try it. Should I focus more on studio content or outdoor? My outdoor yoga content tends to perform better.", ts: "2026-04-14T10:30:00" },

@@ -598,20 +598,6 @@ function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compa
     return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
   };
 
-  // Avatar helper — renders a 32px circle
-  const Avatar = ({ src, fallback, isRight }) => (
-    <div style={{
-      width: 30, height: 30, borderRadius: 10, flexShrink: 0,
-      overflow: "hidden", background: "rgba(255,255,255,.08)",
-      border: "1px solid rgba(255,255,255,.1)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: ".65rem", fontWeight: 700, color: "rgba(255,255,255,.5)",
-      alignSelf: "flex-end", marginBottom: 20, // align to bottom of bubble
-    }}>
-      {src ? <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : fallback}
-    </div>
-  );
-
   // Avatars: brand = logoUrl, creator = avatarUrl or pravatar
   const avatarIdx = (name) => {
     let h = 0;
@@ -667,7 +653,7 @@ function MessageThread({ campaign, creatorName, messages, onSend, isBrand, compa
           <div style={{ fontWeight: 600, fontSize: ".95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isBrand ? creatorName : campaign?.brand}</div>
           <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 2 }}>{campaign?.brand} · {campaign?.campaign}</div>
         </div>
-        <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)", flexShrink: 0 }}>active</div>
+        {campaign?.stage && <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".68rem", fontWeight: 600, background: "rgba(100,255,150,.08)", border: "1px solid rgba(100,255,150,.15)", color: "rgba(100,255,150,.7)", flexShrink: 0 }}>{campaign.stage}</div>}
       </div>
 
       {/* Messages */}
@@ -914,7 +900,7 @@ function CreatorInbox({ conversations, onSelectThread, onBack, onSend, allMessag
           {selected && allMessages ? (
             <MessageThread
               campaign={{ brand: selected.brandName, campaign: selected.campaignName }}
-              creatorName={selected.brandName}
+              creatorName={selected.key?.split("::")[2] || ""}
               messages={allMessages[selected.key] || selected.messages || []}
               onSend={(text) => onSend?.(selected.key, text)}
               isBrand={false}

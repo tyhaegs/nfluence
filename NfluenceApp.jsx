@@ -55,7 +55,6 @@ function NfluenceApp() {
   const [notifications, setNotifications] = useState([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [notifReturnView, setNotifReturnView] = useState("dashboard");
   const notifIdRef = React.useRef(0);
 
   const addNotification = React.useCallback((n) => {
@@ -346,6 +345,8 @@ function NfluenceApp() {
     if (sb) await sb.auth.signOut().catch(console.error);
     setCreatorUser(null);
     setCreatorProfile({});
+    setCreatorApplied([]);
+    setCreatorActive([]);
     setView('landing');
   };
 

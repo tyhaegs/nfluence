@@ -1198,7 +1198,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const escrowChanged = escrowDelta > 0;
 
   const handleSave = () => {
-    const needsPayment = c.featured || escrowChanged;
+    const needsPayment = (c.featured && !initialCampaign.featured) || escrowChanged;
     if (needsPayment) setShowPayModal(true);
     else onSave(c);
   };
@@ -1535,6 +1535,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
                 pay ${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & save
               </button>
             </div>
+            <div style={{ textAlign: "center", fontSize: ".72rem", color: "rgba(255,255,255,.25)", marginTop: 8 }}>demo mode — payment processing not yet active</div>
           </div>
         </div>
       )}
