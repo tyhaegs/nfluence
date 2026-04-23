@@ -3014,4 +3014,779 @@ function Preview({ brand, campaign, platforms, terms }) {
 
 
 
+// ── GigListingBuilder ──
+
+function GigListingBuilder({ onBack, onPublish }) {
+  const [step, setStep] = useState(0);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [pendingGigData, setPendingGigData] = useState(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
+    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  };
+
+  const [brand, setBrand] = useState({
+    name: "", email: "", phone: "", phoneCode: "+1",
+    logoPreview: null, logoTransform: null, logoEditing: false,
+  });
+  const [details, setDetails] = useState({
+    title: "", description: "", industry: "", location: "",
+    shootDate: "", contentTypes: [], equipment: "",
+    deliverables: "", requirements: "", spotsTotal: 1,
+  });
+  const [inspoBoard, setInspoBoard] = useState([]); // [{ type: "photo"|"video", src, id }]
+  const [pay, setPay] = useState({ payType: "flat", payRate: "" });
+  const [account, setAccount] = useState({ email: "", password: "", confirmPassword: "", agreeTerms: false, plan: "gig" });
+  const [lightboxItem, setLightboxItem] = useState(null);
+
+  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const canProceed = useMemo(() => {
+    if (step === 0) return brand.name.trim() && isValidEmail(brand.email);
+    if (step === 1) return details.title.trim() && details.description.trim() && details.industry && details.location.trim() && details.shootDate && details.contentTypes.length > 0 && details.equipment && details.deliverables.trim();
+    if (step === 2) return true; // inspo board optional
+    if (step === 3) return pay.payRate && !isNaN(parseFloat(pay.payRate)) && parseFloat(pay.payRate) > 0;
+    if (step === 4) return isValidEmail(account.email) && account.password.length >= 8 && account.password === account.confirmPassword && account.agreeTerms;
+    return true;
+  }, [step, brand, details, pay, account]);
+
+  const next = () => { if (step < 4) setStep(step + 1); };
+  const back = () => { if (step > 0) setStep(step - 1); };
+
+  const containerRef = useRef(null);
+  useEffect(() => {
+    containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+    window.scrollTo?.({ top: 0, behavior: "smooth" });
+    if (step === 4 && !account.email && brand.email) setAccount(p => ({ ...p, email: brand.email }));
+  }, [step]);
+
+  const handleAddMedia = (files, type) => {
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setInspoBoard(prev => [...prev, { id: Date.now() + Math.random(), type, src: ev.target.result }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveMedia = (id) => setInspoBoard(prev => prev.filter(item => item.id !== id));
+
+  // Mosaic layout — assigns grid spans based on position
+  const getMosaicStyle = (index, total) => {
+    const patterns = [
+      // Item 0: tall left
+      { gridColumn: "span 1", gridRow: "span 2" },
+      // Item 1: normal top right
+      { gridColumn: "span 1", gridRow: "span 1" },
+      // Item 2: normal bottom right
+      { gridColumn: "span 1", gridRow: "span 1" },
+      // Item 3: full width
+      { gridColumn: "span 2", gridRow: "span 1" },
+      // Item 4: normal
+      { gridColumn: "span 1", gridRow: "span 1" },
+      // Item 5: normal
+      { gridColumn: "span 1", gridRow: "span 1" },
+    ];
+    return patterns[index % patterns.length];
+  };
+
+  const buildAndPublish = () => {
+    const gigData = {
+      brand: brand.name, logoPreview: brand.logoPreview,
+      title: details.title, description: details.description,
+      industry: details.industry, location: details.location,
+      shootDate: details.shootDate, contentTypes: details.contentTypes,
+      equipment: details.equipment, deliverables: details.deliverables,
+      requirements: details.requirements, spotsTotal: details.spotsTotal,
+      payType: pay.payType, payRate: parseFloat(pay.payRate),
+      inspoBoard, skills: [],
+    };
+    onPublish(gigData);
+  };
+
+  const gigPrice = 49.99;
+  const discountedPrice = (gigPrice * (1 - promoDiscount)).toFixed(2);
+
+  return (
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+
+      {/* Pay Modal */}
+      {showPayModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400, textAlign: "center" }}>
+            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", fontWeight: 700, marginBottom: 6 }}>publish your gig</div>
+            <div style={{ fontSize: ".85rem", opacity: .45, marginBottom: 24 }}>your listing goes live immediately</div>
+            <div style={{ fontSize: "3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff", marginBottom: 4 }}>${discountedPrice}</div>
+            <div style={{ fontSize: ".85rem", opacity: .45, marginBottom: 20 }}>one-time · per listing</div>
+            <div style={{ marginBottom: 20, display: "flex", gap: 8 }}>
+              <input className="nf-input" value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="promo code" style={{ flex: 1 }} />
+              <button className="nf-btn" onClick={applyPromo} style={{ minWidth: 0, padding: "8px 14px", fontSize: ".8rem" }}>apply</button>
+            </div>
+            {promoApplied && <div style={{ fontSize: ".8rem", color: "rgba(100,255,150,.8)", marginBottom: 12 }}>{Math.round(promoDiscount * 100)}% off applied</div>}
+            {promoError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.7)", marginBottom: 12 }}>{promoError}</div>}
+            <button className="nf-btn" style={{ width: "100%", marginBottom: 10, background: "rgba(255,255,255,.08)" }} onClick={buildAndPublish}>pay ${discountedPrice} & publish</button>
+            <button className="nf-btn-back" style={{ width: "100%" }} onClick={() => setShowPayModal(false)}>cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxItem && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setLightboxItem(null)}>
+          {lightboxItem.type === "video" ? (
+            <video src={lightboxItem.src} controls autoPlay style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12 }} onClick={e => e.stopPropagation()} />
+          ) : (
+            <img src={lightboxItem.src} alt="" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, objectFit: "contain" }} />
+          )}
+          <div style={{ position: "absolute", top: 20, right: 20, cursor: "pointer", opacity: .7, fontSize: "1.5rem" }}>✕</div>
+        </div>
+      )}
+
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .nf-header { width: 100%; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-family: 'Monda', system-ui, sans-serif; }
+        .nf-nav-brand { font-weight: 600; font-size: 1.1rem; color: #fff; cursor: pointer; }
+        .nf-nav-links { display: flex; gap: 18px; font-size: .9rem; opacity: .85; }
+        .nf-nav-links a { color: #fff; text-decoration: none; }
+        .nf-wrap { max-width: 470px; width: 100%; margin: 0 auto; padding: 0 16px; }
+        .nf-section-title { text-align: center; font-family: 'Monda', system-ui, sans-serif; font-size: 1.5rem; margin-bottom: 15px; color: #fff; }
+        .nf-step-row { display: flex; justify-content: center; gap: 8px; padding: 24px 16px 8px; max-width: 470px; margin: 0 auto; }
+        .nf-step-pip { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.08); transition: background 0.3s; }
+        .nf-step-pip.active { background: rgba(255,255,255,.55); }
+        .nf-step-pip.done { background: rgba(255,255,255,.25); }
+        .nf-step-labels { display: flex; justify-content: space-between; max-width: 470px; margin: 0 auto; padding: 8px 16px 0; font-size: .7rem; text-transform: lowercase; letter-spacing: .03em; color: rgba(255,255,255,.3); }
+        .nf-step-labels span { flex: 1; text-align: center; transition: color 0.3s; }
+        .nf-step-labels span.active { color: rgba(255,255,255,.85); }
+        .nf-step-labels span.done { color: rgba(255,255,255,.45); }
+        .nf-field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; }
+        .nf-field { flex: 1 1 0; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
+        .nf-field-full { width: 100%; margin-bottom: 15px; }
+        .nf-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s; }
+        .nf-input::placeholder { color: rgba(255,255,255,.45); }
+        .nf-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
+        .nf-textarea { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; width: 100%; outline: none; resize: vertical; min-height: 90px; font-family: system-ui, sans-serif; transition: border-color .12s; }
+        .nf-textarea::placeholder { color: rgba(255,255,255,.45); }
+        .nf-textarea:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
+        .nf-select { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; width: 100%; outline: none; appearance: none; font-family: system-ui, sans-serif; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6 6.5-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+        .nf-select:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background-color: rgba(0,0,0,.5); }
+        .nf-select option { background: #0a1020; color: #fff; }
+        .nf-chip { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.18); background: transparent; font-size: .8rem; color: rgba(255,255,255,.6); cursor: pointer; transition: all .12s; text-transform: lowercase; user-select: none; font-family: system-ui, sans-serif; }
+        .nf-chip:hover { border-color: rgba(255,255,255,.35); color: rgba(255,255,255,.85); }
+        .nf-chip.selected { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.55); box-shadow: 0 0 12px rgba(255,255,255,.18); color: #fff; }
+        .nf-chip-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .nf-chip-grid .nf-chip { width: 100%; }
+        @media (max-width: 600px) { .nf-chip-grid { grid-template-columns: 1fr 1fr; } }
+        .nf-label { font-size: .8rem; opacity: .6; margin-bottom: 6px; text-transform: lowercase; letter-spacing: .02em; }
+        .nf-line { width: 100%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%); opacity: .6; margin: 24px 0; }
+        .nf-hint { font-size: .75rem; opacity: .45; margin-top: -2px; text-align: center; }
+        .nf-upload { border: 1px dashed rgba(255,255,255,.18); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all .12s; background: rgba(0,0,0,.2); }
+        .nf-upload:hover { border-color: rgba(255,255,255,.35); background: rgba(0,0,0,.35); }
+        .nf-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 160px; padding: 12px 24px; border-radius: 16px; font-family: system-ui, sans-serif; text-transform: lowercase; font-size: .99rem; background: transparent; border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(20px); color: #fff; cursor: pointer; transition: transform .12s, border .12s, box-shadow .12s, background .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
+        .nf-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.03); }
+        .nf-btn:disabled { opacity: .25; cursor: not-allowed; transform: none; }
+        .nf-btn-back { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; border-radius: 16px; font-family: system-ui, sans-serif; text-transform: lowercase; font-size: .99rem; background: transparent; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.5); cursor: pointer; transition: all .12s; }
+        .nf-btn-back:hover { border-color: rgba(255,255,255,.28); color: #fff; }
+        .nf-actions { display: flex; align-items: center; justify-content: space-between; max-width: 470px; margin: 0 auto; padding: 30px 16px 60px; }
+        .nf-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 140px; gap: 4px; border-radius: 16px; overflow: hidden; }
+        .nf-mosaic-item { position: relative; overflow: hidden; cursor: pointer; background: rgba(255,255,255,.04); }
+        .nf-mosaic-item img, .nf-mosaic-item video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+        .nf-mosaic-item:hover img, .nf-mosaic-item:hover video { transform: scale(1.03); }
+        .nf-mosaic-remove { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .15s; font-size: 10px; color: #fff; z-index: 2; }
+        .nf-mosaic-item:hover .nf-mosaic-remove { opacity: 1; }
+        .nf-mosaic-type-badge { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,.55); border-radius: 6px; padding: 2px 7px; font-size: 10px; color: rgba(255,255,255,.8); }
+        @keyframes nf-ann-shimmer { 0%,100% { border-color: rgba(180,255,80,.25); box-shadow: 0 0 8px rgba(180,255,80,.08); } 50% { border-color: rgba(180,255,80,.85); box-shadow: 0 0 18px rgba(180,255,80,.3); } }
+        @keyframes nf-val-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 6px rgba(255,140,30,.08); } 50% { border-color: rgba(255,140,30,.9); box-shadow: 0 0 14px rgba(255,140,30,.35); } }
+        .nf-plan-ann-selected { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
+        .nf-plan-val-badge { animation: nf-val-shimmer 2.5s ease-in-out infinite; }
+        .nf-plan-unsel:hover { border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.04) !important; transform: translateY(-2px); }
+      `}</style>
+
+      <div className="nf-header">
+        <div className="nf-nav-brand" onClick={onBack}>nfluence</div>
+        <div className="nf-nav-links"><a href="#" onClick={e => { e.preventDefault(); onBack(); }}>campaigns</a></div>
+      </div>
+
+      <div className="nf-step-row">
+        {GIG_STEPS.map((_, i) => (
+          <div key={i} className={`nf-step-pip ${i === step ? "active" : i < step ? "done" : ""}`} />
+        ))}
+      </div>
+      <div className="nf-step-labels">
+        {GIG_STEPS.map((l, i) => (
+          <span key={l} className={i === step ? "active" : i < step ? "done" : ""}>{l}</span>
+        ))}
+      </div>
+
+      {/* Step 0 — Brand */}
+      {step === 0 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
+          <div className="nf-wrap">
+            <div className="nf-section-title">about your brand</div>
+            <div className="nf-field-full">
+              <input className="nf-input" value={brand.name} onChange={e => setBrand(p => ({ ...p, name: e.target.value }))} placeholder="brand name *" maxLength={60} />
+            </div>
+            <div className="nf-field-full">
+              <input className="nf-input" type="email" value={brand.email} onChange={e => setBrand(p => ({ ...p, email: e.target.value }))} placeholder="email *"
+                style={brand.email && !isValidEmail(brand.email) ? { borderColor: "rgba(255,100,100,.3)" } : {}} />
+              {brand.email && !isValidEmail(brand.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
+            </div>
+            <div className="nf-field-row">
+              <div className="nf-field" style={{ maxWidth: 80 }}>
+                <select className="nf-select" value={brand.phoneCode} onChange={e => setBrand(p => ({ ...p, phoneCode: e.target.value }))}>
+                  {["+1","+44","+61","+52","+55","+49","+33","+34","+39","+81","+82","+91"].map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="nf-field">
+                <input className="nf-input" value={brand.phone} onChange={e => setBrand(p => ({ ...p, phone: e.target.value }))} placeholder="phone number" />
+              </div>
+            </div>
+            <label className="nf-upload" style={{ marginBottom: 15, display: "block", cursor: brand.logoEditing ? "default" : "pointer" }}>
+              {!brand.logoEditing && (
+                <input type="file" accept="image/png,image/svg+xml,image/jpeg" style={{ display: "none" }}
+                  onChange={e => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = (ev) => setBrand(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); reader.readAsDataURL(file); } }} />
+              )}
+              {brand.logoEditing && brand.logoPreview ? (
+                <ImageEditor src={brand.logoPreview} shape="circle" onSave={t => setBrand(p => ({ ...p, logoTransform: t, logoEditing: false }))} onCancel={() => setBrand(p => ({ ...p, logoPreview: null, logoEditing: false, logoTransform: null }))} />
+              ) : brand.logoPreview ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,.15)", position: "relative" }}>
+                    <img src={brand.logoPreview} alt="logo" style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${brand.logoTransform?.pos?.x || 0}px), calc(-50% + ${brand.logoTransform?.pos?.y || 0}px)) scale(${brand.logoTransform?.scale || 1})`, minWidth: "100%", minHeight: "100%", objectFit: "cover" }} />
+                  </div>
+                  <div style={{ fontSize: ".7rem", opacity: .4 }}>click to change</div>
+                </div>
+              ) : (
+                <div><div style={{ fontSize: ".85rem", opacity: .6 }}>click to upload brand logo</div><div style={{ fontSize: ".7rem", opacity: .35, marginTop: 4 }}>recommended: 512×512px · png or svg · max 5mb</div></div>
+              )}
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Step 1 — Details */}
+      {step === 1 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
+          <div className="nf-wrap">
+            <div className="nf-section-title">gig details</div>
+            <div className="nf-field-full">
+              <input className="nf-input" value={details.title} onChange={e => setDetails(p => ({ ...p, title: e.target.value }))} placeholder="gig title * e.g. product photography — summer line" maxLength={80} />
+            </div>
+            <div className="nf-field-full">
+              <textarea className="nf-textarea" value={details.description} onChange={e => setDetails(p => ({ ...p, description: e.target.value }))} placeholder="describe the gig — what you're shooting, the vibe, what you're looking for *" />
+            </div>
+            <div className="nf-line" />
+            <div className="nf-section-title">content type</div>
+            <div className="nf-hint">(select all that apply)</div>
+            <div className="nf-chip-grid" style={{ marginBottom: 20 }}>
+              {GIG_CONTENT_TYPES.map(ct => (
+                <div key={ct} className={`nf-chip ${details.contentTypes.includes(ct) ? "selected" : ""}`}
+                  onClick={() => setDetails(p => ({ ...p, contentTypes: p.contentTypes.includes(ct) ? p.contentTypes.filter(i => i !== ct) : [...p.contentTypes, ct] }))}>
+                  {ct}
+                </div>
+              ))}
+            </div>
+            <div className="nf-line" />
+            <div className="nf-field-full">
+              <div className="nf-label">industry *</div>
+              <select className="nf-select" value={details.industry} onChange={e => setDetails(p => ({ ...p, industry: e.target.value }))}>
+                <option value="">select industry</option>
+                {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+              </select>
+            </div>
+            <div className="nf-field-full">
+              <input className="nf-input" value={details.location} onChange={e => setDetails(p => ({ ...p, location: e.target.value }))} placeholder="shoot location * e.g. Los Angeles, CA" />
+            </div>
+            <div className="nf-field-row">
+              <div className="nf-field">
+                <div className="nf-label">shoot date *</div>
+                <input type="date" className="nf-input" style={{ colorScheme: "dark" }} value={details.shootDate} onChange={e => setDetails(p => ({ ...p, shootDate: e.target.value }))} />
+              </div>
+              <div className="nf-field">
+                <div className="nf-label">spots available</div>
+                <input className="nf-input" type="number" min="1" value={details.spotsTotal} onChange={e => setDetails(p => ({ ...p, spotsTotal: parseInt(e.target.value) || 1 }))} />
+              </div>
+            </div>
+            <div className="nf-line" />
+            <div className="nf-field-full">
+              <div className="nf-label">equipment *</div>
+              <select className="nf-select" value={details.equipment} onChange={e => setDetails(p => ({ ...p, equipment: e.target.value }))}>
+                <option value="">select equipment situation</option>
+                {GIG_EQUIPMENT.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+              </select>
+            </div>
+            <div className="nf-field-full">
+              <textarea className="nf-textarea" value={details.deliverables} onChange={e => setDetails(p => ({ ...p, deliverables: e.target.value }))} placeholder="deliverables * e.g. 20 edited photos + RAW files, 3 short-form vertical videos" />
+            </div>
+            <div className="nf-field-full">
+              <textarea className="nf-textarea" value={details.requirements} onChange={e => setDetails(p => ({ ...p, requirements: e.target.value }))} placeholder="requirements (optional) — portfolio link, experience level, etc." style={{ minHeight: 70 }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 — Inspo Board */}
+      {step === 2 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
+          <div className="nf-wrap">
+            <div className="nf-section-title">inspo board</div>
+            <div className="nf-hint" style={{ marginBottom: 20 }}>upload photos and videos to show the vibe — photographers will see this as a mosaic collage</div>
+
+            {inspoBoard.length > 0 && (
+              <div className="nf-mosaic" style={{ marginBottom: 20 }}>
+                {inspoBoard.map((item, idx) => {
+                  const mosaicStyle = getMosaicStyle(idx, inspoBoard.length);
+                  return (
+                    <div key={item.id} className="nf-mosaic-item" style={mosaicStyle} onClick={() => setLightboxItem(item)}>
+                      {item.type === "video" ? (
+                        <video src={item.src} muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <img src={item.src} alt="" />
+                      )}
+                      <div className="nf-mosaic-type-badge">{item.type}</div>
+                      <div className="nf-mosaic-remove" onClick={e => { e.stopPropagation(); handleRemoveMedia(item.id); }}>✕</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+              <label className="nf-upload" style={{ flex: 1, cursor: "pointer" }}>
+                <input type="file" accept="image/png,image/jpeg,image/webp" multiple style={{ display: "none" }}
+                  onChange={e => handleAddMedia(Array.from(e.target.files || []), "photo")} />
+                <div style={{ fontSize: ".85rem", opacity: .6 }}>+ add photos</div>
+                <div style={{ fontSize: ".7rem", opacity: .35, marginTop: 4 }}>jpg, png, webp</div>
+              </label>
+              <label className="nf-upload" style={{ flex: 1, cursor: "pointer" }}>
+                <input type="file" accept="video/mp4,video/quicktime,video/webm" multiple style={{ display: "none" }}
+                  onChange={e => handleAddMedia(Array.from(e.target.files || []), "video")} />
+                <div style={{ fontSize: ".85rem", opacity: .6 }}>+ add videos</div>
+                <div style={{ fontSize: ".7rem", opacity: .35, marginTop: 4 }}>mp4, mov, webm</div>
+              </label>
+            </div>
+            {inspoBoard.length === 0 && <div style={{ fontSize: ".75rem", opacity: .3, textAlign: "center" }}>optional — skip if you don't have reference media yet</div>}
+            {inspoBoard.length > 0 && <div style={{ fontSize: ".75rem", opacity: .3, textAlign: "center" }}>click any item to preview · hover to remove</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 — Pay */}
+      {step === 3 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
+          <div className="nf-wrap">
+            <div className="nf-section-title">pay rate</div>
+            <div className="nf-hint" style={{ marginBottom: 20 }}>cash only — set what you're paying the photographer / videographer</div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+              {[{ value: "flat", label: "flat fee" }, { value: "hourly", label: "hourly rate" }].map(opt => (
+                <div key={opt.value}
+                  onClick={() => setPay(p => ({ ...p, payType: opt.value }))}
+                  style={{ flex: 1, padding: "12px 16px", borderRadius: 14, cursor: "pointer", textAlign: "center", fontSize: ".9rem", transition: "all .15s", border: `1px solid ${pay.payType === opt.value ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`, background: pay.payType === opt.value ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)" }}>
+                  {opt.label}
+                </div>
+              ))}
+            </div>
+            <div className="nf-field-full" style={{ position: "relative" }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: "1rem", opacity: .6, pointerEvents: "none" }}>$</div>
+              <input className="nf-input" type="number" min="1" value={pay.payRate} onChange={e => setPay(p => ({ ...p, payRate: e.target.value }))} placeholder={pay.payType === "flat" ? "total flat fee *" : "hourly rate *"} style={{ paddingLeft: 24 }} />
+            </div>
+            <div style={{ marginTop: 8, fontSize: ".8rem", opacity: .4 }}>
+              {pay.payType === "flat" ? "paid as a single lump sum upon completion" : "billed by the hour — agree on total hours with the photographer beforehand"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4 — Account / Preview */}
+      {step === 4 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
+          <div className="nf-wrap">
+            <div className="nf-section-title">preview & publish</div>
+
+            {/* Gig preview card */}
+            <div style={{ background: "radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0))", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, overflow: "hidden", marginBottom: 24 }}>
+              <div style={{ height: 100, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ fontSize: ".75rem", opacity: .3 }}>gig listing</div>
+              </div>
+              <div style={{ padding: "16px 16px 14px" }}>
+                <div style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", marginBottom: 4 }}>{details.title || "gig title"}</div>
+                <div style={{ fontSize: ".82rem", opacity: .45, marginBottom: 12 }}>{brand.name || "brand name"}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  {details.contentTypes.slice(0, 3).map(ct => (
+                    <div key={ct} style={{ padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(255,255,255,.15)", fontSize: ".72rem", opacity: .7 }}>{ct}</div>
+                  ))}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+                  <div>
+                    <div style={{ fontSize: ".75rem", opacity: .4 }}>pay</div>
+                    <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff" }}>${pay.payRate || "—"}{pay.payType === "hourly" ? <span style={{ fontSize: ".75rem", opacity: .5 }}>/hr</span> : ""}</div>
+                  </div>
+                  <div style={{ fontSize: ".82rem", opacity: .5 }}>{details.location || "—"}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="nf-line" />
+            <div className="nf-section-title">account details</div>
+            <div className="nf-field-full">
+              <input className="nf-input" type="email" value={account.email} onChange={e => setAccount(p => ({ ...p, email: e.target.value }))} placeholder="email *"
+                style={account.email && !isValidEmail(account.email) ? { borderColor: "rgba(255,100,100,.3)" } : {}} />
+            </div>
+            <div className="nf-field-full">
+              <input className="nf-input" type="password" value={account.password} onChange={e => setAccount(p => ({ ...p, password: e.target.value }))} placeholder="password * (min 8 characters)" />
+              {account.password && account.password.length < 8 && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>password must be at least 8 characters</div>}
+            </div>
+            <div className="nf-field-full">
+              <input className="nf-input" type="password" value={account.confirmPassword} onChange={e => setAccount(p => ({ ...p, confirmPassword: e.target.value }))} placeholder="confirm password *" />
+              {account.confirmPassword && account.password !== account.confirmPassword && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>passwords do not match</div>}
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", padding: "5px 0", fontSize: ".85rem", color: "#fff" }}
+                onClick={() => setAccount(p => ({ ...p, agreeTerms: !p.agreeTerms }))}>
+                <div style={{ width: 36, height: 20, borderRadius: 10, border: `1px solid ${account.agreeTerms ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.18)"}`, background: account.agreeTerms ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.35)", position: "relative", transition: "all .2s", flexShrink: 0 }}>
+                  <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, left: 2, transition: "transform .2s", transform: account.agreeTerms ? "translateX(16px)" : "none" }} />
+                </div>
+                <span>i agree to the <span style={{ textDecoration: "underline", opacity: .8 }}>terms of service</span> and <span style={{ textDecoration: "underline", opacity: .8 }}>privacy policy</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="nf-actions">
+        {step > 0 ? <button className="nf-btn-back" onClick={back}>back</button> : <div />}
+        {step < 4 ? (
+          <button className="nf-btn" disabled={!canProceed} onClick={next}>next</button>
+        ) : (
+          <button className="nf-btn" disabled={!canProceed} onClick={() => setShowPayModal(true)}>publish gig — $49.99</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+// ── BrowseGigListings ──
+
+function BrowseGigListings({ demoGigs = [], myGigs = [], onBack, onSelectGig, appliedGigs = [] }) {
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterSkill, setFilterSkill] = useState("");
+
+  const allGigs = [...demoGigs, ...myGigs];
+  const filtered = allGigs.filter(g => {
+    if (filterIndustry && g.industry !== filterIndustry) return false;
+    if (filterSkill && !g.skills?.includes(filterSkill)) return false;
+    return true;
+  });
+
+  return (
+    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .nf-gig-card { background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0)); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s, border-color .25s; }
+        .nf-gig-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 28px 65px rgba(0,0,0,.5); border-color: rgba(255,255,255,.25); }
+        .nf-select { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; outline: none; appearance: none; font-family: system-ui, sans-serif; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6 6.5-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+        .nf-select option { background: #0a1020; color: #fff; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
+        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} onClick={onBack}>back</span>
+      </div>
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
+        <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 8, fontWeight: 600 }}>gig listings</h2>
+        <p style={{ textAlign: "center", opacity: .4, fontSize: ".85rem", marginBottom: 28 }}>brands looking for photographers & videographers</p>
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+          <select className="nf-select" value={filterIndustry} onChange={e => setFilterIndustry(e.target.value)} style={{ flex: 1, minWidth: 160 }}>
+            <option value="">all industries</option>
+            {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+          </select>
+          <select className="nf-select" value={filterSkill} onChange={e => setFilterSkill(e.target.value)} style={{ flex: 1, minWidth: 160 }}>
+            <option value="">all skills</option>
+            {GIG_SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        {filtered.length === 0 && (
+          <div style={{ textAlign: "center", opacity: .3, fontSize: ".9rem", marginTop: 60 }}>no gig listings yet</div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          {filtered.map((gig, i) => {
+            const isApplied = appliedGigs.includes(gig.id);
+            const spotsLeft = Math.max(0, (gig.spotsTotal || 1) - (gig.spotsFilled || 0));
+            return (
+              <div key={gig.id || i} className="nf-gig-card" onClick={() => onSelectGig(gig)}>
+                <div style={{ height: 90, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                  {gig.logoUrl ? <img src={gig.logoUrl} alt={gig.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ fontSize: ".7rem", opacity: .25 }}>no image</div>}
+                  <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,.55)", borderRadius: 8, padding: "3px 10px", fontSize: ".72rem", color: "#fff" }}>{spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left</div>
+                </div>
+                <div style={{ padding: "14px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
+                  <div style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", marginBottom: 3, lineHeight: 1.3 }}>{gig.title}</div>
+                  <div style={{ fontSize: ".82rem", opacity: .45, marginBottom: 10 }}>{gig.brand}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
+                    {(gig.contentTypes || []).slice(0, 2).map(ct => (
+                      <div key={ct} style={{ padding: "2px 9px", borderRadius: 20, border: "1px solid rgba(255,255,255,.15)", fontSize: ".7rem", opacity: .65 }}>{ct}</div>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    {[["location", gig.location], ["shoot date", gig.shootDate], ["equipment", gig.equipment]].map(([label, val]) => (
+                      <div key={label} style={{ display: "flex", gap: 8, padding: "2px 0", fontSize: ".85rem" }}>
+                        <div style={{ opacity: .35, minWidth: 90 }}>{label}:</div>
+                        <div style={{ opacity: .75 }}>{val || "—"}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+                    <div>
+                      <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 2 }}>pay</div>
+                      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff" }}>${gig.payRate}{gig.payType === "hourly" ? <span style={{ fontSize: ".75rem", opacity: .5 }}>/hr</span> : ""}</div>
+                    </div>
+                    {isApplied ? (
+                      <div style={{ padding: "8px 16px", borderRadius: 12, border: "1px solid rgba(100,255,150,.2)", fontSize: ".85rem", fontWeight: 600, color: "rgba(100,255,150,.8)", display: "flex", alignItems: "center", gap: 6 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        applied
+                      </div>
+                    ) : (
+                      <div style={{ padding: "8px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", fontSize: ".85rem", fontWeight: 600, color: "#fff", cursor: "pointer" }}>apply</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ── GigDetail ──
+
+function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSignInRedirect }) {
+  const [hasApplied, setHasApplied] = useState(appliedGigs.includes(gig.id));
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyStep, setApplyStep] = useState(0);
+  const [lightboxItem, setLightboxItem] = useState(null);
+  const [applyForm, setApplyForm] = useState({ name: user?.name || "", email: user?.email || "", pitch: "", portfolio: "" });
+
+  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const spotsLeft = Math.max(0, (gig.spotsTotal || 1) - (gig.spotsFilled || 0));
+
+  const submitApplication = () => {
+    const applicationData = { name: applyForm.name, email: applyForm.email, pitch: applyForm.pitch, portfolio: applyForm.portfolio };
+    setHasApplied(true);
+    setApplyStep(1);
+    onApply?.(gig, applicationData);
+  };
+
+  // Mosaic layout helper
+  const getMosaicStyle = (index) => {
+    const patterns = [
+      { gridColumn: "span 1", gridRow: "span 2" },
+      { gridColumn: "span 1", gridRow: "span 1" },
+      { gridColumn: "span 1", gridRow: "span 1" },
+      { gridColumn: "span 2", gridRow: "span 1" },
+      { gridColumn: "span 1", gridRow: "span 1" },
+      { gridColumn: "span 1", gridRow: "span 1" },
+    ];
+    return patterns[index % patterns.length];
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .nf-mosaic { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; gap: 4px; border-radius: 16px; overflow: hidden; }
+        .nf-mosaic-item { position: relative; overflow: hidden; cursor: pointer; background: rgba(255,255,255,.04); }
+        .nf-mosaic-item img, .nf-mosaic-item video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+        .nf-mosaic-item:hover img, .nf-mosaic-item:hover video { transform: scale(1.03); }
+        .nf-mosaic-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .nf-mosaic-play-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.55); border: 2px solid rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center; transition: transform .15s; }
+        .nf-mosaic-item:hover .nf-mosaic-play-btn { transform: scale(1.08); }
+        .nf-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s; }
+        .nf-input::placeholder { color: rgba(255,255,255,.45); }
+        .nf-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
+        .nf-textarea { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px; font-size: .85rem; width: 100%; outline: none; resize: vertical; min-height: 80px; font-family: system-ui, sans-serif; }
+        .nf-textarea::placeholder { color: rgba(255,255,255,.45); }
+        .nf-textarea:focus { border-color: #fff; background: rgba(0,0,0,.5); }
+      `}</style>
+
+      {/* Lightbox */}
+      {lightboxItem && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.95)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setLightboxItem(null)}>
+          {lightboxItem.type === "video" ? (
+            <video src={lightboxItem.src} controls autoPlay style={{ maxWidth: "92vw", maxHeight: "92vh", borderRadius: 12 }} onClick={e => e.stopPropagation()} />
+          ) : (
+            <img src={lightboxItem.src} alt="" style={{ maxWidth: "92vw", maxHeight: "92vh", borderRadius: 12, objectFit: "contain" }} />
+          )}
+          <div style={{ position: "absolute", top: 20, right: 24, cursor: "pointer", fontSize: "1.4rem", opacity: .7 }} onClick={() => setLightboxItem(null)}>✕</div>
+        </div>
+      )}
+
+      {/* Apply Modal */}
+      {showApplyModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400 }}>
+            {applyStep === 0 ? (
+              <>
+                <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.2rem", fontWeight: 700, marginBottom: 20, textAlign: "center" }}>apply for this gig</div>
+                <div style={{ marginBottom: 12 }}>
+                  <input className="nf-input" value={applyForm.name} onChange={e => setApplyForm(p => ({ ...p, name: e.target.value }))} placeholder="your name *" style={{ marginBottom: 10 }} />
+                  <input className="nf-input" type="email" value={applyForm.email} onChange={e => setApplyForm(p => ({ ...p, email: e.target.value }))} placeholder="your email *" style={{ marginBottom: 10 }} />
+                  <textarea className="nf-textarea" value={applyForm.portfolio} onChange={e => setApplyForm(p => ({ ...p, portfolio: e.target.value }))} placeholder="portfolio link or Instagram *" style={{ marginBottom: 10 }} />
+                  <textarea className="nf-textarea" value={applyForm.pitch} onChange={e => setApplyForm(p => ({ ...p, pitch: e.target.value }))} placeholder="why are you a great fit for this gig?" />
+                </div>
+                <button onClick={submitApplication} disabled={!applyForm.name.trim() || !isValidEmail(applyForm.email) || !applyForm.portfolio.trim()}
+                  style={{ width: "100%", padding: "12px", borderRadius: 14, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontSize: ".95rem", fontFamily: "system-ui, sans-serif", marginBottom: 10, opacity: (!applyForm.name.trim() || !isValidEmail(applyForm.email) || !applyForm.portfolio.trim()) ? 0.3 : 1 }}>
+                  submit application
+                </button>
+                <button onClick={() => setShowApplyModal(false)} style={{ width: "100%", padding: "10px", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontSize: ".9rem", fontFamily: "system-ui, sans-serif" }}>cancel</button>
+              </>
+            ) : (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "2rem", marginBottom: 12 }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.2rem", fontWeight: 700, marginBottom: 8 }}>application sent</div>
+                <div style={{ fontSize: ".85rem", opacity: .5, marginBottom: 20 }}>{gig.brand} will be in touch if you're a fit</div>
+                <button onClick={() => setShowApplyModal(false)} style={{ padding: "10px 24px", borderRadius: 14, border: "1px solid rgba(255,255,255,.2)", background: "transparent", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif" }}>close</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
+        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} onClick={onBack}>back</span>
+      </div>
+
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px 80px" }}>
+
+        {/* Hero */}
+        <div style={{ background: "radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0))", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
+          <div style={{ height: 140, background: gig.imgUrl ? "transparent" : "rgba(255,255,255,.04)", position: "relative" }}>
+            {gig.imgUrl ? <img src={gig.imgUrl} alt={gig.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: ".75rem", opacity: .25 }}>gig listing</div>}
+          </div>
+          <div style={{ padding: "18px 20px 20px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
+              {gig.logoUrl ? (
+                <img src={gig.logoUrl} alt={gig.brand} style={{ width: 52, height: 52, borderRadius: 14, objectFit: "cover", border: "1px solid rgba(255,255,255,.15)", flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0 }} />
+              )}
+              <div>
+                <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.2rem", fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 3 }}>{gig.title}</div>
+                <div style={{ fontSize: ".85rem", opacity: .45 }}>{gig.brand}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+              {(gig.contentTypes || []).map(ct => (
+                <div key={ct} style={{ padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(255,255,255,.15)", fontSize: ".75rem", opacity: .7 }}>{ct}</div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px", marginBottom: 16 }}>
+              {[["location", gig.location], ["shoot date", gig.shootDate], ["equipment", gig.equipment], ["spots left", `${spotsLeft} of ${gig.spotsTotal || 1}`], ["industry", gig.industry]].map(([label, val]) => (
+                <div key={label} style={{ fontSize: ".85rem" }}>
+                  <span style={{ opacity: .35 }}>{label}: </span>
+                  <span style={{ opacity: .8 }}>{val || "—"}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontSize: ".85rem", opacity: .65, lineHeight: 1.65, marginBottom: 16 }}>{gig.description}</div>
+
+            {gig.deliverables && (
+              <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 16 }}>
+                <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase", letterSpacing: ".04em" }}>deliverables</div>
+                <div style={{ fontSize: ".85rem", opacity: .75, lineHeight: 1.6 }}>{gig.deliverables}</div>
+              </div>
+            )}
+
+            {gig.requirements && (
+              <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 16 }}>
+                <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase", letterSpacing: ".04em" }}>requirements</div>
+                <div style={{ fontSize: ".85rem", opacity: .75, lineHeight: 1.6 }}>{gig.requirements}</div>
+              </div>
+            )}
+
+            {/* Pay + Apply */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+              <div>
+                <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 3 }}>pay</div>
+                <div style={{ fontSize: "2rem", fontWeight: 700, color: "#fff", fontFamily: "'Monda', system-ui, sans-serif" }}>
+                  ${gig.payRate}{gig.payType === "hourly" ? <span style={{ fontSize: ".9rem", opacity: .5 }}>/hr</span> : ""}
+                </div>
+                <div style={{ fontSize: ".75rem", opacity: .4 }}>{gig.payType === "flat" ? "flat fee" : "hourly rate"}</div>
+              </div>
+              {isOwner ? (
+                <div style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,.2)", fontSize: ".9rem", opacity: .5 }}>your listing</div>
+              ) : hasApplied ? (
+                <div style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(100,255,150,.2)", fontSize: ".9rem", color: "rgba(100,255,150,.8)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  applied
+                </div>
+              ) : (
+                <button onClick={() => { if (!user) { onSignInRedirect?.(); return; } setApplyStep(0); setShowApplyModal(true); }} style={{ padding: "12px 28px", borderRadius: 14, border: "1px solid rgba(255,255,255,.35)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontSize: ".95rem", fontWeight: 600, fontFamily: "system-ui, sans-serif", transition: "all .15s" }}>
+                  apply now
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Inspo Board */}
+        {gig.inspoBoard && gig.inspoBoard.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1rem", fontWeight: 600, marginBottom: 12, opacity: .8 }}>inspo board</div>
+            <div className="nf-mosaic">
+              {gig.inspoBoard.map((item, idx) => {
+                const mosaicStyle = getMosaicStyle(idx);
+                return (
+                  <div key={item.id || idx} className="nf-mosaic-item" style={mosaicStyle} onClick={() => setLightboxItem(item)}>
+                    {item.type === "video" ? (
+                      <>
+                        <video src={item.src} muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div className="nf-mosaic-play">
+                          <div className="nf-mosaic-play-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <img src={item.src} alt="" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+
+
 // ═══════════════════════════════════════════════
