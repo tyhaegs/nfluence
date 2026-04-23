@@ -5736,7 +5736,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
-  const [filterTier, setFilterTier] = useState("Any");
+  const [filterTier, setFilterTier] = useState("all");
   const [filterIndustry, setFilterIndustry] = useState("All");
 
   const COMP_LABELS = { All: "All", product: "product only", paid: "paid", "product+paid": "product + paid", other: "other" };
@@ -5788,8 +5788,8 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
     return [...featured, ...regular];
   }, [campaigns, search, filterPlatform, filterComp, filterTier, filterIndustry]);
 
-  const hasActiveFilters = search.trim() || filterPlatform !== "All" || filterComp !== "All" || filterTier !== "Any" || filterIndustry !== "All";
-  const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterTier("Any"); setFilterIndustry("All"); };
+  const hasActiveFilters = search.trim() || filterPlatform !== "All" || filterComp !== "All" || filterTier !== "all" || filterIndustry !== "All";
+  const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterTier("all"); setFilterIndustry("All"); };
 
   const pillBtn = (active, onClick, label) => (
     <button onClick={onClick} style={{
@@ -5860,7 +5860,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>following</div>
-            <div className="nf-filter-scroll">{FOLLOWER_TIERS.map(t => pillBtn(filterTier === t, () => setFilterTier(t), t === "Any" ? "any" : t))}</div>
+            <div className="nf-filter-scroll">{FOLLOWER_TIERS.map(t => pillBtn(filterTier === t, () => setFilterTier(t), t))}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>industry</div>
