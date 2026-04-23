@@ -29,6 +29,97 @@ const SOCIAL_OPTIONS = ["Instagram", "TikTok", "YouTube", "X", "Facebook", "Webs
 const REGION_CODES = ["US","CA","MX","GB","IE","FR","DE","ES","PT","IT","CH","AT","NL","BE","DK","NO","SE","FI","PL","CZ","HU","RO","GR","TR","IL","AE","SA","EG","ZA","IN","CN","JP","KR","TH","SG","AU","NZ","BR","AR","CL","CO"];
 const US_STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
 
+// ── Gig Listing Constants ──
+
+const GIG_CONTENT_TYPES = [
+  "product photography",
+  "lifestyle photography",
+  "video / reels",
+  "flat lay",
+  "model / on-person",
+  "food & beverage",
+  "unboxing",
+  "mixed (photo + video)",
+];
+
+const GIG_EQUIPMENT = [
+  "bring your own",
+  "brand provides camera",
+  "brand provides lighting",
+  "brand provides full kit",
+  "studio provided",
+];
+
+const GIG_SKILLS = ["photographer", "videographer"];
+
+const GIG_STEPS = ["brand", "details", "inspo", "pay", "preview"];
+
+const DEMO_GIG_LISTINGS = [
+  {
+    id: "gig_001",
+    brand: "Nike",
+    logoUrl: "/assets/logo_nike.jpg",
+    imgUrl: "/assets/banner_nike.jpg",
+    title: "Product Photography — Pegasus 41",
+    industry: "fitness & training",
+    location: "Los Angeles, CA",
+    shootDate: "05/10/26",
+    contentTypes: ["product photography", "lifestyle photography"],
+    deliverables: "20 final edited photos, RAW files included. Mix of studio white background and outdoor lifestyle.",
+    equipment: "bring your own",
+    payType: "flat",
+    payRate: 400,
+    spotsTotal: 2,
+    spotsFilled: 1,
+    description: "We're looking for a skilled product photographer to shoot our Pegasus 41 running shoe. We want clean studio shots alongside outdoor lifestyle imagery. Reference board attached — we love the muted, editorial tone.",
+    requirements: "Portfolio required. 2+ years experience. Must be local to LA.",
+    inspoBoard: [],
+    skills: ["photographer"],
+  },
+  {
+    id: "gig_002",
+    brand: "Alani Nu",
+    logoUrl: "/assets/logo_alani_nu.jpg",
+    imgUrl: "/assets/banner_alani_nu.jpg",
+    title: "Lifestyle Video Content — Energy Drink Line",
+    industry: "food & beverage",
+    location: "Miami, FL",
+    shootDate: "05/20/26",
+    contentTypes: ["video / reels", "lifestyle photography"],
+    deliverables: "3 short-form videos (15–30 sec each), 10 lifestyle photos. Vertical format for social.",
+    equipment: "bring your own",
+    payType: "flat",
+    payRate: 600,
+    spotsTotal: 3,
+    spotsFilled: 1,
+    description: "Alani Nu needs a videographer to capture lifestyle content featuring our energy drink line in real, everyday settings — gyms, kitchens, beach mornings. Bright, vibrant, high energy.",
+    requirements: "Videography portfolio required. Social content experience preferred.",
+    inspoBoard: [],
+    skills: ["videographer"],
+  },
+  {
+    id: "gig_003",
+    brand: "Alo",
+    logoUrl: "/assets/logo_alo.jpg",
+    imgUrl: "/assets/banner_alo.jpg",
+    title: "Yoga Apparel — Outdoor Shoot",
+    industry: "fashion & apparel",
+    location: "Malibu, CA",
+    shootDate: "06/01/26",
+    contentTypes: ["lifestyle photography", "model / on-person"],
+    deliverables: "30 final edited photos. Golden hour preferred. Clean, minimal editing style.",
+    equipment: "bring your own",
+    payType: "flat",
+    payRate: 750,
+    spotsTotal: 1,
+    spotsFilled: 0,
+    description: "Alo is looking for a photographer to shoot our spring apparel line in an outdoor setting. Think Malibu cliffs, golden hour, minimal and editorial. Model will be provided.",
+    requirements: "Strong outdoor/lifestyle portfolio. Experience shooting apparel preferred.",
+    inspoBoard: [],
+    skills: ["photographer"],
+  },
+];
+
 // Demo campaign data for the browse view
 const DEMO_CAMPAIGNS = [
   { brand: "Nike", stage: "delivered", creators: {
@@ -63,21 +154,13 @@ const DEMO_CAMPAIGNS = [
         { name: "Aria Sato", avatar: "AS", platforms: { Instagram: "76k" }, stage: "accepted", acceptedAt: "2026-04-15T10:00:00.000Z" },
       ],
       pending: []
-    }, logoUrl: "/assets/logo_alo.jpg", campaign: "Mindful Movement", platforms: ["Instagram"], following: "20k+", deliverables: { Instagram: "(3) stories + (1) reel" }, deadline: "07/01/26", comp: "$500", compType: "paid", spotsTotal: 10, spotsFilled: 8, description: "Alo Yoga is seeking mindful movement creators for a premium paid campaign. We want content that captures the intersection of wellness, fashion, and intentional living. Think sunrise flows, studio sessions, mindful moments. This campaign pays $500 per creator — no product seeding, purely paid collaboration.", location: "Worldwide", requirements: "Must be 18+. Yoga, wellness, or mindful living niche. Professional-quality content required. 20k+ following on Instagram.", products: [], hasStyleGuide: true, reviews: [{ creator: "Nina W.", rating: 5, text: "Alo is a dream brand to work with. The creative brief was clear and they gave me full creative freedom.", submittedAt: "2026-04-08T09:00:00.000Z", brandResponse: "Thank you Nina! Your content perfectly captured the Alo spirit." }, { creator: "David P.", rating: 5, text: "Paid on time, great communication, and they featured my content on their main page.", submittedAt: "2026-04-09T15:00:00.000Z", brandResponse: null }, { creator: "Lena K.", rating: 4, text: "Beautiful products and a very organized team. Would recommend.", submittedAt: "2026-04-15T11:00:00.000Z", brandResponse: null }, { creator: "Marcus J.", rating: 5, text: "One of the most professional campaigns I've been part of.", submittedAt: "2026-04-17T16:00:00.000Z", brandResponse: null }], imgUrl: "/assets/banner_alo.jpg", imgBg: "#111", imgIcon: "", featured: true },
-  { brand: "GoPro", stage: "under_review", creators: {
-      approved: [
-        { name: "Jake Sullivan", avatar: "JS", platforms: { YouTube: "320k", Instagram: "95k" }, stage: "content_submitted" },
-        { name: "Tanya Rodriguez", avatar: "TR", platforms: { YouTube: "180k", Instagram: "62k" }, stage: "product_shipped" },
-      ],
-      pending: [
-        { name: "Kai Andersen", avatar: "KA", platforms: { YouTube: "45k", Instagram: "38k" }, stage: "applied" },
-      ]
-    }, logoUrl: "/assets/logo_gopro.jpg", campaign: "POV Creator Program", platforms: ["YouTube", "Instagram"], following: "30k+", deliverables: { YouTube: "(1) video", Instagram: "(1) reel" }, deadline: "06/20/26", comp: "$2,500", compType: "paid", spotsTotal: 15, spotsFilled: 3, description: "GoPro is launching a POV Creator Program for adventure and action sports creators. We want first-person perspective content that makes viewers feel like they're right there with you — whether that's mountain biking, surfing, skydiving, or anything that gets the adrenaline pumping. This is a premium paid campaign at $2,500 per creator, and you'll receive the latest GoPro HERO to keep.", location: "Worldwide", requirements: "Must be 18+. Adventure, action sports, or extreme outdoor niche. Must shoot on GoPro. 30k+ combined following across YouTube and Instagram.", products: [{ name: "GoPro HERO13 Black", variant: "Latest model" }, { name: "GoPro Accessories Kit", variant: "Mounts, cases, batteries" }], hasStyleGuide: true, reviews: [{ creator: "Jake S.", rating: 5, text: "Incredible opportunity. GoPro gave me full creative freedom and the gear is next level.", submittedAt: "2026-04-11T13:00:00.000Z", brandResponse: null }, { creator: "Tanya R.", rating: 5, text: "Best-paying campaign I've done. The team really cares about the creator experience.", submittedAt: "2026-04-18T10:00:00.000Z", brandResponse: null }], imgUrl: "/assets/banner_gopro.jpg", imgBg: "#111", imgIcon: "", featured: true },
+    }, logoUrl: "/assets/logo_alo.jpg", campaign: "Mindful Movement", platforms: ["Instagram"], following: "25k+", deliverables: { Instagram: "(1) reel + (1) static" }, deadline: "05/01/26", comp: "free product", compType: "product", spotsTotal: 10, spotsFilled: 5, description: "Alo is seeking mindful movement creators to showcase our latest studio-to-street collection. We're looking for authentic yoga and wellness creators who embody the Alo lifestyle. You'll receive a curated product box and create content that inspires your community to move with intention.", location: "United States", requirements: "Must be 18+. Yoga/wellness niche. Minimum 25k followers on Instagram. No competing activewear brands for 90 days.", products: [{ name: "Alo Warrior Mat", variant: "Stone" }, { name: "Alo Studio Top", variant: "Size provided" }, { name: "Alo High-Waist Legging", variant: "Size provided" }], hasStyleGuide: true, reviews: [], imgUrl: "/assets/banner_alo.jpg", imgBg: "#111", imgIcon: "", featured: false },
+  { brand: "GoPro", stage: "open", creators: { approved: [], pending: [] }, logoUrl: "/assets/logo_gopro.jpg", campaign: "POV Creator Program", platforms: ["YouTube", "Instagram"], following: "50k+", deliverables: { YouTube: "(1) short + (1) review", Instagram: "(2) reels" }, deadline: "07/01/26", comp: "free product", compType: "product", spotsTotal: 15, spotsFilled: 3, description: "GoPro is searching for adventure creators who push limits. Whether you're surfing, skiing, mountain biking, or skydiving — if you live for the POV, we want you. You'll receive the HERO13 Black and full accessories kit to capture your next adventure.", location: "Worldwide", requirements: "Must be 18+. Adventure/action sports niche. 50k+ followers. Must have existing action/adventure content.", products: [{ name: "GoPro HERO13 Black", variant: "Standard" }, { name: "GoPro Accessories Kit", variant: "Full bundle" }], hasStyleGuide: false, reviews: [], imgUrl: "/assets/banner_gopro.jpg", imgBg: "#111", imgIcon: "", featured: false },
 ];
 
 const BRAND_META = {
-  "Nike": { bio: "We exist to bring inspiration and innovation to every athlete in the world. If you have a body, you are an athlete.", tagline: "Just Do It", location: "Beaverton, OR", website: "nike.com", founded: "1964", totalCampaigns: 47, totalCreators: 1240 },
-  "Alani Nu": { bio: "Built for women who hustle. Alani Nu is a health & wellness brand making supplements and energy drinks that actually taste good and work.", tagline: "fuel the hustle", location: "Louisville, KY", website: "alaninutrition.com", founded: "2018", totalCampaigns: 22, totalCreators: 410 },
+  "Nike": { bio: "Nike is the world's leading athletic footwear and apparel brand. We exist to bring inspiration and innovation to every athlete in the world.", tagline: "just do it", location: "Beaverton, OR", website: "nike.com", founded: "1964", totalCampaigns: 48, totalCreators: 1240 },
+  "Alani Nu": { bio: "Alani Nu makes better-for-you energy drinks, protein bars, and supplements designed for the health-conscious generation.", tagline: "fuel your lifestyle", location: "Louisville, KY", website: "alaninu.com", founded: "2018", totalCampaigns: 22, totalCreators: 410 },
   "Alo": { bio: "Alo exists to inspire mindful movement and bring yoga to the world. We make gear designed to go from the studio to the streets.", tagline: "mindful movement", location: "Los Angeles, CA", website: "aloyoga.com", founded: "2007", totalCampaigns: 31, totalCreators: 680 },
   "GoPro": { bio: "GoPro makes the world's most versatile cameras. We help people capture and share their most meaningful experiences.", tagline: "be a hero", location: "San Mateo, CA", website: "gopro.com", founded: "2002", totalCampaigns: 18, totalCreators: 290 },
 };
