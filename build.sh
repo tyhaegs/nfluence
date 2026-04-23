@@ -41,6 +41,7 @@ cat > "$OUT" <<HTMLEOF
   <script>
     window.SUPABASE_URL = "https://xynujmscxjxbfivylfne.supabase.co";
     window.SUPABASE_ANON_KEY = "sb_publishable_WgxWdFozCUuUbWAUy9VKTQ_zbxdyvxE";
+    window.STRIPE_PUBLISHABLE_KEY = "pk_test_51TPR393hA44QTwx3TBSDjGESyhj3t92yOnxpdPcNihIeEMrGad5IGlCqofuGBlZLBzPqizhFZGwhkIoU3UKexSp100GWhkF9cM";
   </script>
 </head>
 <body>
