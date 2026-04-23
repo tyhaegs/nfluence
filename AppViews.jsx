@@ -257,7 +257,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onOpenNotifications, onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onOpenNotifications, onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showAttentionModal, setShowAttentionModal] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
@@ -473,9 +473,12 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           )}
         </div>
         {allCampaigns.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
             <button className="nf-new-campaign-btn" onClick={onNewCampaign}>
               <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>+</span> new campaign
+            </button>
+            <button className="nf-new-campaign-btn" onClick={onNewGig} style={{ borderColor: "rgba(255,255,255,.2)" }}>
+              <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>+</span> post a gig
             </button>
           </div>
         )}
@@ -2752,7 +2755,20 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>niches</div>
                 <input className="nf-creator-input" placeholder="e.g. fitness, wellness, travel (comma separated)" value={editForm.niches || ""} onChange={e => setEditForm(f => ({ ...f, niches: e.target.value }))} />
               </div>
-              {/* Platforms */}
+              {/* Skills */}
+              <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em", marginTop: 4 }}>skills</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {GIG_SKILLS.map(skill => {
+                  const isSelected = (editForm.skills || []).includes(skill);
+                  return (
+                    <div key={skill}
+                      onClick={() => setEditForm(f => ({ ...f, skills: isSelected ? (f.skills || []).filter(s => s !== skill) : [...(f.skills || []), skill] }))}
+                      style={{ flex: 1, padding: "8px 12px", borderRadius: 12, cursor: "pointer", textAlign: "center", fontSize: ".82rem", transition: "all .15s", border: `1px solid ${isSelected ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`, background: isSelected ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)", color: isSelected ? "#fff" : "rgba(255,255,255,.5)" }}>
+                      {skill}
+                    </div>
+                  );
+                })}
+              </div>
               <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em", marginTop: 4 }}>platforms</div>
               <div style={{ fontSize: ".72rem", opacity: .3, marginTop: -8 }}>follower counts are self-reported — verification coming soon</div>
               {[["instagram", "Instagram handle", "instagramFollowers", "followers"], ["tiktok", "TikTok handle", "tiktokFollowers", "followers"], ["youtube", "YouTube channel", "youtubeFollowers", "subscribers"], ["x", "X handle", "xFollowers", "followers"]].map(([handleField, handlePlaceholder, countField, countLabel]) => (

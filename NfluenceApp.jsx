@@ -1,17 +1,13 @@
 // ═══════════════════════════════════════════════
 
 function NfluenceApp() {
-  const [view, setView] = useState("landing"); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq | gigbuilder | browsegigs | gigdetail
+  const [view, setView] = useState("landing"); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [selectedBrand, setSelectedBrand] = useState("Nike");
   const [pendingCampaign, setPendingCampaign] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(DEMO_CAMPAIGNS[0]);
   const [user, setUser] = useState(null); // { email, name }
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
-  const [myGigListings, setMyGigListings] = useState([]);
-  const [selectedGig, setSelectedGig] = useState(null);
-  const [gigDetailSource, setGigDetailSource] = useState("landing"); // "landing" | "dashboard" | "browsegigs"
-  const [appliedGigs, setAppliedGigs] = useState([]); // ["gigId", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
   const [signInRedirect, setSignInRedirect] = useState(null); // campaign to redirect back to after sign in
   const [detailSource, setDetailSource] = useState("landing"); // "landing" | "dashboard" | "browse"
@@ -253,58 +249,7 @@ function NfluenceApp() {
     setView("dashboard");
   };
 
-  const handlePublishGig = async (gigData) => {
-    const newGig = {
-      ...gigData,
-      id: "gig_" + Date.now(),
-      createdAt: new Date().toISOString(),
-      spotsFilled: 0,
-      applicants: [],
-    };
-
-    // Persist to Supabase if signed in and configured
-    if (user?.id && typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL) {
-      try {
-        const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { data, error } = await sb.from('gig_listings').insert({
-          brand_id: user.id,
-          brand_name: gigData.brand,
-          title: gigData.title,
-          description: gigData.description,
-          industry: gigData.industry,
-          location: gigData.location,
-          shoot_date: gigData.shootDate,
-          content_types: gigData.contentTypes,
-          deliverables: gigData.deliverables,
-          equipment: gigData.equipment,
-          pay_type: gigData.payType,
-          pay_rate: gigData.payRate,
-          spots_total: gigData.spotsTotal,
-          inspo_board: gigData.inspoBoard || [],
-          skills: gigData.skills || [],
-        }).select().single();
-        if (!error && data) newGig.id = data.id;
-      } catch (err) {
-        console.error('Failed to save gig listing to Supabase:', err);
-      }
-    }
-
-    setMyGigListings(prev => [newGig, ...prev]);
-    setView('dashboard');
-  };
-
-  const handleApplyGig = (gig, applicationData) => {
-    setAppliedGigs(prev => [...prev, gig.id]);
-    const demoIdx = DEMO_GIG_LISTINGS.findIndex(d => d.id === gig.id);
-    if (demoIdx >= 0) {
-      // demo gig — no override needed for now
-    }
-    const userIdx = myGigListings.findIndex(g => g.id === gig.id);
-    if (userIdx >= 0) {
-      setMyGigListings(prev => prev.map((g, i) => i !== userIdx ? g : { ...g, applicants: [...(g.applicants || []), applicationData] }));
-    }
-    addNotification({ for: "brand", type: "new_gig_application", title: "new gig application", body: `${applicationData.name} applied to ${gig.title}` });
-  };
+  const handleViewReviews = () => {
     setLastReviewsVisitedAt(new Date().toISOString());
     setView("reviews");
   };
@@ -577,7 +522,7 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} />;
@@ -623,10 +568,6 @@ function NfluenceApp() {
     const isOwner = isOwnCampaign || isDemoFromDashboard;
     return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
-
-  if (view === "gigbuilder") return <GigListingBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublishGig} />;
-  if (view === "browsegigs") return <BrowseGigListings demoGigs={DEMO_GIG_LISTINGS} myGigs={myGigListings} onBack={() => setView("landing")} onSelectGig={(g) => { setSelectedGig(g); setGigDetailSource("browsegigs"); setView("gigdetail"); }} appliedGigs={appliedGigs} />;
-  if (view === "gigdetail" && selectedGig) return <GigDetail gig={selectedGig} onBack={() => setView(gigDetailSource === "dashboard" ? "dashboard" : gigDetailSource === "browsegigs" ? "browsegigs" : "landing")} isOwner={myGigListings.some(g => g.id === selectedGig.id)} user={user} appliedGigs={appliedGigs} onApply={handleApplyGig} onSignInRedirect={handleSignInRedirect} />;
 
   return (
     <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
@@ -687,7 +628,6 @@ function NfluenceApp() {
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("landing")}>campaigns</span>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browsegigs")}>gigs</span>
           <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
           {user ? (
             <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }} onClick={() => setView("dashboard")}>dashboard</span>
@@ -707,9 +647,6 @@ function NfluenceApp() {
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
           <button onClick={() => setView("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
             start a campaign
-          </button>
-          <button onClick={() => setView("gigbuilder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
-            post a gig
           </button>
           <button onClick={() => setView(creatorUser ? "creatordashboard" : "creatorsignin")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
             i'm a creator
