@@ -38,6 +38,10 @@ cat > "$OUT" <<HTMLEOF
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    window.SUPABASE_URL = "https://xynujmscxjxbfivylfne.supabase.co";
+    window.SUPABASE_ANON_KEY = "sb_publishable_WgxWdFozCUuUbWAUy9VKTQ_zbxdyvxE";
+  </script>
 </head>
 <body>
   <div id="root"></div>
