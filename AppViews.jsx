@@ -9,13 +9,13 @@ function SignIn({ onSignIn, onBack }) {
   const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
         .nf-signin-input {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
           background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px;
           font-size: .95rem; width: 100%; outline: none;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: system-ui, sans-serif;
           transition: border-color .12s, box-shadow .12s, background .12s;
         }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
@@ -121,7 +121,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-review-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 20px; }
         .nf-reply-btn { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: .78rem; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
@@ -269,7 +269,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
   }))];
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-dash-card {
           background: radial-gradient(circle at top, rgba(255,255,255,.04), rgba(4,11,21,0));
@@ -811,7 +811,7 @@ function MessageInbox({ conversations, campaign, onSelectThread, onBack, onSend,
   );
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-msg-layout { display: flex; flex: 1; min-height: 0; }
         .nf-msg-sidebar { width: 300px; min-width: 260px; border-right: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
@@ -848,7 +848,7 @@ function MessageInbox({ conversations, campaign, onSelectThread, onBack, onSend,
 
 function Messages({ campaign, creatorName, messages, onSend, onBack, isBrand, brandAvatar, creatorAvatar }) {
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid rgba(255,255,255,.08)", background: "rgba(4,11,21,.8)", backdropFilter: "blur(20px)", flexShrink: 0 }}>
         <div onClick={onBack} style={{ cursor: "pointer", opacity: .6, fontSize: "1.1rem" }}>←</div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -919,7 +919,7 @@ function CreatorInbox({ conversations, onSelectThread, onBack, onSend, allMessag
   );
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-msg-layout { display: flex; flex: 1; min-height: 0; }
         .nf-msg-sidebar { width: 300px; min-width: 260px; border-right: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; }
@@ -1079,7 +1079,7 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -1327,7 +1327,7 @@ function NotificationsPage({ notifications, forRole, onBack, onMarkAllRead, onMa
     content_approved: "content approved", message_received: "message",
   };
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @keyframes nf-notif-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,140,30,.15);}50%{box-shadow:0 0 0 6px rgba(255,140,30,0);} }
         .nf-notif-full-row { transition: background .12s; cursor: pointer; }
@@ -1438,7 +1438,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
   );
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; }
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -1862,9 +1862,9 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{`
-        .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, -apple-system, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
+        .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
         .nf-signin-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
         .nf-signin-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
@@ -1961,7 +1961,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
   };
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2271,7 +2271,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
   };
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-creator-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; transition: transform .2s, border-color .2s, box-shadow .2s; }
         .nf-creator-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.2) !important; box-shadow: 0 8px 30px rgba(0,0,0,.3); }

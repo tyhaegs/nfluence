@@ -227,7 +227,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
   const dividerStyle = { height: 1, background: "rgba(255,255,255,.08)", margin: "24px 0" };
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-cta-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s !important; }
         .nf-cta-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 18px rgba(255,255,255,.12) !important; background: rgba(255,255,255,.12) !important; }
@@ -1219,7 +1219,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave }) {
   const totalDue = ((c.featured ? featuredPrice : 0) + escrowDelta) * (1 - promoDiscount);
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1645,7 +1645,7 @@ function CampaignBuilder({ onBack, onPublish }) {
   })), []);
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face {
           font-family: 'Monda';
@@ -1702,7 +1702,7 @@ function CampaignBuilder({ onBack, onPublish }) {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
           background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px;
           font-size: .85rem; width: 100%; outline: none;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: system-ui, sans-serif;
           transition: border-color .12s, box-shadow .12s, background .12s;
         }
         .nf-input::placeholder { color: rgba(255,255,255,.45); }
@@ -1716,7 +1716,7 @@ function CampaignBuilder({ onBack, onPublish }) {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
           background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px;
           font-size: .85rem; width: 100%; outline: none; resize: vertical;
-          min-height: 90px; font-family: system-ui, -apple-system, sans-serif;
+          min-height: 90px; font-family: system-ui, sans-serif;
           transition: border-color .12s, box-shadow .12s, background .12s;
         }
         .nf-textarea::placeholder { color: rgba(255,255,255,.45); }
@@ -1730,7 +1730,7 @@ function CampaignBuilder({ onBack, onPublish }) {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
           background: rgba(0,0,0,.35); color: #fff; padding: 8px 10px;
           font-size: .85rem; width: 100%; outline: none; appearance: none;
-          font-family: system-ui, -apple-system, sans-serif; cursor: pointer;
+          font-family: system-ui, sans-serif; cursor: pointer;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6 6.5-6'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 10px center;
           transition: border-color .12s, box-shadow .12s, background .12s;
@@ -1744,7 +1744,7 @@ function CampaignBuilder({ onBack, onPublish }) {
 
         .nf-pill {
           text-align: center; text-transform: lowercase;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: system-ui, sans-serif;
           display: inline-flex; align-items: center; justify-content: center;
           padding: 8px 14px; border-radius: 14px; font-size: .99rem;
           border: 1px solid rgba(255,255,255,.18); background: transparent;
@@ -1764,7 +1764,7 @@ function CampaignBuilder({ onBack, onPublish }) {
         .nf-btn {
           display: inline-flex; align-items: center; justify-content: center;
           min-width: 160px; padding: 12px 24px; border-radius: 16px;
-          font-family: system-ui, -apple-system, sans-serif; text-transform: lowercase;
+          font-family: system-ui, sans-serif; text-transform: lowercase;
           font-size: .99rem; background: transparent;
           border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(20px);
           color: #fff; cursor: pointer;
@@ -1780,7 +1780,7 @@ function CampaignBuilder({ onBack, onPublish }) {
         .nf-btn-back {
           display: inline-flex; align-items: center; justify-content: center;
           padding: 12px 24px; border-radius: 16px;
-          font-family: system-ui, -apple-system, sans-serif; text-transform: lowercase;
+          font-family: system-ui, sans-serif; text-transform: lowercase;
           font-size: .99rem; background: transparent;
           border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.5);
           cursor: pointer; transition: all .12s;
@@ -1837,7 +1837,7 @@ function CampaignBuilder({ onBack, onPublish }) {
           border: 1px solid rgba(255,255,255,.18); background: transparent;
           font-size: .8rem; color: rgba(255,255,255,.6); cursor: pointer;
           transition: all .12s; text-transform: lowercase; user-select: none;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: system-ui, sans-serif;
         }
         .nf-chip:hover { border-color: rgba(255,255,255,.35); color: rgba(255,255,255,.85); }
         .nf-chip.selected {
@@ -1963,7 +1963,7 @@ function CampaignBuilder({ onBack, onPublish }) {
         .nf-deadline-opt {
           padding: 8px 18px; font-size: .85rem; border: none;
           background: transparent; color: rgba(255,255,255,.45);
-          cursor: pointer; font-family: system-ui, -apple-system, sans-serif;
+          cursor: pointer; font-family: system-ui, sans-serif;
           text-transform: lowercase; transition: all .12s;
         }
         .nf-deadline-opt.active {
