@@ -237,6 +237,49 @@ By default Supabase requires email confirmation. During development, disable it:
 
 ---
 
+## Admin Dashboard Setup
+
+The admin dashboard lives at `admin/index.html` (excluded from git — contains your service role key).
+
+### 1 — Get your service role key
+
+1. Go to **Settings → API** in the Supabase dashboard
+2. Copy the **service_role / secret** key (starts with `eyJ...`)
+3. Open `admin/index.html` and replace `YOUR_SERVICE_KEY_HERE` with that key
+
+> Keep this file local only. The service role key bypasses all RLS — never commit or deploy it publicly.
+
+### 2 — Promote a user to admin
+
+After a user has signed up (so their row exists in `profiles`), open the **SQL Editor** in the Supabase dashboard and run:
+
+```sql
+UPDATE profiles
+SET role = 'admin'
+WHERE email = 'your@email.com';
+```
+
+If the `profiles` table stores the user's email in a different column, or you only have their user ID, use:
+
+```sql
+-- By user ID (find it in Authentication → Users)
+UPDATE profiles
+SET role = 'admin'
+WHERE id = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+```
+
+Confirm it worked:
+
+```sql
+SELECT id, email, role FROM profiles WHERE role = 'admin';
+```
+
+### 3 — Sign in to the admin dashboard
+
+Open `admin/index.html` directly in your browser (double-click the file or serve it locally). Sign in with the admin user's email and password — any account without `role = 'admin'` will be rejected.
+
+---
+
 ## Before Going Live Checklist
 
 - [ ] Attorney review complete
