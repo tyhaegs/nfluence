@@ -204,7 +204,7 @@ function NfluenceApp() {
     return [...featured, ...regular];
   }, [demoCampaignOverrides, demoCampaignReviewOverrides]);
 
-  const handlePublish = async (campaignData) => {
+  const handlePublish = async (campaignData, account = {}) => {
     const newCampaign = {
       ...campaignData,
       id: Date.now(),
@@ -214,12 +214,34 @@ function NfluenceApp() {
       creators: { pending: [], approved: [] },
     };
 
-    // Persist to Supabase if signed in and configured
     const sb = getSB();
-    if (user?.id && sb) {
+    let activeUser = user;
+
+    // If not signed in, sign up with the credentials from the account step
+    if (!activeUser && sb && account?.email && account?.password) {
+      try {
+        const { data, error } = await sb.auth.signUp({
+          email: account.email,
+          password: account.password,
+          options: { data: { name: campaignData.brand, role: 'brand' } },
+        });
+        if (error) throw error;
+        if (data.user) {
+          activeUser = { id: data.user.id, email: data.user.email, name: campaignData.brand };
+          setAuthSession(data.session);
+          setUser(activeUser);
+          await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: campaignData.brand, role: 'brand' });
+        }
+      } catch (err) {
+        console.error('Sign up failed during publish:', err);
+      }
+    }
+
+    // Persist campaign to Supabase
+    if (activeUser?.id && sb) {
       try {
         const { data, error } = await sb.from('campaigns').insert({
-          brand_id: user.id,
+          brand_id: activeUser.id,
           brand_name: campaignData.brand,
           name: campaignData.campaign,
           description: campaignData.description,
@@ -240,7 +262,7 @@ function NfluenceApp() {
             ? new Date(Date.now() + (campaignData.featuredWeeks || 7) * 24 * 60 * 60 * 1000).toISOString()
             : null,
         }).select().single();
-        if (!error && data) newCampaign.id = data.id; // use DB id
+        if (!error && data) newCampaign.id = data.id;
       } catch (err) {
         console.error('Failed to save campaign to Supabase:', err);
       }
@@ -253,6 +275,57 @@ function NfluenceApp() {
       setMyCampaigns(prev => [newCampaign, ...prev]);
       setView('dashboard');
     }
+  };
+
+  const handleGigPublish = async (gigData, account = {}) => {
+    const sb = getSB();
+    let activeUser = user;
+
+    // If not signed in, sign up with the credentials from the account step
+    if (!activeUser && sb && account?.email && account?.password) {
+      try {
+        const { data, error } = await sb.auth.signUp({
+          email: account.email,
+          password: account.password,
+          options: { data: { name: gigData.brand, role: 'brand' } },
+        });
+        if (error) throw error;
+        if (data.user) {
+          activeUser = { id: data.user.id, email: data.user.email, name: gigData.brand };
+          setAuthSession(data.session);
+          setUser(activeUser);
+          await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: gigData.brand, role: 'brand' });
+        }
+      } catch (err) {
+        console.error('Sign up failed during gig publish:', err);
+      }
+    }
+
+    if (activeUser?.id && sb) {
+      try {
+        await sb.from('gig_listings').insert({
+          brand_id: activeUser.id,
+          brand_name: gigData.brand,
+          title: gigData.title,
+          description: gigData.description,
+          industry: gigData.industry,
+          location: gigData.location,
+          shoot_date: gigData.shootDate,
+          content_types: gigData.contentTypes,
+          equipment: gigData.equipment,
+          deliverables: gigData.deliverables,
+          requirements: gigData.requirements,
+          spots_total: gigData.spotsTotal,
+          pay_type: gigData.payType,
+          pay_rate: gigData.payRate,
+        });
+      } catch (err) {
+        console.error('Failed to save gig to Supabase:', err);
+      }
+    }
+
+    addNotification({ for: 'brand', type: 'gig_published', title: 'gig listing published', body: `Your ${gigData.title || 'gig'} listing is now live.` });
+    setView('dashboard');
   };
 
   const handleOnboardingDone = () => {
@@ -540,7 +613,7 @@ function NfluenceApp() {
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
-  if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={(gig) => { addNotification({ for: "brand", type: "gig_published", title: "gig listing published", body: `Your ${gig.title || "gig"} listing is now live.` }); setView("dashboard"); }} />;
+  if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} />;
   if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={(updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCampaign(updated);

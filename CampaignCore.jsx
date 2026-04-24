@@ -2896,7 +2896,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
             const featuredPrice = PRICES[terms.featuredWeeks || 7] || 2.99;
             const needsPayment = terms.featured || escrow > 0;
             if (needsPayment) { setPendingCampaignData({ ...campaignData, _escrow: escrow, _featuredPrice: terms.featured ? featuredPrice : 0 }); setShowPayModal(true); }
-            else if (onPublish) onPublish(campaignData);
+            else if (onPublish) onPublish(campaignData, account);
             else alert("campaign published! (demo)");
           }}>publish</button>
         )}
@@ -2964,7 +2964,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                   try {
                     await callStripePayment(Math.round(totalDue * 100), session?.access_token, cardRef.current);
                     setShowPayModal(false);
-                    if (onPublish) onPublish(pendingCampaignData);
+                    if (onPublish) onPublish(pendingCampaignData, account);
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
                   } finally {
@@ -3203,7 +3203,7 @@ function GigListingBuilder({ onBack, onPublish }) {
       payType: pay.payType, payRate: parseFloat(pay.payRate),
       inspoBoard, skills: [],
     };
-    onPublish(gigData);
+    onPublish(gigData, account);
   };
 
   const gigPrice = 49.99;
