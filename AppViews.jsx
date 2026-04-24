@@ -469,6 +469,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             </button>
           </div>
         )}
+        <div style={{ textAlign: "center", padding: "40px 0 8px", fontSize: ".75rem", opacity: .28, fontFamily: "system-ui, sans-serif" }}>
+          questions? <a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)" }}>support@nfluenceagency.com</a>
+        </div>
       </div>
 
       {/* Needs attention modal */}
@@ -2647,6 +2650,9 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           </div>
         </div>
       )}
+      <div style={{ textAlign: "center", padding: "32px 0 16px", fontSize: ".75rem", opacity: .28, fontFamily: "system-ui, sans-serif" }}>
+        questions? <a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)" }}>support@nfluenceagency.com</a>
+      </div>
     </div>
   );
 }
@@ -2765,6 +2771,9 @@ function FAQPage({ onBack, onStart }) {
           <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.2rem", fontWeight: 700, marginBottom: 8 }}>ready to launch?</div>
           <div style={{ fontSize: ".9rem", opacity: .45, marginBottom: 24 }}>join the brands already growing with nfluence</div>
           <button onClick={onStart} className="nf-faq-cta" style={{ padding: "14px 32px", borderRadius: 14, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", fontSize: ".95rem", fontWeight: 600, textTransform: "lowercase" }}>start a campaign — $299</button>
+        </div>
+        <div style={{ textAlign: "center", marginTop: 32, fontSize: ".78rem", opacity: .3, fontFamily: "system-ui, sans-serif", lineHeight: 1.7 }}>
+          still have questions? email us at <a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)" }}>support@nfluenceagency.com</a>
         </div>
       </div>
     </div>

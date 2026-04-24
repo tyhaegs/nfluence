@@ -766,6 +766,10 @@ function NfluenceApp() {
           );
           })}
         </div>
+        <div style={{ textAlign: "center", padding: "40px 24px 28px", fontSize: ".75rem", opacity: .25, fontFamily: "system-ui, sans-serif", lineHeight: 2 }}>
+          <div><a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.2)" }}>support@nfluenceagency.com</a></div>
+          <div>© 2026 nfluence</div>
+        </div>
       </div>
     </div>
   );
