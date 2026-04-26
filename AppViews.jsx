@@ -257,7 +257,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showAttentionModal, setShowAttentionModal] = useState(false);
@@ -320,6 +320,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {showSettingsMenu && (
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
+                  { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
                   { label: "edit profile", action: () => { setShowSettingsMenu(false); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
@@ -337,9 +338,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {showTray && <NotificationTray notifications={notifications} forRole="brand" onClose={() => setShowTray(false)} onMarkAllRead={() => { onMarkAllNotifsRead?.(); setShowTray(false); }} onViewAll={() => { setShowTray(false); onViewAllNotifications?.(); }} />}
 
       {/* Banner */}
-      <div style={{ width: "100%", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))", position: "relative" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px", position: "relative", height: 160 }}>
-          <div style={{ position: "absolute", bottom: -52, left: 24, width: 104, height: 104, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 24px 0" }}>
+        <div style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))", position: "relative" }}>
+          <div style={{ position: "absolute", bottom: -52, left: 16, width: 104, height: 104, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
             {(user?.name || "B").charAt(0).toUpperCase()}
           </div>
         </div>
@@ -398,6 +399,31 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 4 }}>total creators</div>
           </div>
         </div>
+
+        {/* Scheduled Calls */}
+        {(() => {
+          const allCalls = Object.entries(scheduledCalls).flatMap(([key, calls]) => {
+            const parts = key.split("::");
+            const brand = parts[0], campaign = parts[1], creator = parts[2];
+            return (Array.isArray(calls) ? calls : [calls]).map(call => ({ ...call, brand, campaign, creator, key }));
+          }).filter(c => c.status === "confirmed" || c.status === "pending").sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+          if (allCalls.length === 0) return null;
+          return (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 10 }}>scheduled calls</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {allCalls.map((call, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", fontSize: ".85rem" }}>
+                    <div style={{ opacity: .5, minWidth: 130 }}>{new Date(call.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                    <div style={{ opacity: .8, flex: 1 }}>{call.creator}</div>
+                    <div style={{ opacity: .4 }}>{call.campaign}</div>
+                    <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".72rem", fontWeight: 600, background: call.status === "confirmed" ? "rgba(100,255,150,.08)" : "rgba(255,200,60,.08)", border: `1px solid ${call.status === "confirmed" ? "rgba(100,255,150,.2)" : "rgba(255,200,60,.2)"}`, color: call.status === "confirmed" ? "rgba(100,255,150,.8)" : "rgba(255,200,60,.8)" }}>{call.status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Campaign List */}
         {allCampaigns.length > 0 && <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>}
