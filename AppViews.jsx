@@ -336,7 +336,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           const headerAvg = headerTotal ? headerReviews.reduce((s, r) => s + r.rating, 0) / headerTotal : null;
           return (
             <div style={{ paddingTop: 64, marginBottom: 24 }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || user?.brandName || "your brand"}</div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{(user?.name && user.name !== user?.email) ? user.name : (user?.brandName || "your brand")}</div>
               {user?.email && <div style={{ fontSize: ".85rem", opacity: .45, marginTop: 6 }}>{user.email}</div>}
               {user?.location && <div style={{ fontSize: ".85rem", opacity: .35, marginTop: 3 }}>{user.location}</div>}
               {headerTotal > 0 && (
