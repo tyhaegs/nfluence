@@ -260,6 +260,8 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
 function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showBrandEdit, setShowBrandEdit] = useState(false);
+  const [brandEditForm, setBrandEditForm] = useState({ name: "", location: "", website: "" });
   const [showAttentionModal, setShowAttentionModal] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
   const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
@@ -321,7 +323,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); setBrandEditForm({ name: user?.name || "", location: user?.location || "", website: user?.website || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -408,39 +410,32 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             const brand = parts[0], campaign = parts[1], creator = parts[2];
             return (Array.isArray(calls) ? calls : [calls]).map(call => ({ ...call, brand, campaign, creator, key }));
           }).filter(c => c.status === "confirmed" || c.status === "pending").sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-          const fmtDate = (iso) => {
-            const d = new Date(iso);
-            const day = d.toLocaleDateString("en-US", { weekday: "short" });
-            const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            const tm = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-            const tz = d.toLocaleTimeString("en-US", { timeZoneName: "short" }).split(" ").pop();
-            return `${day}, ${md} · ${tm} ${tz}`;
-          };
           return (
             <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 10 }}>scheduled calls</div>
               {allCalls.length === 0 ? (
-                <div style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.02)", fontSize: ".85rem", opacity: .4 }}>no upcoming calls</div>
+                <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.06)", fontSize: ".85rem", opacity: .35 }}>no upcoming calls</div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {allCalls.map((call, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.03)" }}>
-                      <div style={{ flex: "0 0 auto", minWidth: 0 }}>
-                        <div style={{ fontSize: ".95rem", fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{call.brand} · {call.campaign}</div>
-                      </div>
-                      <div style={{ flex: 1, textAlign: "center", fontSize: ".88rem", opacity: .7 }}>{fmtDate(call.datetime)}</div>
-                      <div style={{ flex: "0 0 auto", display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {allCalls.map((call, i) => {
+                    const dt = new Date(call.datetime);
+                    const dateStr = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+                    const timeStr = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)" }}>
+                        <div style={{ fontWeight: 700, fontSize: ".95rem", color: "#fff", flex: 1 }}>{call.brand} · {call.campaign}</div>
+                        <div style={{ fontSize: ".9rem", opacity: .5, marginRight: 20, whiteSpace: "nowrap", minWidth: 220, textAlign: "center" }}>{dateStr} · {timeStr}</div>
                         {call.status === "confirmed" ? (
-                          <div style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.3)", color: "rgba(120,255,165,.95)" }}>confirmed</div>
+                          <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)" }}>confirmed</div>
                         ) : (
-                          <>
-                            <div onClick={e => e.stopPropagation()} style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.3)", color: "rgba(120,255,165,.95)", cursor: "pointer" }}>confirm</div>
-                            <div onClick={e => e.stopPropagation()} style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(255,100,100,.08)", border: "1px solid rgba(255,100,100,.3)", color: "rgba(255,140,140,.95)", cursor: "pointer" }}>decline</div>
-                          </>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)", cursor: "pointer" }}>confirm</div>
+                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(255,100,100,.3)", background: "rgba(255,100,100,.06)", fontSize: ".85rem", fontWeight: 700, color: "rgba(255,120,120,.8)", cursor: "pointer" }}>decline</div>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -464,32 +459,30 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - approvedCount) : null;
               return (
                 <div key={c.id || i} className="nf-campaign-card" style={{ position: "relative" }} onClick={() => onSelectCampaign(c)}>
-                  {/* Banner */}
                   <div style={{ position: "relative" }}>
                     <div style={{ height: 150, background: c.imgBg || "#0c1424", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                       {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
                     </div>
-                    {/* Logo */}
                     {c.logoUrl ? (
                       <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
                     ) : (
                       <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                     )}
-                    {/* Edit button top-right */}
                     {isUserCampaign && (
                       <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
                     )}
                   </div>
-                  {/* Brand name + campaign */}
                   <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ paddingTop: 34 }}>
                       <div className={c.featured ? "nf-featured-name" : ""} style={{ fontSize: "1.7rem", fontWeight: 700, color: c.featured ? undefined : "#fff", lineHeight: 1.15 }}>{c.brand}</div>
                       <div style={{ fontSize: "1.05rem", opacity: .5, marginTop: 4 }}>{c.campaign}</div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
-                        {spotsLeft != null ? `${spotsLeft} spots left` : "open"}
-                      </div>
+                      {spotsLeft != null && (
+                        <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
+                          {spotsLeft} spots left
+                        </div>
+                      )}
                       <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
                       <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
                         {(c.platforms || []).map(p => (
@@ -500,12 +493,12 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                   </div>
                   <div style={{ padding: "8px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
                     <div style={{ marginBottom: 0, flex: 1 }}>
-                      {c.deadline && (
-                        <div style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
-                          <div style={{ opacity: .35, minWidth: 105 }}>deadline:</div>
-                          <div style={{ opacity: .85 }}>{c.deadline}</div>
+                      {[["deadline:", c.deadline]].filter(([,v]) => v).map(([label, val]) => (
+                        <div key={label} style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
+                          <div style={{ opacity: .35, minWidth: 105 }}>{label}</div>
+                          <div style={{ opacity: .85 }}>{val}</div>
                         </div>
-                      )}
+                      ))}
                       {c.deliverables && (
                         <div style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
                           <div style={{ opacity: .35, minWidth: 105 }}>deliverables:</div>
@@ -518,7 +511,6 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                         </div>
                       )}
                     </div>
-                    {/* Footer */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)", minHeight: 68 }}>
                       <div>
                         <div style={{ fontSize: ".85rem", opacity: .4, textTransform: "lowercase", marginBottom: 3 }}>creators get</div>
@@ -527,7 +519,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                           {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
                         <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(100,180,255,.1)", border: "1px solid rgba(100,180,255,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(100,180,255,.9)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
                         {pendingCount > 0 && <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(255,200,60,.08)", border: "1px solid rgba(255,200,60,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(255,200,60,.9)" }}>{pendingCount} pending</div>}
                       </div>
@@ -552,6 +544,26 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           questions? <a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)" }}>support@nfluenceagency.com</a>
         </div>
       </div>
+
+      {/* Brand edit modal */}
+      {showBrandEdit && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400 }}>
+            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 20 }}>edit profile</div>
+            {[["brand name", "name"], ["location", "location"], ["website", "website"]].map(([label, key]) => (
+              <div key={key} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase" }}>{label}</div>
+                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif" }}
+                  value={brandEditForm[key]} onChange={e => setBrandEditForm(f => ({ ...f, [key]: e.target.value }))} placeholder={label} />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button onClick={() => setShowBrandEdit(false)} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>cancel</button>
+              <button onClick={() => { if (user) { user.name = brandEditForm.name; user.location = brandEditForm.location; user.website = brandEditForm.website; } setShowBrandEdit(false); }} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>save</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Needs attention modal */}
       {showAttentionModal && (() => {
