@@ -355,25 +355,21 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ fontSize: ".72rem", opacity: .35, marginTop: 4 }}>total creators</div>
           </div>
         </div>
-        {/* Reviews card — full width row */}
+        {/* Reviews row */}
         {(() => {
           const allReviews = allCampaigns.flatMap(c => (c.reviews || []).map(r => ({ ...r, _campaign: c })));
           const totalReviews = allReviews.length;
           const avgRating = totalReviews ? (allReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1) : null;
-          const newCount = allReviews.filter(r => r.submittedAt && (!lastReviewsVisitedAt || new Date(r.submittedAt) > new Date(lastReviewsVisitedAt))).length;
+          const r = parseFloat(avgRating);
           return (
-            <div className="nf-reviews-card" onClick={onViewReviews} style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 20, textAlign: "left", padding: "18px 22px" }}>
-              <div style={{ textAlign: "center", minWidth: 60 }}>
-                <div className="nf-gold-shimmer" style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", lineHeight: 1 }}>{avgRating || "—"}</div>
-                <div style={{ display: "flex", gap: 1, justifyContent: "center", marginTop: 4 }}>
-                  {[1,2,3,4,5].map(i => { const r = parseFloat(avgRating); return <span key={i} style={{ fontSize: ".75rem", color: i <= Math.floor(r) ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>; })}
-                </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+              <div style={{ display: "flex", gap: 2 }}>
+                {[1,2,3,4,5].map(i => <span key={i} style={{ fontSize: ".9rem", color: i <= Math.floor(r) ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>)}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: ".85rem", fontWeight: 600 }}>{totalReviews > 0 ? `${totalReviews} review${totalReviews !== 1 ? "s" : ""}` : "no reviews yet"}</div>
-                <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>creator reviews of your brand</div>
-              </div>
-              {newCount > 0 && <div style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(251,191,36,.15)", border: "1px solid rgba(251,191,36,.3)", fontSize: ".7rem", fontWeight: 600, color: "#fbbf24", flexShrink: 0 }}>{newCount} new</div>}
+              {avgRating && <span style={{ fontSize: ".9rem", fontWeight: 600, color: "#fff" }}>{avgRating}</span>}
+              <span onClick={onViewReviews} style={{ fontSize: ".85rem", opacity: .5, textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)", cursor: "pointer" }}>
+                {totalReviews > 0 ? `${totalReviews} review${totalReviews !== 1 ? "s" : ""}` : "no reviews yet"}
+              </span>
             </div>
           );
         })()}
