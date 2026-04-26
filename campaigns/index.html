@@ -4713,32 +4713,54 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
         {/* Scheduled Calls */}
         {(() => {
-          const allCalls = Object.entries(scheduledCalls).flatMap(([key, calls]) => {
+          const merged = { ...DEMO_SCHEDULED_CALLS, ...scheduledCalls };
+          const allCalls = Object.entries(merged).flatMap(([key, calls]) => {
             const parts = key.split("::");
             const brand = parts[0], campaign = parts[1], creator = parts[2];
             return (Array.isArray(calls) ? calls : [calls]).map(call => ({ ...call, brand, campaign, creator, key }));
           }).filter(c => c.status === "confirmed" || c.status === "pending").sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-          if (allCalls.length === 0) return null;
+          const fmtDate = (iso) => {
+            const d = new Date(iso);
+            const day = d.toLocaleDateString("en-US", { weekday: "short" });
+            const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const tm = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+            const tz = d.toLocaleTimeString("en-US", { timeZoneName: "short" }).split(" ").pop();
+            return `${day}, ${md} · ${tm} ${tz}`;
+          };
           return (
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 10 }}>scheduled calls</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {allCalls.map((call, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", fontSize: ".85rem" }}>
-                    <div style={{ opacity: .5, minWidth: 130 }}>{new Date(call.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
-                    <div style={{ opacity: .8, flex: 1 }}>{call.creator}</div>
-                    <div style={{ opacity: .4 }}>{call.campaign}</div>
-                    <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".72rem", fontWeight: 600, background: call.status === "confirmed" ? "rgba(100,255,150,.08)" : "rgba(255,200,60,.08)", border: `1px solid ${call.status === "confirmed" ? "rgba(100,255,150,.2)" : "rgba(255,200,60,.2)"}`, color: call.status === "confirmed" ? "rgba(100,255,150,.8)" : "rgba(255,200,60,.8)" }}>{call.status}</div>
-                  </div>
-                ))}
-              </div>
+              {allCalls.length === 0 ? (
+                <div style={{ padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.02)", fontSize: ".85rem", opacity: .4 }}>no upcoming calls</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {allCalls.map((call, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.03)" }}>
+                      <div style={{ flex: "0 0 auto", minWidth: 0 }}>
+                        <div style={{ fontSize: ".95rem", fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{call.brand} · {call.campaign}</div>
+                      </div>
+                      <div style={{ flex: 1, textAlign: "center", fontSize: ".88rem", opacity: .7 }}>{fmtDate(call.datetime)}</div>
+                      <div style={{ flex: "0 0 auto", display: "flex", gap: 8, alignItems: "center" }}>
+                        {call.status === "confirmed" ? (
+                          <div style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.3)", color: "rgba(120,255,165,.95)" }}>confirmed</div>
+                        ) : (
+                          <>
+                            <div onClick={e => e.stopPropagation()} style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.3)", color: "rgba(120,255,165,.95)", cursor: "pointer" }}>confirm</div>
+                            <div onClick={e => e.stopPropagation()} style={{ padding: "6px 14px", borderRadius: 20, fontSize: ".78rem", fontWeight: 600, background: "rgba(255,100,100,.08)", border: "1px solid rgba(255,100,100,.3)", color: "rgba(255,140,140,.95)", cursor: "pointer" }}>decline</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })()}
 
         {/* Campaign List */}
         {allCampaigns.length > 0 && <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
           {allCampaigns.length === 0 ? (
             <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "center", padding: "60px 0" }}>
               <button className="nf-new-campaign-btn" onClick={onNewCampaign} style={{ padding: "16px 36px", fontSize: "1rem" }}>
@@ -4760,9 +4782,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     </div>
                     {/* Logo */}
                     {c.logoUrl ? (
-                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
+                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
                     ) : (
-                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
+                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                     )}
                     {/* Edit button top-right */}
                     {isUserCampaign && (
@@ -4776,21 +4798,45 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                       <div style={{ fontSize: "1.05rem", opacity: .5, marginTop: 4 }}>{c.campaign}</div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block" }}>
+                      <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
                         {spotsLeft != null ? `${spotsLeft} spots left` : "open"}
+                      </div>
+                      <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
+                      <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
+                        {(c.platforms || []).map(p => (
+                          <div key={p} style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PLAT_SVGS_SMALL[p]}</div>
+                        ))}
                       </div>
                     </div>
                   </div>
-                    <div style={{ padding: "8px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ padding: "8px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
+                    <div style={{ marginBottom: 0, flex: 1 }}>
                       {c.deadline && (
-                        <div style={{ fontSize: ".82rem", opacity: .4, marginBottom: 4 }}>deadline {c.deadline}</div>
+                        <div style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
+                          <div style={{ opacity: .35, minWidth: 105 }}>deadline:</div>
+                          <div style={{ opacity: .85 }}>{c.deadline}</div>
+                        </div>
+                      )}
+                      {c.deliverables && (
+                        <div style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
+                          <div style={{ opacity: .35, minWidth: 105 }}>deliverables:</div>
+                          <div style={{ opacity: .85 }}>
+                            {Object.entries(c.deliverables).map(([plat, del], idx) => {
+                              const abbr = { Instagram: "IG", TikTok: "TT", YouTube: "YT", X: "X", Facebook: "FB" };
+                              return <span key={plat}>{idx > 0 ? " · " : ""}{abbr[plat] || plat}: {del}</span>;
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
                     {/* Footer */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-                      <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-                        {c.comp || "—"}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)", minHeight: 68 }}>
+                      <div>
+                        <div style={{ fontSize: ".85rem", opacity: .4, textTransform: "lowercase", marginBottom: 3 }}>creators get</div>
+                        <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                          {c.comp || "—"}
+                          {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
+                        </div>
                       </div>
                       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
                         <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(100,180,255,.1)", border: "1px solid rgba(100,180,255,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(100,180,255,.9)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
@@ -5730,7 +5776,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
         {/* Campaigns tab */}
         {activeTab === "campaigns" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, paddingBottom: 60 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20, paddingBottom: 60 }}>
             {campaigns.map((c, i) => {
               const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - (c.creators?.approved?.length || 0)) : null;
               const applied = appliedCampaigns.includes(c.brand + "::" + c.campaign);
@@ -5973,7 +6019,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
             <div style={{ fontSize: ".85rem", marginTop: 6 }}>try adjusting or clearing your filters</div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
             {filtered.map((c, i) => (
               <div key={i} className="nf-browse-card" onClick={() => onSelectCampaign(c)}>
                 <div style={{ position: "relative" }}>
