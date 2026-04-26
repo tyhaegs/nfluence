@@ -948,7 +948,7 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
         * { box-sizing:border-box; margin:0; padding:0; }
         .cpp-back { opacity:.5; transition:opacity .15s; cursor:pointer; }
         .cpp-back:hover { opacity:1; }
-        .cpp-plat-card { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; gap:14px; text-decoration:none; color:#fff; transition:transform .2s, border-color .2s, box-shadow .2s; }
+        .cpp-plat-card { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between; aspect-ratio:1; text-decoration:none; color:#fff; transition:transform .2s, border-color .2s, box-shadow .2s; }
         .cpp-plat-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,.2); box-shadow:0 10px 30px rgba(0,0,0,.35); }
         .cpp-msg-btn { transition:transform .12s, border-color .2s, box-shadow .2s, background .2s; cursor:pointer; }
         .cpp-msg-btn:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.55) !important; box-shadow:0 0 18px rgba(255,255,255,.12) !important; background:rgba(255,255,255,.12) !important; }
@@ -979,7 +979,7 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
 
         {/* Header row */}
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>
+          <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em", overflowWrap: "break-word", minWidth: 0 }}>
             {creator.name || "creator"}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, fontSize: ".88rem", opacity: .5, marginTop: 10 }}>
@@ -987,12 +987,17 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
             {creator.age && <span>· {creator.age} yrs</span>}
             {creator.languages && <span>· {creator.languages}</span>}
           </div>
-          {rating && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-              <span style={{ color: "#fbbf24", fontSize: ".95rem" }}>{"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}</span>
-              <span style={{ fontSize: ".85rem", opacity: .5 }}>{rating.toFixed(1)}{completedCount > 0 ? ` · ${completedCount} campaign${completedCount !== 1 ? "s" : ""} completed` : ""}</span>
-            </div>
-          )}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginTop: 8 }}>
+            {rating
+              ? <span style={{ color: "#fbbf24", fontSize: ".95rem" }}>{"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}</span>
+              : <span style={{ color: "rgba(255,255,255,.2)", fontSize: ".95rem" }}>☆☆☆☆☆</span>
+            }
+            <span style={{ fontSize: ".85rem", opacity: .5 }}>
+              {rating
+                ? `${rating.toFixed(1)}${completedCount > 0 ? ` · ${completedCount} campaign${completedCount !== 1 ? "s" : ""} completed` : ""}`
+                : "(0 reviews)"}
+            </span>
+          </div>
         </div>
 
         {/* Bio */}
@@ -1004,8 +1009,8 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
 
         {/* Niches */}
         {niches.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20, marginTop: 8 }}>
-            {niches.map((n, i) => <div key={i} className="cpp-niche">{n}</div>)}
+          <div style={{ fontSize: ".85rem", opacity: .5, marginBottom: 20, marginTop: 6 }}>
+            {niches.join(", ")}
           </div>
         )}
 
@@ -1491,12 +1496,12 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
-  const [filterTier, setFilterTier] = useState("all");
   const [filterIndustry, setFilterIndustry] = useState("All");
 
   const COMP_LABELS = { All: "All", product: "product only", paid: "paid", "product+paid": "product + paid", other: "other" };
 
   const getIndustries = (c) => {
+    if (c.industry) return [c.industry];
     const text = (c.description + " " + c.brand + " " + c.campaign).toLowerCase();
     return INDUSTRIES.filter(ind => {
       const keywords = ind.split(/[&\s]+/).filter(w => w.length > 3);
@@ -1523,13 +1528,6 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
       }
       if (filterPlatform !== "All" && !c.platforms.includes(filterPlatform)) return false;
       if (filterComp !== "All" && c.compType !== filterComp) return false;
-      if (filterTier !== "all") {
-        const tierOrder = ["25k", "50k", "100k", "250k", "500k", "1M+"];
-        const normalize = (t) => t.toLowerCase().replace(/\+$/, "");
-        const campaignIdx = tierOrder.findIndex(t => normalize(t) === normalize(c.following || ""));
-        const filterIdx = tierOrder.findIndex(t => normalize(t) === normalize(filterTier));
-        if (campaignIdx === -1 || campaignIdx > filterIdx) return false;
-      }
       if (filterIndustry !== "All") {
         const inds = getIndustries(c);
         if (!inds.includes(filterIndustry)) return false;
@@ -1539,10 +1537,10 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
     const featured = shuffle(results.filter(c => c.featured), 0);
     const regular = shuffle(results.filter(c => !c.featured), 1000);
     return [...featured, ...regular];
-  }, [campaigns, search, filterPlatform, filterComp, filterTier, filterIndustry]);
+  }, [campaigns, search, filterPlatform, filterComp, filterIndustry]);
 
-  const hasActiveFilters = search.trim() || filterPlatform !== "All" || filterComp !== "All" || filterTier !== "all" || filterIndustry !== "All";
-  const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterTier("all"); setFilterIndustry("All"); };
+  const hasActiveFilters = search.trim() || filterPlatform !== "All" || filterComp !== "All" || filterIndustry !== "All";
+  const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterIndustry("All"); };
 
   const pillBtn = (active, onClick, label) => (
     <button onClick={onClick} style={{
@@ -1563,7 +1561,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         .nf-apply-btn2:hover { border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 14px rgba(255,255,255,.15) !important; background: rgba(255,255,255,.08) !important; transform: translateY(-1px); }
         .nf-search-input::placeholder { color: rgba(255,255,255,.3); }
         .nf-search-input:focus { outline: none; border-color: rgba(255,255,255,.35) !important; box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
-        .nf-filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .nf-filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; flex: 1; min-width: 0; }
         .nf-filter-scroll::-webkit-scrollbar { display: none; }
         @keyframes nf-gold-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
@@ -1573,15 +1571,12 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <NotificationBell notifications={[]} onOpen={() => {}} />
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }}>
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-          </div>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center" }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
         </div>
       </div>
 
@@ -1610,10 +1605,6 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>comp</div>
             <div className="nf-filter-scroll">{Object.entries(COMP_LABELS).map(([val, label]) => pillBtn(filterComp === val, () => setFilterComp(val), label))}</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>following</div>
-            <div className="nf-filter-scroll">{FOLLOWER_TIERS.map(t => pillBtn(filterTier === t, () => setFilterTier(t), t))}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>industry</div>
@@ -1759,8 +1750,8 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
 function CreatorOnboarding({ onComplete, onBack }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "profile", "platforms", "preview"];
-  const [account, setAccount] = useState({ name: "", email: "", password: "", confirmPassword: "" });
-  const [profile, setProfile] = useState({ bio: "", location: "", age: "", languages: "", niches: "", avatarPreview: null, bannerPreview: null, avatarEditing: false, bannerEditing: false, avatarTransform: null, bannerTransform: null });
+  const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+  const [profile, setProfile] = useState({ bio: "", city: "", state: "", country: "", age: "", languages: "", niches: "", avatarPreview: null, bannerPreview: null, avatarEditing: false, bannerEditing: false, avatarTransform: null, bannerTransform: null });
   const [platforms, setPlatforms] = useState({ selected: { Instagram: false, TikTok: false, YouTube: false, X: false, Facebook: false }, handles: {}, followers: {} });
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
@@ -1772,7 +1763,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
   const handlesComplete = selectedPlatformKeys.length > 0 && selectedPlatformKeys.every(p => platforms.handles[p]?.trim());
 
   const canProceed = useMemo(() => {
-    if (step === 0) return account.name.trim() && account.email.includes("@") && account.password.length >= 8 && account.password === account.confirmPassword;
+    if (step === 0) return account.firstName.trim() && account.lastName.trim() && account.email.includes("@") && account.password.length >= 8 && account.password === account.confirmPassword;
     if (step === 1) return true; // profile optional
     if (step === 2) return handlesComplete;
     return true;
@@ -1789,10 +1780,11 @@ function CreatorOnboarding({ onComplete, onBack }) {
   };
 
   const handleComplete = () => {
+    const fullName = [account.firstName, account.lastName].filter(Boolean).join(" ");
     const profileData = {
-      name: account.name,
+      name: fullName,
       bio: profile.bio,
-      location: profile.location,
+      location: [profile.city, profile.state, profile.country].filter(Boolean).join(", "),
       age: profile.age,
       languages: profile.languages,
       niches: profile.niches,
@@ -1812,7 +1804,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
       facebookFollowers: platforms.followers["Facebook"] || "",
       rating: null,
     };
-    onComplete(account.email, account.name, account.password, profileData);
+    onComplete(account.email, fullName, account.password, profileData);
   };
 
   const NICHE_OPTIONS = ["fitness & training", "wellness & supplements", "beauty & skincare", "fashion & apparel", "outdoors & adventure", "health & nutrition", "tech & gadgets", "gaming", "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment", "travel", "pets", "automotive", "finance & investing", "education & coaching"];
@@ -1844,6 +1836,8 @@ function CreatorOnboarding({ onComplete, onBack }) {
         .co-plat-btn.selected { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.3); }
         .co-upload-zone { display: block; padding: 20px; border-radius: 14px; border: 2px dashed rgba(255,255,255,.12); background: rgba(255,255,255,.02); cursor: pointer; text-align: center; transition: all .15s; }
         .co-upload-zone:hover { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.04); }
+        @keyframes nf-cta-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(100,255,150,.35); } 60% { box-shadow: 0 0 0 10px rgba(100,255,150,0); } }
+        .co-btn-finish { animation: nf-cta-pulse 2s ease-out infinite; }
       `}</style>
 
       {/* Header */}
@@ -1873,9 +1867,15 @@ function CreatorOnboarding({ onComplete, onBack }) {
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>create your account</div>
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>free forever for creators</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>full name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                <input className="co-input" placeholder="your name" value={account.name} onChange={e => setAccount(a => ({ ...a, name: e.target.value }))} />
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>first name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
+                  <input className="co-input" placeholder="first" value={account.firstName} onChange={e => setAccount(a => ({ ...a, firstName: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>last name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
+                  <input className="co-input" placeholder="last" value={account.lastName} onChange={e => setAccount(a => ({ ...a, lastName: e.target.value }))} />
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>email <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
@@ -1951,7 +1951,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8 }}>profile photo</div>
               {profile.avatarEditing && profile.avatarPreview ? (
-                <ImageEditor src={profile.avatarPreview} shape="circle"
+                <ImageEditor src={profile.avatarPreview} shape="square"
                   initialScale={profile.avatarTransform?.scale} initialPos={profile.avatarTransform?.pos}
                   onSave={(t) => setProfile(p => ({ ...p, avatarTransform: t, avatarEditing: false }))}
                   onCancel={() => setProfile(p => ({ ...p, avatarPreview: null, avatarEditing: false, avatarTransform: null }))} />
@@ -1959,7 +1959,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   <label style={{ cursor: "pointer", position: "relative" }}>
                     <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={e => handleFileUpload("avatarPreview", e)} />
-                    <div style={{ width: 72, height: 72, borderRadius: "50%", border: "2px dashed rgba(255,255,255,.2)", background: "rgba(255,255,255,.04)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: 14, border: "2px dashed rgba(255,255,255,.2)", background: "rgba(255,255,255,.04)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {profile.avatarPreview ? <img src={profile.avatarPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
                     </div>
                   </label>
@@ -1981,10 +1981,20 @@ function CreatorOnboarding({ onComplete, onBack }) {
                 <textarea className="co-input" placeholder="tell brands about yourself..." rows={3} value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} style={{ resize: "vertical", lineHeight: 1.5 }} />
               </div>
               <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ flex: 2 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>location</div>
-                  <input className="co-input" placeholder="city, state or country" value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>city</div>
+                  <input className="co-input" placeholder="city" value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} />
                 </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>state</div>
+                  <input className="co-input" placeholder="state" value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>country</div>
+                  <input className="co-input" placeholder="country" value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>age</div>
                   <input className="co-input" placeholder="age" value={profile.age} onChange={e => setProfile(p => ({ ...p, age: e.target.value }))} />
@@ -2051,12 +2061,12 @@ function CreatorOnboarding({ onComplete, onBack }) {
               {/* Banner */}
               <div style={{ height: 120, background: profile.bannerPreview ? `url(${profile.bannerPreview}) center/cover` : "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.2))", position: "relative" }}>
                 <div style={{ position: "absolute", bottom: -28, left: 20, width: 56, height: 56, borderRadius: "50%", border: "3px solid #040b15", background: "#0c1424", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", fontWeight: 700 }}>
-                  {profile.avatarPreview ? <img src={profile.avatarPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : account.name.charAt(0).toUpperCase()}
+                  {profile.avatarPreview ? <img src={profile.avatarPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : (account.firstName || "?").charAt(0).toUpperCase()}
                 </div>
               </div>
               <div style={{ padding: "38px 20px 20px", background: "rgba(255,255,255,.02)" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{account.name || "your name"}</div>
-                {(profile.location || profile.age) && <div style={{ fontSize: ".82rem", opacity: .5, marginBottom: 6 }}>{[profile.location, profile.age && `${profile.age} yrs`].filter(Boolean).join(" · ")}</div>}
+                <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{[account.firstName, account.lastName].filter(Boolean).join(" ") || "your name"}</div>
+                {([profile.city, profile.state, profile.country].some(Boolean) || profile.age) && <div style={{ fontSize: ".82rem", opacity: .5, marginBottom: 6 }}>{[[profile.city, profile.state, profile.country].filter(Boolean).join(", "), profile.age && `${profile.age} yrs`].filter(Boolean).join(" · ")}</div>}
                 {profile.bio && <div style={{ fontSize: ".85rem", opacity: .55, lineHeight: 1.5, marginBottom: 10 }}>{profile.bio}</div>}
                 {selectedNiches.length > 0 && (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
@@ -2085,7 +2095,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
           {step < 3 ? (
             <button className="co-btn" style={{ flex: 1 }} disabled={!canProceed} onClick={() => setStep(s => s + 1)}>continue →</button>
           ) : (
-            <button className="co-btn" style={{ flex: 1, borderColor: "rgba(100,255,150,.35)", background: "rgba(100,255,150,.1)", color: "rgba(100,255,150,.95)" }} onClick={handleComplete}>let's go →</button>
+            <button className="co-btn co-btn-finish" style={{ flex: 1, borderColor: "rgba(100,255,150,.35)", background: "rgba(100,255,150,.1)", color: "rgba(100,255,150,.95)" }} onClick={handleComplete}>i'm in →</button>
           )}
         </div>
       </div>
@@ -2607,7 +2617,28 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Basic info */}
               <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em" }}>basic info</div>
-              {[["name", "your name"], ["bio", "short bio (shown on profile)"], ["location", "city, state or country"], ["age", "your age"], ["languages", "e.g. English, Spanish"]].map(([field, placeholder]) => (
+              {[["name", "your name"], ["bio", "short bio (shown on profile)"]].map(([field, placeholder]) => (
+                <div key={field}>
+                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
+                  <input className="nf-creator-input" placeholder={placeholder} value={editForm[field] || ""} onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))} />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 10 }}>
+                {[["city", "city"], ["state", "state"], ["country", "country"]].map(([field, placeholder]) => (
+                  <div key={field} style={{ flex: 1 }}>
+                    <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
+                    <input className="nf-creator-input" placeholder={placeholder} value={editForm[field] || ""} onChange={e => {
+                      const val = e.target.value;
+                      setEditForm(f => {
+                        const updated = { ...f, [field]: val };
+                        updated.location = [updated.city, updated.state, updated.country].filter(Boolean).join(", ");
+                        return updated;
+                      });
+                    }} />
+                  </div>
+                ))}
+              </div>
+              {[["age", "your age"], ["languages", "e.g. English, Spanish"]].map(([field, placeholder]) => (
                 <div key={field}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
                   <input className="nf-creator-input" placeholder={placeholder} value={editForm[field] || ""} onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))} />

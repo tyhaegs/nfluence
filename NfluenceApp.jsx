@@ -753,7 +753,7 @@ function NfluenceApp() {
           {mergedDemos.map((c, i) => {
             const isApplied = appliedCampaigns.includes(c.brand + "::" + c.campaign);
             return (
-            <div key={i} className="nf-campaign-card" onClick={() => { setSelectedCampaign(mergedDemos[i]); setDetailSource("landing"); setView("detail"); }}>
+            <div key={i} className="nf-campaign-card" onClick={() => { setSelectedCampaign(c); setDetailSource("landing"); setView("detail"); }}>
               {/* Product image area */}
               <div style={{ position: "relative" }}>
                 <div style={{ height: 150, background: c.imgBg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
@@ -831,7 +831,7 @@ function NfluenceApp() {
                       applied
                     </div>
                   ) : (
-                    <div className="nf-apply-btn" onClick={e => { e.stopPropagation(); setAutoApply(true); setSelectedCampaign(mergedDemos[i]); setDetailSource("landing"); setView("detail"); }} style={{ padding: "10px 24px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", fontSize: ".95rem", fontWeight: 600, color: "#fff" }}>apply</div>
+                    <div className="nf-apply-btn" onClick={e => { e.stopPropagation(); setAutoApply(true); setSelectedCampaign(c); setDetailSource("landing"); setView("detail"); }} style={{ padding: "10px 24px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", fontSize: ".95rem", fontWeight: 600, color: "#fff" }}>apply</div>
                   )}
                 </div>
               </div>

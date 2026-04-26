@@ -8,8 +8,9 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   const containerRef = useRef(null);
 
   const isCircle = shape === "circle";
-  const cropW = isCircle ? 160 : 320;
-  const cropH = isCircle ? 160 : 120;
+  const isSquare = shape === "square";
+  const cropW = (isCircle || isSquare) ? 160 : 320;
+  const cropH = (isCircle || isSquare) ? 160 : 120;
 
   const onMouseDown = useCallback((e) => {
     e.preventDefault();
@@ -61,13 +62,12 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
     return () => el.removeEventListener("touchmove", handler);
   }, []);
 
-  const zoomPct = Math.round(((scale - 0.5) / (3 - 0.5)) * 100);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
       <div ref={containerRef} style={{
-        width: cropW, height: cropH, borderRadius: isCircle ? "50%" : 12,
+        width: cropW, height: cropH, borderRadius: isCircle ? "50%" : isSquare ? 14 : 12,
         overflow: "hidden", border: "2px solid rgba(255,255,255,.3)",
         cursor: "grab", position: "relative", background: "#000",
       }}
@@ -85,11 +85,11 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, width: cropW }}>
         <span style={{ fontSize: ".7rem", opacity: .4 }}>-</span>
-        <input type="range" min="0.5" max="3" step="0.05" value={scale}
+        <input type="range" min="1" max="3" step="0.05" value={scale}
           onChange={e => setScale(parseFloat(e.target.value))}
           style={{ flex: 1, accentColor: "rgba(255,255,255,.5)" }} />
         <span style={{ fontSize: ".7rem", opacity: .4 }}>+</span>
-        <span style={{ fontSize: ".7rem", opacity: .5, minWidth: 34, textAlign: "right" }}>{zoomPct}%</span>
+        <span style={{ fontSize: ".7rem", opacity: .5, minWidth: 34, textAlign: "right" }}>{scale.toFixed(1)}x</span>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         <div onClick={() => onSave({ scale, pos })}
