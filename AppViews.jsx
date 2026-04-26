@@ -402,32 +402,36 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
         {/* Scheduled Calls */}
         {(() => {
-          const allCalls = Object.entries(scheduledCalls).flatMap(([key, calls]) => {
+          const merged = { ...DEMO_SCHEDULED_CALLS, ...scheduledCalls };
+          const allCalls = Object.entries(merged).flatMap(([key, calls]) => {
             const parts = key.split("::");
             const brand = parts[0], campaign = parts[1], creator = parts[2];
             return (Array.isArray(calls) ? calls : [calls]).map(call => ({ ...call, brand, campaign, creator, key }));
           }).filter(c => c.status === "confirmed" || c.status === "pending").sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
-          if (allCalls.length === 0) return null;
           return (
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 10 }}>scheduled calls</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {allCalls.map((call, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", fontSize: ".85rem" }}>
-                    <div style={{ opacity: .5, minWidth: 130 }}>{new Date(call.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
-                    <div style={{ opacity: .8, flex: 1 }}>{call.creator}</div>
-                    <div style={{ opacity: .4 }}>{call.campaign}</div>
-                    <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".72rem", fontWeight: 600, background: call.status === "confirmed" ? "rgba(100,255,150,.08)" : "rgba(255,200,60,.08)", border: `1px solid ${call.status === "confirmed" ? "rgba(100,255,150,.2)" : "rgba(255,200,60,.2)"}`, color: call.status === "confirmed" ? "rgba(100,255,150,.8)" : "rgba(255,200,60,.8)" }}>{call.status}</div>
-                  </div>
-                ))}
-              </div>
+              {allCalls.length === 0 ? (
+                <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.06)", fontSize: ".85rem", opacity: .35 }}>no upcoming calls</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {allCalls.map((call, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", fontSize: ".85rem" }}>
+                      <div style={{ opacity: .5, minWidth: 130 }}>{new Date(call.datetime).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                      <div style={{ opacity: .8, flex: 1 }}>{call.creator}</div>
+                      <div style={{ opacity: .4 }}>{call.campaign}</div>
+                      <div style={{ padding: "3px 10px", borderRadius: 20, fontSize: ".72rem", fontWeight: 600, background: call.status === "confirmed" ? "rgba(100,255,150,.08)" : "rgba(255,200,60,.08)", border: `1px solid ${call.status === "confirmed" ? "rgba(100,255,150,.2)" : "rgba(255,200,60,.2)"}`, color: call.status === "confirmed" ? "rgba(100,255,150,.8)" : "rgba(255,200,60,.8)" }}>{call.status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })()}
 
         {/* Campaign List */}
         {allCampaigns.length > 0 && <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
           {allCampaigns.length === 0 ? (
             <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "center", padding: "60px 0" }}>
               <button className="nf-new-campaign-btn" onClick={onNewCampaign} style={{ padding: "16px 36px", fontSize: "1rem" }}>
@@ -1419,7 +1423,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
         {/* Campaigns tab */}
         {activeTab === "campaigns" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, paddingBottom: 60 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20, paddingBottom: 60 }}>
             {campaigns.map((c, i) => {
               const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - (c.creators?.approved?.length || 0)) : null;
               const applied = appliedCampaigns.includes(c.brand + "::" + c.campaign);
@@ -1662,7 +1666,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
             <div style={{ fontSize: ".85rem", marginTop: 6 }}>try adjusting or clearing your filters</div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
             {filtered.map((c, i) => (
               <div key={i} className="nf-browse-card" onClick={() => onSelectCampaign(c)}>
                 <div style={{ position: "relative" }}>

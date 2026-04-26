@@ -241,4 +241,16 @@ function businessDaysSince(dateStr) {
   return count;
 }
 
+const DEMO_SCHEDULED_CALLS = {
+  "Nike::Running Challenge::Alex Rivera": [
+    { datetime: "2026-05-02T14:00:00", status: "confirmed", notes: "content review call" },
+  ],
+  "Alani Nu::Lifestyle & Energy Campaign::Emma Davis": [
+    { datetime: "2026-05-05T11:00:00", status: "confirmed", notes: "campaign kickoff" },
+  ],
+  "Alo::Mindful Movement::Nina Williams": [
+    { datetime: "2026-05-07T10:00:00", status: "pending", notes: "shoot planning" },
+  ],
+};
+
 // ═══════════════════════════════════════════════
