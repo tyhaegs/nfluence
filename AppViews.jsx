@@ -323,12 +323,20 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 80px" }}>
         {/* Profile info */}
-        <div style={{ paddingTop: 64, marginBottom: 24 }}>
-          <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || "your brand"}</div>
-          <div style={{ display: "flex", gap: 10, marginTop: 10, fontSize: ".88rem", opacity: .5, alignItems: "center", flexWrap: "wrap" }}>
-            {user?.email && <span>{user.email}</span>}
-          </div>
-        </div>
+        {(() => {
+          const headerReviews = allCampaigns.flatMap(c => (c.reviews || []));
+          const headerTotal = headerReviews.length;
+          return (
+            <div style={{ paddingTop: 64, marginBottom: 24 }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || "your brand"}</div>
+              <div style={{ display: "flex", gap: 10, marginTop: 8, fontSize: ".88rem", opacity: .5, alignItems: "center", flexWrap: "wrap" }}>
+                {user?.email && <span>{user.email}</span>}
+                {user?.location && <><span style={{ opacity: .4 }}>·</span><span>{user.location}</span></>}
+                {headerTotal > 0 && <><span style={{ opacity: .4 }}>·</span><span onClick={onViewReviews} style={{ textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)", cursor: "pointer" }}>{headerTotal} review{headerTotal !== 1 ? "s" : ""}</span></>}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Stats Row — 3 col: active · needs attention · total creators, then reviews */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
