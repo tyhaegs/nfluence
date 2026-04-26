@@ -82,7 +82,7 @@ const DEMO_GIG_LISTINGS = [
     logoUrl: "/assets/logo_alani_nu.jpg",
     imgUrl: "/assets/banner_alani_nu.jpg",
     title: "Lifestyle Video Content — Energy Drink Line",
-    industry: "food & beverage",
+    industry: "wellness & supplements",
     location: "Miami, FL",
     shootDate: "05/20/26",
     contentTypes: ["video / reels", "lifestyle photography"],

@@ -100,8 +100,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
     setC(prev => {
       const newPending = (prev.creators?.pending || []).filter(cr => cr.name !== creator.name);
       const newApproved = [...(prev.creators?.approved || []), { ...creator, stage: "accepted", acceptedAt: new Date().toISOString() }];
-      const newSpotsFilled = (prev.spotsFilled || 0) + 1;
-      return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved }, spotsFilled: newSpotsFilled };
+      return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved } };
     });
     onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted!", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
   };
@@ -1696,7 +1695,9 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     if (step === 3) {
       const isPaid = terms.compType === "paid" || terms.compType === "product+paid";
       const needsCap = isPaid && (campaign.spotsTotal === null || campaign.spotsTotal === 0);
-      return terms.compType && terms.country && !needsCap;
+      const hasDeadline = terms.deadlineMode === "date" ? !!terms.deadlineDate : !!(terms.deadlineAmount && parseInt(terms.deadlineAmount) > 0);
+      const hasAmount = !isPaid || (parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) > 0);
+      return terms.compType && terms.country && !needsCap && hasDeadline && hasAmount;
     }
     if (step === 4) return isValidEmail(account.email) && account.password.length >= 8 && account.password === account.confirmPassword && account.agreeTerms;
     return true;
@@ -3111,10 +3112,14 @@ function Preview({ brand, campaign, platforms, terms }) {
 
 // ── GigListingBuilder ──
 
-function GigListingBuilder({ onBack, onPublish }) {
+function GigListingBuilder({ onBack, onPublish, session }) {
   const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState("");
   const [pendingGigData, setPendingGigData] = useState(null);
+  const cardRef = useRef(null);
+  const cardDivRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
@@ -3160,6 +3165,26 @@ function GigListingBuilder({ onBack, onPublish }) {
     window.scrollTo?.({ top: 0, behavior: "smooth" });
     if (step === 4 && !account.email && brand.email) setAccount(p => ({ ...p, email: brand.email }));
   }, [step]);
+
+  useEffect(() => {
+    if (!showPayModal) {
+      cardRef.current?.destroy();
+      cardRef.current = null;
+      setPayError("");
+      return;
+    }
+    const stripe = getStripe();
+    if (!stripe) return;
+    const t = setTimeout(() => {
+      if (!cardDivRef.current || cardRef.current) return;
+      const card = stripe.elements().create('card', {
+        style: { base: { color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: '15px', '::placeholder': { color: 'rgba(255,255,255,.35)' } } },
+      });
+      card.mount(cardDivRef.current);
+      cardRef.current = card;
+    }, 0);
+    return () => { clearTimeout(t); cardRef.current?.destroy(); cardRef.current = null; };
+  }, [showPayModal]);
 
   const handleAddMedia = (files, type) => {
     files.forEach(file => {
@@ -3226,8 +3251,23 @@ function GigListingBuilder({ onBack, onPublish }) {
             </div>
             {promoApplied && <div style={{ fontSize: ".8rem", color: "rgba(100,255,150,.8)", marginBottom: 12 }}>{Math.round(promoDiscount * 100)}% off applied</div>}
             {promoError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.7)", marginBottom: 12 }}>{promoError}</div>}
-            <button className="nf-btn" style={{ width: "100%", marginBottom: 10, background: "rgba(255,255,255,.08)" }} onClick={buildAndPublish}>pay ${discountedPrice} & publish</button>
-            <button className="nf-btn-back" style={{ width: "100%" }} onClick={() => setShowPayModal(false)}>cancel</button>
+            <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12, textAlign: "left" }} />
+            {payError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.9)", marginBottom: 10, textAlign: "left" }}>{payError}</div>}
+            <button className="nf-btn" disabled={payLoading} style={{ width: "100%", marginBottom: 10, background: payLoading ? "rgba(255,255,255,.04)" : "rgba(255,255,255,.08)", opacity: payLoading ? .6 : 1 }} onClick={async () => {
+              if (!cardRef.current) return;
+              setPayLoading(true);
+              setPayError("");
+              try {
+                await callStripePayment(Math.round(parseFloat(discountedPrice) * 100), session?.access_token, cardRef.current);
+                setShowPayModal(false);
+                buildAndPublish();
+              } catch (err) {
+                setPayError(err.message || "Payment failed");
+              } finally {
+                setPayLoading(false);
+              }
+            }}>{payLoading ? "processing..." : `pay $${discountedPrice} & publish`}</button>
+            <button className="nf-btn-back" disabled={payLoading} style={{ width: "100%" }} onClick={() => { if (!payLoading) setShowPayModal(false); }}>cancel</button>
           </div>
         </div>
       )}

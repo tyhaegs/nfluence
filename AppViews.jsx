@@ -1750,7 +1750,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
 function CreatorOnboarding({ onComplete, onBack }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "profile", "platforms", "preview"];
-  const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+  const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "", agreeTerms: false });
   const [profile, setProfile] = useState({ bio: "", city: "", state: "", country: "", age: "", languages: "", niches: "", avatarPreview: null, bannerPreview: null, avatarEditing: false, bannerEditing: false, avatarTransform: null, bannerTransform: null });
   const [platforms, setPlatforms] = useState({ selected: { Instagram: false, TikTok: false, YouTube: false, X: false, Facebook: false }, handles: {}, followers: {} });
   const [showPass, setShowPass] = useState(false);
@@ -1763,7 +1763,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
   const handlesComplete = selectedPlatformKeys.length > 0 && selectedPlatformKeys.every(p => platforms.handles[p]?.trim());
 
   const canProceed = useMemo(() => {
-    if (step === 0) return account.firstName.trim() && account.lastName.trim() && account.email.includes("@") && account.password.length >= 8 && account.password === account.confirmPassword;
+    if (step === 0) return account.firstName.trim() && account.lastName.trim() && account.email.includes("@") && account.password.length >= 8 && account.password === account.confirmPassword && account.agreeTerms;
     if (step === 1) return true; // profile optional
     if (step === 2) return handlesComplete;
     return true;
@@ -1807,7 +1807,6 @@ function CreatorOnboarding({ onComplete, onBack }) {
     onComplete(account.email, fullName, account.password, profileData);
   };
 
-  const NICHE_OPTIONS = ["fitness & training", "wellness & supplements", "beauty & skincare", "fashion & apparel", "outdoors & adventure", "health & nutrition", "tech & gadgets", "gaming", "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment", "travel", "pets", "automotive", "finance & investing", "education & coaching"];
   const [selectedNiches, setSelectedNiches] = useState([]);
   const toggleNiche = (n) => {
     setSelectedNiches(prev => {
@@ -2042,7 +2041,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
             <div>
               <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 10 }}>content niches <span style={{ opacity: .5 }}>(select all that apply)</span></div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {NICHE_OPTIONS.map(n => (
+                {INDUSTRIES.map(n => (
                   <div key={n} className={`co-niche-pill${selectedNiches.includes(n) ? " selected" : ""}`} onClick={() => toggleNiche(n)}>{n}</div>
                 ))}
               </div>
@@ -2060,7 +2059,7 @@ function CreatorOnboarding({ onComplete, onBack }) {
             <div style={{ borderRadius: 16, border: "1px solid rgba(255,255,255,.1)", overflow: "hidden", marginBottom: 24 }}>
               {/* Banner */}
               <div style={{ height: 120, background: profile.bannerPreview ? `url(${profile.bannerPreview}) center/cover` : "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.2))", position: "relative" }}>
-                <div style={{ position: "absolute", bottom: -28, left: 20, width: 56, height: 56, borderRadius: "50%", border: "3px solid #040b15", background: "#0c1424", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", fontWeight: 700 }}>
+                <div style={{ position: "absolute", bottom: -28, left: 20, width: 56, height: 56, borderRadius: 14, border: "3px solid #040b15", background: "#0c1424", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", fontWeight: 700 }}>
                   {profile.avatarPreview ? <img src={profile.avatarPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : (account.firstName || "?").charAt(0).toUpperCase()}
                 </div>
               </div>
@@ -2177,7 +2176,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                   {[
                     { label: "view profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>', action: () => { setShowMenu(false); onViewOwnProfile?.(); } },
                     { label: "messages", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', action: () => { setShowMenu(false); onOpenMessages?.(); } },
-                    { label: "edit profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action: () => { setShowMenu(false); setEditForm({ ...creatorProfile }); setShowEditModal(true); } },
+                    { label: "edit profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action: () => { setShowMenu(false); const parts = (creatorProfile.location || "").split(",").map(s => s.trim()); const baseForm = { ...creatorProfile, city: creatorProfile.city || parts[0] || "", state: creatorProfile.state || parts[1] || "", country: creatorProfile.country || parts[2] || "" }; setEditForm(baseForm); setShowEditModal(true); } },
                     { label: "sign out", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>', action: () => { setShowMenu(false); onSignOut(); } },
                   ].map((item, i, arr) => (
                     <div key={item.label} onClick={item.action} style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,.06)" : "none", transition: "background .1s" }}
@@ -2279,7 +2278,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           {[
             { label: "active campaigns", value: activeCampaigns.length, onClick: () => setShowActiveModal(true) },
             { label: "pending campaigns", value: appliedCampaigns.filter(c => c.status === "applied").length, onClick: () => setShowPendingModal(true) },
-            { label: "completed campaigns", value: appliedCampaigns.filter(c => c.status === "accepted").length, onClick: () => setShowCompletedModal(true) },
+            { label: "completed campaigns", value: appliedCampaigns.filter(c => c.status === "paid").length, onClick: () => setShowCompletedModal(true) },
           ].map((s, i) => (
             <div key={i} className="nf-creator-card" style={{ padding: "18px 20px", textAlign: "center", cursor: "pointer" }} onClick={s.onClick}>
               <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8, textTransform: "lowercase" }}>{s.label}</div>

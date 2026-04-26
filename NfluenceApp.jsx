@@ -395,10 +395,13 @@ function NfluenceApp() {
     setUser(null);
     setMyCampaigns([]);
     setNotifications([]);
+    setCreatorProfile({});
+    setCreatorApplied([]);
+    setCreatorActive([]);
     setView('landing');
   };
 
-  const handleCreatorSignIn = async (email, name, password) => {
+  const handleCreatorSignIn = async (email, name, password, profileData = null) => {
     const _sb = getSB();
     if (_sb) {
       try {
@@ -407,17 +410,20 @@ function NfluenceApp() {
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
         setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
-        // Load creator profile
         const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
-        if (profile) setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName });
+        if (profile) {
+          setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName });
+        } else if (profileData) {
+          setCreatorProfile(profileData);
+        }
       } catch (err) {
         console.error('Supabase creator sign in failed, demo mode:', err);
         setCreatorUser({ email, name: name || email });
-        setCreatorProfile(prev => ({ ...prev, name: prev.name || name }));
+        setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
       }
     } else {
       setCreatorUser({ email, name: name || email });
-      setCreatorProfile(prev => ({ ...prev, name: prev.name || name }));
+      setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
     }
     setView('creatordashboard');
   };
@@ -429,6 +435,8 @@ function NfluenceApp() {
     setCreatorProfile({});
     setCreatorApplied([]);
     setCreatorActive([]);
+    setScheduledCalls({});
+    setAllMessages(DEMO_MESSAGES);
     setView('landing');
   };
 
@@ -592,7 +600,7 @@ function NfluenceApp() {
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
-  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password); setCreatorProfile(prev => ({ ...prev, ...profileData })); }} />;
+  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} />;
   if (view === "creatordashboard") return <>
     <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
@@ -613,7 +621,7 @@ function NfluenceApp() {
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
-  if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} />;
+  if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} session={authSession} />;
   if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={(updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCampaign(updated);
@@ -821,7 +829,7 @@ function NfluenceApp() {
                   <div>
                     <div style={{ fontSize: ".85rem", opacity: .4, textTransform: "lowercase", marginBottom: 3 }}>creators get</div>
                     <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-                      {c.comp.startsWith("$") ? c.comp : c.comp}
+                      {c.comp}
                       {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                     </div>
                   </div>
