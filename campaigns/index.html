@@ -4596,6 +4596,13 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           cursor: pointer; transition: all .12s; display: inline-flex; align-items: center; gap: 8;
         }
         .nf-new-campaign-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
+        .nf-campaign-card {
+          background: radial-gradient(circle at top, rgba(255,255,255,.04), rgba(4,11,21,0));
+          border: 1px solid rgba(255,255,255,.1); border-radius: 20px;
+          display: flex; flex-direction: column; overflow: hidden;
+          transition: transform .2s, border-color .2s, box-shadow .2s; cursor: pointer;
+        }
+        .nf-campaign-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); box-shadow: 0 12px 35px rgba(0,0,0,.35); }
       `}</style>
 
       {/* Nav */}
@@ -4625,14 +4632,20 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         {(() => {
           const headerReviews = allCampaigns.flatMap(c => (c.reviews || []));
           const headerTotal = headerReviews.length;
+          const headerAvg = headerTotal ? headerReviews.reduce((s, r) => s + r.rating, 0) / headerTotal : null;
           return (
             <div style={{ paddingTop: 64, marginBottom: 24 }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || "your brand"}</div>
-              <div style={{ display: "flex", gap: 10, marginTop: 8, fontSize: ".88rem", opacity: .5, alignItems: "center", flexWrap: "wrap" }}>
-                {user?.email && <span>{user.email}</span>}
-                {user?.location && <><span style={{ opacity: .4 }}>·</span><span>{user.location}</span></>}
-                {headerTotal > 0 && <><span style={{ opacity: .4 }}>·</span><span onClick={onViewReviews} style={{ textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)", cursor: "pointer" }}>{headerTotal} review{headerTotal !== 1 ? "s" : ""}</span></>}
-              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{user?.name || user?.brandName || "your brand"}</div>
+              {user?.email && <div style={{ fontSize: ".85rem", opacity: .45, marginTop: 6 }}>{user.email}</div>}
+              {user?.location && <div style={{ fontSize: ".85rem", opacity: .35, marginTop: 3 }}>{user.location}</div>}
+              {headerTotal > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                  <div style={{ display: "flex", gap: 1 }}>
+                    {[1,2,3,4,5].map(i => <span key={i} style={{ fontSize: ".75rem", color: i <= Math.floor(headerAvg) ? "#fbbf24" : "rgba(251,191,36,.2)" }}>★</span>)}
+                  </div>
+                  <span onClick={onViewReviews} style={{ fontSize: ".8rem", opacity: .5, textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)", cursor: "pointer" }}>{headerTotal} review{headerTotal !== 1 ? "s" : ""}</span>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -4724,7 +4737,6 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                       <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
                         {spotsLeft != null ? `${spotsLeft} spots left` : "open"}
                       </div>
-                      <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
                       <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
                         {(c.platforms || []).map(p => (
                           <div key={p} style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PLAT_SVGS_SMALL[p]}</div>
@@ -4735,21 +4747,18 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                   {/* Details */}
                   <div style={{ padding: "8px 16px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
                     <div style={{ flex: 1 }}>
-                      {[["following:", c.following], ["deadline:", c.deadline]].map(([label, val]) => val ? (
-                        <div key={label} style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
-                          <div style={{ opacity: .35, minWidth: 105 }}>{label}</div>
-                          <div style={{ opacity: .85 }}>{val}</div>
+                      {c.deadline && (
+                        <div style={{ display: "flex", gap: 8, padding: "3px 0", fontSize: ".95rem" }}>
+                          <div style={{ opacity: .35, minWidth: 80 }}>deadline:</div>
+                          <div style={{ opacity: .85 }}>{c.deadline}</div>
                         </div>
-                      ) : null)}
+                      )}
                     </div>
                     {/* Footer */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-                      <div>
-                        <div style={{ fontSize: ".85rem", opacity: .4, textTransform: "lowercase", marginBottom: 3 }}>creators get</div>
-                        <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-                          {c.comp || "—"}
-                          {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
-                        </div>
+                      <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                        {c.comp || "—"}
+                        {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                       </div>
                       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
                         <div style={{ padding: "4px 10px", borderRadius: 20, background: "rgba(100,180,255,.1)", border: "1px solid rgba(100,180,255,.25)", fontSize: ".72rem", fontWeight: 600, color: "rgba(100,180,255,.9)" }}>{approvedCount} creator{approvedCount !== 1 ? "s" : ""}</div>
@@ -7811,7 +7820,7 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={[]} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
