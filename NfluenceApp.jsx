@@ -217,23 +217,42 @@ function NfluenceApp() {
     const sb = getSB();
     let activeUser = user;
 
+    // Build the brand profile from data collected in the builder
+    const brandProfile = {
+      name: campaignData.brand,
+      email: account?.email,
+      phone: account?.phone,
+      location: campaignData.location,
+      logoUrl: campaignData.logoUrl,
+      bannerUrl: campaignData.bannerUrl,
+      industry: campaignData.industry,
+      bio: campaignData.bio,
+    };
+
     // If not signed in, sign up with the credentials from the account step
-    if (!activeUser && sb && account?.email && account?.password) {
-      try {
-        const { data, error } = await sb.auth.signUp({
-          email: account.email,
-          password: account.password,
-          options: { data: { name: campaignData.brand, role: 'brand' } },
-        });
-        if (error) throw error;
-        if (data.user) {
-          activeUser = { id: data.user.id, email: data.user.email, name: campaignData.brand };
-          setAuthSession(data.session);
-          setUser(activeUser);
-          await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: campaignData.brand, role: 'brand' });
+    if (!activeUser && account?.email) {
+      if (sb && account?.password) {
+        try {
+          const { data, error } = await sb.auth.signUp({
+            email: account.email,
+            password: account.password,
+            options: { data: { name: campaignData.brand, role: 'brand' } },
+          });
+          if (error) throw error;
+          if (data.user) {
+            activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
+            setAuthSession(data.session);
+            setUser(activeUser);
+            await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: campaignData.brand, role: 'brand' });
+          }
+        } catch (err) {
+          console.error('Sign up failed during publish:', err);
         }
-      } catch (err) {
-        console.error('Sign up failed during publish:', err);
+      }
+      // Demo-mode fallback: still populate the user state even without Supabase
+      if (!activeUser) {
+        activeUser = { ...brandProfile };
+        setUser(activeUser);
       }
     }
 
@@ -281,23 +300,42 @@ function NfluenceApp() {
     const sb = getSB();
     let activeUser = user;
 
+    // Build the brand profile from data collected in the builder
+    const brandProfile = {
+      name: gigData.brand,
+      email: account?.email,
+      phone: account?.phone,
+      location: gigData.location,
+      logoUrl: gigData.logoUrl,
+      bannerUrl: gigData.bannerUrl,
+      industry: gigData.industry,
+      bio: gigData.bio,
+    };
+
     // If not signed in, sign up with the credentials from the account step
-    if (!activeUser && sb && account?.email && account?.password) {
-      try {
-        const { data, error } = await sb.auth.signUp({
-          email: account.email,
-          password: account.password,
-          options: { data: { name: gigData.brand, role: 'brand' } },
-        });
-        if (error) throw error;
-        if (data.user) {
-          activeUser = { id: data.user.id, email: data.user.email, name: gigData.brand };
-          setAuthSession(data.session);
-          setUser(activeUser);
-          await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: gigData.brand, role: 'brand' });
+    if (!activeUser && account?.email) {
+      if (sb && account?.password) {
+        try {
+          const { data, error } = await sb.auth.signUp({
+            email: account.email,
+            password: account.password,
+            options: { data: { name: gigData.brand, role: 'brand' } },
+          });
+          if (error) throw error;
+          if (data.user) {
+            activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
+            setAuthSession(data.session);
+            setUser(activeUser);
+            await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: gigData.brand, role: 'brand' });
+          }
+        } catch (err) {
+          console.error('Sign up failed during gig publish:', err);
         }
-      } catch (err) {
-        console.error('Sign up failed during gig publish:', err);
+      }
+      // Demo-mode fallback: still populate the user state even without Supabase
+      if (!activeUser) {
+        activeUser = { ...brandProfile };
+        setUser(activeUser);
       }
     }
 
