@@ -757,8 +757,8 @@ function NfluenceApp() {
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
       `}</style>
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={() => setView("landing")}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85 }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
