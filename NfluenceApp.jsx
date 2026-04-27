@@ -9,7 +9,7 @@ function getSB() {
 }
 
 function NfluenceApp() {
-  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
+  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [selectedBrand, setSelectedBrand] = useState("Nike");
   const [pendingCampaign, setPendingCampaign] = useState(null);
@@ -221,6 +221,17 @@ function NfluenceApp() {
   // Persist current view to localStorage on every change
   useEffect(() => {
     try { localStorage.setItem("nf_last_view", view); } catch (e) {}
+    // Mirror auth-flow / public views into the URL hash so refresh stays put
+    const HASHED_VIEWS = ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding"];
+    if (typeof window !== "undefined") {
+      const currentHash = window.location.hash.replace("#", "");
+      if (HASHED_VIEWS.includes(view)) {
+        if (currentHash !== view) window.history.replaceState(null, "", "#" + view);
+      } else if (HASHED_VIEWS.includes(currentHash)) {
+        // We've moved off a public view (e.g. into dashboard) — clear stale hash
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    }
   }, [view]);
 
   // Respond to in-page hash changes so deep links inside the SPA still route
