@@ -80,8 +80,8 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .suc-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
         .suc-back:hover { opacity: 1; }
-        .suc-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 18px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; }
-        .suc-card:hover { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.06); }
+        .suc-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; }
+        .suc-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); box-shadow: 0 0 18px rgba(255,255,255,.12); }
       `}</style>
 
       <div className="suc-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
@@ -95,14 +95,13 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
             <div style={{ fontSize: ".95rem", opacity: .5 }}>how do you want to use the platform?</div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
-            <div className="suc-card" onClick={onBrand}>
-              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1rem", fontWeight: 600 }}>i'm a brand</div>
-            </div>
-
-            <div className="suc-card" onClick={onCreator}>
-              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1rem", fontWeight: 600 }}>i'm a creator</div>
-            </div>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={onBrand} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
+              i'm a brand
+            </button>
+            <button onClick={onCreator} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
+              i'm a creator
+            </button>
           </div>
         </div>
       </div>

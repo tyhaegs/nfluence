@@ -223,6 +223,18 @@ function NfluenceApp() {
     try { localStorage.setItem("nf_last_view", view); } catch (e) {}
   }, [view]);
 
+  // Respond to in-page hash changes so deep links inside the SPA still route
+  useEffect(() => {
+    const onHash = () => {
+      const h = window.location.hash.replace("#", "");
+      if (["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding"].includes(h)) {
+        setView(h);
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
     if (!showToast) return;
