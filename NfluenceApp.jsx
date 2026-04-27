@@ -276,6 +276,7 @@ function NfluenceApp() {
       bannerUrl: campaignData.bannerUrl,
       industry: campaignData.industry,
       bio: campaignData.bio,
+      socialLinks: campaignData.socialLinks,
     };
 
     // If not signed in, sign up with the credentials from the account step
