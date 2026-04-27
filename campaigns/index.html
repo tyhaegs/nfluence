@@ -4568,7 +4568,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, onUpdateUser, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showBrandEdit, setShowBrandEdit] = useState(false);
@@ -4618,6 +4618,8 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           transition: transform .2s, border-color .2s, box-shadow .2s; cursor: pointer;
         }
         .nf-campaign-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); box-shadow: 0 12px 35px rgba(0,0,0,.35); }
+        @keyframes nf-border-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 8px rgba(255,140,30,.08); } 50% { border-color: rgba(255,165,50,.85); box-shadow: 0 0 18px rgba(255,140,30,.3); } }
+        @keyframes nf-confirm-shimmer { 0%,100% { border-color: rgba(100,255,150,.2); box-shadow: 0 0 8px rgba(100,255,150,.08); } 50% { border-color: rgba(100,255,150,.9); box-shadow: 0 0 18px rgba(100,255,150,.35); } }
       `}</style>
 
       {/* Nav */}
@@ -4634,7 +4636,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); setBrandEditForm({ name: user?.name || "", location: user?.location || "", website: user?.website || "" }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || null, bannerPreview: user?.bannerPreview || null }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -4651,11 +4653,10 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {showTray && <NotificationTray notifications={notifications} forRole="brand" onClose={() => setShowTray(false)} onMarkAllRead={() => { onMarkAllNotifsRead?.(); setShowTray(false); }} onViewAll={() => { setShowTray(false); onViewAllNotifications?.(); }} />}
 
       {/* Banner */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 24px 0" }}>
-        <div style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))", position: "relative" }}>
-          <div style={{ position: "absolute", bottom: -52, left: 16, width: 104, height: 104, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
-            {(user?.name || "B").charAt(0).toUpperCase()}
-          </div>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 24px 0", position: "relative" }}>
+        <div style={{ width: "100%", height: 160, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))" }} />
+        <div style={{ position: "absolute", bottom: -48, left: 40, width: 96, height: 96, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
+          {(user?.name || user?.email || "B").charAt(0).toUpperCase()}
         </div>
       </div>
 
@@ -4664,7 +4665,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         {(() => {
           return (
             <div style={{ paddingTop: 64, marginBottom: 24 }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{(user?.name && user.name !== user?.email) ? user.name : (user?.brandName || "your brand")}</div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{(user?.name && user.name !== user?.email) ? user.name : (user?.brandName || (user?.email ? user.email.split("@")[0] : "your brand"))}</div>
               {user?.email && <div style={{ fontSize: ".85rem", opacity: .45, marginTop: 6 }}>{user.email}</div>}
               {user?.location && <div style={{ fontSize: ".85rem", opacity: .35, marginTop: 3 }}>{user.location}</div>}
               {(() => {
@@ -4700,7 +4701,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             const overdueCount = allCampaigns.reduce((sum, c) => sum + (c.creators?.approved || []).filter(cr => cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3).length, 0);
             const total = pendingCount + overdueCount;
             return (
-              <div className="nf-stat-card" style={{ borderColor: total > 0 ? "rgba(255,140,30,.5)" : "rgba(255,255,255,.08)", animation: total > 0 ? "nf-border-shimmer 2.5s ease-in-out infinite" : "none", cursor: total > 0 ? "pointer" : "default" }} onClick={() => total > 0 && setShowAttentionModal(true)}>
+              <div className="nf-stat-card" style={{ borderColor: total > 0 ? "rgba(255,140,30,.5)" : "rgba(255,255,255,.08)", borderWidth: total > 0 ? 1.5 : 1, animation: total > 0 ? "nf-border-shimmer 2.5s ease-in-out infinite" : "none", cursor: total > 0 ? "pointer" : "default" }} onClick={() => total > 0 && setShowAttentionModal(true)}>
                 <div style={{ fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: total > 0 ? "rgba(255,140,30,.95)" : "#fff" }}>{total}</div>
                 <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 4, textTransform: "lowercase" }}>needs attention</div>
               </div>
@@ -4723,7 +4724,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           }).filter(c => c.status === "confirmed" || c.status === "pending").sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
           return (
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: ".75rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 10 }}>scheduled calls</div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>scheduled calls</div>
               {allCalls.length === 0 ? (
                 <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.06)", fontSize: ".85rem", opacity: .35 }}>no upcoming calls</div>
               ) : (
@@ -4740,7 +4741,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                           <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)" }}>confirmed</div>
                         ) : (
                           <div style={{ display: "flex", gap: 8 }}>
-                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)", cursor: "pointer" }}>confirm</div>
+                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)", cursor: "pointer", animation: "nf-confirm-shimmer 2.5s ease-in-out infinite" }}>confirm</div>
                             <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(255,100,100,.3)", background: "rgba(255,100,100,.06)", fontSize: ".85rem", fontWeight: 700, color: "rgba(255,120,120,.8)", cursor: "pointer" }}>decline</div>
                           </div>
                         )}
@@ -4858,19 +4859,84 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Brand edit modal */}
       {showBrandEdit && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400 }}>
-            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 20 }}>edit profile</div>
-            {[["brand name", "name"], ["location", "location"], ["website", "website"]].map(([label, key]) => (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setShowBrandEdit(false)}>
+          <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 24 }}>edit profile</div>
+
+            {/* Logo upload */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8, textTransform: "lowercase" }}>logo</div>
+              <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) { const reader = new FileReader(); reader.onload = ev => setBrandEditForm(f => ({ ...f, logoPreview: ev.target.result })); reader.readAsDataURL(file); }
+                }} />
+                <div style={{ width: 64, height: 64, borderRadius: 14, background: brandEditForm.logoPreview ? "transparent" : "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                  {brandEditForm.logoPreview ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".65rem", opacity: .4 }}>upload</span>}
+                </div>
+                <div style={{ fontSize: ".8rem", opacity: .4 }}>click to upload brand logo</div>
+              </label>
+            </div>
+
+            {/* Banner upload */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8, textTransform: "lowercase" }}>banner</div>
+              <label style={{ display: "block", cursor: "pointer" }}>
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) { const reader = new FileReader(); reader.onload = ev => setBrandEditForm(f => ({ ...f, bannerPreview: ev.target.result })); reader.readAsDataURL(file); }
+                }} />
+                <div style={{ width: "100%", height: 80, borderRadius: 12, background: brandEditForm.bannerPreview ? "transparent" : "rgba(255,255,255,.04)", border: "1px dashed rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  {brandEditForm.bannerPreview ? <img src={brandEditForm.bannerPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".8rem", opacity: .35 }}>click to upload banner image</span>}
+                </div>
+              </label>
+            </div>
+
+            {/* Text fields */}
+            {[["brand name", "name"], ["website", "website"]].map(([label, key]) => (
               <div key={key} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase" }}>{label}</div>
                 <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif" }}
-                  value={brandEditForm[key]} onChange={e => setBrandEditForm(f => ({ ...f, [key]: e.target.value }))} placeholder={label} />
+                  value={brandEditForm[key] || ""} onChange={e => setBrandEditForm(f => ({ ...f, [key]: e.target.value }))} placeholder={label} />
               </div>
             ))}
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+
+            {/* Location */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase" }}>location</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", flex: 2, outline: "none", fontFamily: "system-ui, sans-serif" }}
+                  value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none" }}
+                  value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))}>
+                  <option value="">state</option>
+                  {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif" }}
+                  value={brandEditForm.country || ""} onChange={e => setBrandEditForm(f => ({ ...f, country: e.target.value }))} placeholder="country" />
+              </div>
+            </div>
+
+            {/* Industry */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase" }}>industry</div>
+              <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none" }}
+                value={brandEditForm.industry || ""} onChange={e => setBrandEditForm(f => ({ ...f, industry: e.target.value }))}>
+                <option value="">select industry</option>
+                {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+              </select>
+            </div>
+
+            {/* Bio */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5, textTransform: "lowercase" }}>bio</div>
+              <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "8px 10px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical" }}
+                value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setShowBrandEdit(false)} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>cancel</button>
-              <button onClick={() => { if (user) { user.name = brandEditForm.name; user.location = brandEditForm.location; user.website = brandEditForm.website; } setShowBrandEdit(false); }} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>save</button>
+              <button onClick={() => { const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); onUpdateUser?.({ ...user, ...brandEditForm, location }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>save</button>
             </div>
           </div>
         </div>
@@ -7910,7 +7976,7 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} />
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={(updatedUser) => setUser(prev => ({ ...prev, ...updatedUser }))} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
