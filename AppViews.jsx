@@ -325,7 +325,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || null, bannerPreview: user?.bannerPreview || null }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -638,19 +638,22 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
             {/* Industry */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>industry</div>
-              <div style={{ position: "relative" }}>
-                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none" }}
-                  value={brandEditForm.industry || ""} onChange={e => setBrandEditForm(f => ({ ...f, industry: e.target.value }))}>
-                  <option value="">select industry</option>
-                  {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                </select>
-                <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>industry</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {INDUSTRIES.map(ind => {
+                  const selected = brandEditForm.industry === ind;
+                  return (
+                    <div key={ind} onClick={() => setBrandEditForm(f => ({ ...f, industry: selected ? "" : ind }))}
+                      style={{ padding: "6px 13px", borderRadius: 20, border: `1px solid ${selected ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.15)"}`, background: selected ? "rgba(255,255,255,.1)" : "transparent", fontSize: ".78rem", color: selected ? "#fff" : "rgba(255,255,255,.55)", cursor: "pointer", transition: "all .12s", userSelect: "none" }}>
+                      {ind}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Bio */}
-            <div style={{ marginBottom: 28 }}>
+            <div style={{ marginBottom: 28, marginTop: 4 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>bio</div>
               <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical" }}
                 value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
@@ -2946,17 +2949,14 @@ function FAQPage({ onBack, onStart }) {
         .nf-faq-cta:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45) !important; background: rgba(255,255,255,.12) !important; }
       `}</style>
 
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </div>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer" }} onClick={onBack}>
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-            <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
-          </div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif" }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span style={{ color: "#fff", cursor: "pointer" }}>faq</span>
         </div>
       </div>
 
