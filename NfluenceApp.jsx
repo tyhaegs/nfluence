@@ -462,6 +462,70 @@ function NfluenceApp() {
     }
   };
 
+  const handleBrandOnboardingComplete = async (data) => {
+    const _sb = getSB();
+    let activeUser = null;
+    if (_sb) {
+      try {
+        console.log('[auth] signUp() — handleBrandOnboardingComplete:', { email: data.email, brand: data.name });
+        const { data: signUpData, error } = await _sb.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: { data: { name: data.name, role: 'brand' } },
+        });
+        console.log('[auth] signUp() result:', { hasUser: !!signUpData?.user, hasSession: !!signUpData?.session, userId: signUpData?.user?.id, error: error?.message });
+        if (error) throw error;
+        if (signUpData.user) {
+          activeUser = {
+            id: signUpData.user.id,
+            email: signUpData.user.email,
+            name: data.name,
+            tagline: data.tagline,
+            bio: data.bio,
+            logoPreview: data.logoPreview,
+            logoUrl: data.logoPreview,
+            contactName: data.contactName,
+            phone: data.phone,
+            website: data.website,
+            country: data.country,
+            city: data.city,
+            state: data.state,
+            location: data.location,
+            industry: data.industry,
+            socialLinks: data.socialLinks,
+          };
+          setAuthSession(signUpData.session);
+          setUser(activeUser);
+          await _sb.from('profiles').upsert({
+            id: signUpData.user.id,
+            email: signUpData.user.email,
+            name: data.name,
+            tagline: data.tagline,
+            bio: data.bio,
+            phone: data.phone,
+            website: data.website,
+            country: data.country,
+            city: data.city,
+            state: data.state,
+            location: data.location,
+            industry: data.industry,
+            logo_url: data.logoPreview,
+            social_links: data.socialLinks,
+            role: 'brand',
+          });
+        }
+      } catch (err) {
+        console.error('Brand onboarding sign up failed:', err);
+      }
+    }
+    if (!activeUser) {
+      // demo-mode fallback so the user can still proceed without supabase
+      activeUser = { ...data, logoUrl: data.logoPreview };
+      setUser(activeUser);
+    }
+    setView('dashboard');
+  };
+
   const handleSignIn = async (email, name, password) => {
     // Try Supabase auth if available, otherwise demo mode
     const _sb = getSB();
@@ -709,7 +773,8 @@ function NfluenceApp() {
 
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => setView("signin")} />;
-  if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
+  if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("brandonboarding")} />;
+  if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signin")} onComplete={handleBrandOnboardingComplete} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} />;
   if (view === "creatordashboard") return <>

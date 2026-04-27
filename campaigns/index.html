@@ -4324,11 +4324,11 @@ function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSi
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 
-function SignIn({ onSignIn, onBack }) {
+function SignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState("");
+  const isSignUp = false;
   const [agreeTerms, setAgreeTerms] = useState(false);
   const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
@@ -4384,11 +4384,226 @@ function SignIn({ onSignIn, onBack }) {
           </div>
         </div>
         <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
-          {isSignUp ? "already have an account?" : "don't have an account?"}{" "}
-          <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? "sign in" : "sign up for free!"}
+          don't have an account?{" "}
+          <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={onSignUp}>
+            sign up for free!
           </span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── BrandOnboarding ──
+
+function BrandOnboarding({ onBack, onComplete }) {
+  const [form, setForm] = useState({
+    name: "", tagline: "", bio: "", logoPreview: null,
+    contactName: "", email: "", password: "", phone: "",
+    website: "", country: "", city: "", state: "",
+    industry: "",
+    instagram: "", tiktok: "", youtube: "", x: "", facebook: "",
+    agreeTerms: false,
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const canSubmit =
+    form.name.trim() &&
+    form.bio.trim() &&
+    form.contactName.trim() &&
+    isValidEmail(form.email) &&
+    form.password.length >= 8 &&
+    form.agreeTerms;
+
+  const inputStyle = { borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "11px 14px", fontSize: ".9rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" };
+  const selectStyle = { ...inputStyle, padding: "11px 32px 11px 14px", appearance: "none" };
+  const labelStyle = { fontSize: ".75rem", opacity: .4, marginBottom: 5 };
+  const fieldWrap = { marginBottom: 14 };
+  const sectionTitle = { fontSize: ".82rem", fontWeight: 600, opacity: .6, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 12, marginTop: 28 };
+
+  const handleSubmit = async () => {
+    if (!canSubmit || submitting) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const socialLinks = {
+        Instagram: form.instagram || "",
+        TikTok: form.tiktok || "",
+        YouTube: form.youtube || "",
+        X: form.x || "",
+        Facebook: form.facebook || "",
+      };
+      const location = [form.city, form.state, form.country].filter(Boolean).join(", ");
+      await onComplete({
+        name: form.name,
+        tagline: form.tagline,
+        bio: form.bio,
+        logoPreview: form.logoPreview,
+        contactName: form.contactName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone,
+        website: form.website,
+        country: form.country,
+        city: form.city,
+        state: form.state,
+        location,
+        industry: form.industry,
+        socialLinks,
+      });
+    } catch (err) {
+      setError(err?.message || "something went wrong");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .bo-input::placeholder, .bo-textarea::placeholder { color: rgba(255,255,255,.35); }
+        .bo-input:focus, .bo-textarea:focus, .bo-select:focus { border-color: rgba(255,255,255,.45); }
+        .bo-chip { padding: 6px 13px; border-radius: 20px; border: 1px solid rgba(255,255,255,.15); background: transparent; font-size: .78rem; color: rgba(255,255,255,.55); cursor: pointer; transition: all .12s; user-select: none; }
+        .bo-chip.selected { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.1); color: #fff; }
+        .bo-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
+        .bo-back:hover { opacity: 1; }
+        .bo-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
+        .bo-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
+        .bo-btn:disabled { opacity: .3; cursor: not-allowed; }
+      `}</style>
+
+      <div className="bo-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
+        <span style={{ fontSize: "1.1rem" }}>←</span> back
+      </div>
+
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: "12px 24px 80px" }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, marginBottom: 8 }}>create your brand profile</div>
+          <div style={{ fontSize: ".88rem", opacity: .5 }}>tell creators who you are</div>
+        </div>
+
+        {/* About your brand */}
+        <div style={sectionTitle}>about your brand</div>
+
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name *" maxLength={60} />
+        </div>
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
+        </div>
+        <div style={fieldWrap}>
+          <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
+        </div>
+
+        {/* Logo */}
+        <div style={fieldWrap}>
+          <div style={labelStyle}>logo</div>
+          <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "10px 14px", borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", background: "rgba(0,0,0,.25)" }}>
+            <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
+            <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".7rem", opacity: .35 }}>logo</span>}
+            </div>
+            <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
+          </label>
+        </div>
+
+        {/* Industry */}
+        <div style={fieldWrap}>
+          <div style={labelStyle}>industry</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+            {INDUSTRIES.map(ind => {
+              const selected = form.industry === ind;
+              return (
+                <div key={ind} className={`bo-chip${selected ? " selected" : ""}`} onClick={() => setForm(f => ({ ...f, industry: selected ? "" : ind }))}>{ind}</div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Contact */}
+        <div style={sectionTitle}>contact</div>
+
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="contact name *" />
+        </div>
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email *" />
+          {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
+        </div>
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
+        </div>
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="phone number" />
+        </div>
+        <div style={fieldWrap}>
+          <input className="bo-input" style={inputStyle} value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="website" />
+        </div>
+
+        {/* Location */}
+        <div style={fieldWrap}>
+          <div style={labelStyle}>country</div>
+          <div style={{ position: "relative" }}>
+            <select className="bo-select" style={selectStyle} value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: "" }))}>
+              <option value="">select country</option>
+              {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
+          </div>
+        </div>
+        {form.country === "US" && (
+          <div style={{ ...fieldWrap, display: "flex", gap: 8 }}>
+            <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+            <div style={{ position: "relative", flex: 1 }}>
+              <select className="bo-select" style={selectStyle} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
+                <option value="">state</option>
+                {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
+            </div>
+          </div>
+        )}
+        {form.country && form.country !== "US" && (
+          <div style={fieldWrap}>
+            <input className="bo-input" style={inputStyle} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+          </div>
+        )}
+
+        {/* Social links */}
+        <div style={sectionTitle}>social links</div>
+
+        {[
+          { key: "instagram", placeholder: "instagram url" },
+          { key: "tiktok", placeholder: "tiktok url" },
+          { key: "youtube", placeholder: "youtube url" },
+          { key: "x", placeholder: "x url" },
+          { key: "facebook", placeholder: "facebook url" },
+        ].map(s => (
+          <div key={s.key} style={fieldWrap}>
+            <input className="bo-input" style={inputStyle} value={form[s.key]} onChange={e => setForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
+          </div>
+        ))}
+
+        {/* Terms */}
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 16, marginBottom: 18 }}>
+          <input type="checkbox" checked={form.agreeTerms} onChange={e => setForm(f => ({ ...f, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
+          <span style={{ fontSize: ".78rem", opacity: .55, lineHeight: 1.55 }}>
+            I agree to Nfluence's{" "}
+            <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
+            {" "}and{" "}
+            <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
+            I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
+          </span>
+        </label>
+
+        {error && <div style={{ fontSize: ".82rem", color: "rgba(255,120,120,.85)", marginBottom: 12 }}>{error}</div>}
+
+        <button className="bo-btn" disabled={!canSubmit || submitting} onClick={handleSubmit}>
+          {submitting ? "creating account…" : "create account"}
+        </button>
       </div>
     </div>
   );
@@ -7919,6 +8134,70 @@ function NfluenceApp() {
     }
   };
 
+  const handleBrandOnboardingComplete = async (data) => {
+    const _sb = getSB();
+    let activeUser = null;
+    if (_sb) {
+      try {
+        console.log('[auth] signUp() — handleBrandOnboardingComplete:', { email: data.email, brand: data.name });
+        const { data: signUpData, error } = await _sb.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: { data: { name: data.name, role: 'brand' } },
+        });
+        console.log('[auth] signUp() result:', { hasUser: !!signUpData?.user, hasSession: !!signUpData?.session, userId: signUpData?.user?.id, error: error?.message });
+        if (error) throw error;
+        if (signUpData.user) {
+          activeUser = {
+            id: signUpData.user.id,
+            email: signUpData.user.email,
+            name: data.name,
+            tagline: data.tagline,
+            bio: data.bio,
+            logoPreview: data.logoPreview,
+            logoUrl: data.logoPreview,
+            contactName: data.contactName,
+            phone: data.phone,
+            website: data.website,
+            country: data.country,
+            city: data.city,
+            state: data.state,
+            location: data.location,
+            industry: data.industry,
+            socialLinks: data.socialLinks,
+          };
+          setAuthSession(signUpData.session);
+          setUser(activeUser);
+          await _sb.from('profiles').upsert({
+            id: signUpData.user.id,
+            email: signUpData.user.email,
+            name: data.name,
+            tagline: data.tagline,
+            bio: data.bio,
+            phone: data.phone,
+            website: data.website,
+            country: data.country,
+            city: data.city,
+            state: data.state,
+            location: data.location,
+            industry: data.industry,
+            logo_url: data.logoPreview,
+            social_links: data.socialLinks,
+            role: 'brand',
+          });
+        }
+      } catch (err) {
+        console.error('Brand onboarding sign up failed:', err);
+      }
+    }
+    if (!activeUser) {
+      // demo-mode fallback so the user can still proceed without supabase
+      activeUser = { ...data, logoUrl: data.logoPreview };
+      setUser(activeUser);
+    }
+    setView('dashboard');
+  };
+
   const handleSignIn = async (email, name, password) => {
     // Try Supabase auth if available, otherwise demo mode
     const _sb = getSB();
@@ -8166,7 +8445,8 @@ function NfluenceApp() {
 
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => setView("signin")} />;
-  if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
+  if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("brandonboarding")} />;
+  if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signin")} onComplete={handleBrandOnboardingComplete} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} />;
   if (view === "creatordashboard") return <>
