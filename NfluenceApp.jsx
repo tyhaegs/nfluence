@@ -636,7 +636,7 @@ function NfluenceApp() {
   };
 
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
-  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} />;
+  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => setView("signin")} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("creatorsignin")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} />;
@@ -760,18 +760,19 @@ function NfluenceApp() {
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
           <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
           <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
+          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           {user ? (
-            <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }} onClick={() => setView("dashboard")}>dashboard</span>
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("dashboard")}>dashboard</span>
           ) : creatorUser ? (
-            <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }} onClick={() => setView("creatordashboard")}>dashboard</span>
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("creatordashboard")}>dashboard</span>
           ) : (
-            <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }} onClick={() => setView("signin")}>sign in</span>
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("signin")}>sign in</span>
           )}
         </div>
       </div>
