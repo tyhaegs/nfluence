@@ -31,7 +31,7 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
 
   return (
     <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <PublicNav hideSignIn={true} />
+      <PublicNav onSignIn={() => {}} />
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
