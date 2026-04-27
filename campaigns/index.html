@@ -8158,8 +8158,9 @@ function NfluenceApp() {
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif" }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
           {user ? (
             <span style={{ color: "#fff", cursor: "pointer", borderLeft: "1px solid rgba(255,255,255,.2)", paddingLeft: 18 }} onClick={() => setView("dashboard")}>dashboard</span>
           ) : creatorUser ? (
