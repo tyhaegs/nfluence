@@ -1497,7 +1497,7 @@ function NotificationToast({ message, onView, onDismiss }) {
 
 // ── BrandProfile ──
 
-function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCampaigns = [], onApplyClick }) {
+function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCampaigns = [], onApplyClick, user }) {
   const campaigns = allCampaigns.filter(c => c.brand === brand);
   const firstCampaign = campaigns[0] || {};
   const meta = BRAND_META[brand] || {};
@@ -1563,7 +1563,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         const location = meta.location || firstCampaign.location;
         const bio = meta.bio || firstCampaign.bio;
         const website = meta.website || firstCampaign.website;
-        const socials = firstCampaign.socialLinks || firstCampaign.socials || meta.socials || {};
+        const socials = firstCampaign.socialLinks || firstCampaign.socials || meta.socials || user?.socialLinks || {};
         const socialEntries = Object.entries(socials).filter(([, url]) => url && String(url).trim());
         return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>

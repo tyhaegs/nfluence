@@ -5821,7 +5821,7 @@ function NotificationToast({ message, onView, onDismiss }) {
 
 // ── BrandProfile ──
 
-function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCampaigns = [], onApplyClick }) {
+function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCampaigns = [], onApplyClick, user }) {
   const campaigns = allCampaigns.filter(c => c.brand === brand);
   const firstCampaign = campaigns[0] || {};
   const meta = BRAND_META[brand] || {};
@@ -5887,7 +5887,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         const location = meta.location || firstCampaign.location;
         const bio = meta.bio || firstCampaign.bio;
         const website = meta.website || firstCampaign.website;
-        const socials = firstCampaign.socialLinks || firstCampaign.socials || meta.socials || {};
+        const socials = firstCampaign.socialLinks || firstCampaign.socials || meta.socials || user?.socialLinks || {};
         const socialEntries = Object.entries(socials).filter(([, url]) => url && String(url).trim());
         return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>
@@ -8177,7 +8177,7 @@ function NfluenceApp() {
     setSelectedCampaign(updated);
     setView("dashboard");
   }} />;
-  if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} />;
+  if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
   if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
