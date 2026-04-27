@@ -312,9 +312,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       `}</style>
 
       {/* Nav */}
-      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+        <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
+        <div style={{ display: "flex", gap: 14, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
           <span style={{ fontSize: ".85rem", opacity: .6, cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowSettingsMenu(v => !v)}>
@@ -1688,7 +1688,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
   const [filterComp, setFilterComp] = useState("All");
   const [filterIndustry, setFilterIndustry] = useState("All");
 
-  const COMP_LABELS = { All: "All", product: "product only", paid: "paid", "product+paid": "product + paid", other: "other" };
+  const COMP_LABELS = { All: "All", product: "product only", paid: "paid", "product+paid": "product + paid" };
 
   const getIndustries = (c) => {
     if (c.industry) return [c.industry];
@@ -1761,9 +1761,9 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)" }}>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
           <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
           <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
@@ -1787,17 +1787,17 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         </div>
 
         {/* Filter rows */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>platform</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
+            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase", flexShrink: 0 }}>platform</div>
             <div className="nf-filter-scroll">{["All", ...PLATFORM_LIST].map(p => pillBtn(filterPlatform === p, () => setFilterPlatform(p), p === "All" ? "all" : p))}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>comp</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
+            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase", flexShrink: 0 }}>comp</div>
             <div className="nf-filter-scroll">{Object.entries(COMP_LABELS).map(([val, label]) => pillBtn(filterComp === val, () => setFilterComp(val), label))}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase" }}>industry</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
+            <div style={{ fontSize: ".78rem", opacity: .35, minWidth: 64, textTransform: "lowercase", flexShrink: 0 }}>industry</div>
             <div className="nf-filter-scroll">
               {pillBtn(filterIndustry === "All", () => setFilterIndustry("All"), "all")}
               {INDUSTRIES.map(ind => pillBtn(filterIndustry === ind, () => setFilterIndustry(ind), ind))}
