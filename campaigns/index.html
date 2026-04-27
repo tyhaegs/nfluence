@@ -6064,6 +6064,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
     <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         .nf-browse-card { background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0)); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 20px 55px rgba(0,0,0,.35); cursor: pointer; display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s, border-color .25s; }
         .nf-browse-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 28px 65px rgba(0,0,0,.5); border-color: rgba(255,255,255,.25); }
         .nf-apply-btn2 { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s !important; cursor: pointer; }
