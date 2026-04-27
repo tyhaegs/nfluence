@@ -85,6 +85,11 @@ function NfluenceApp() {
       const role = u.user_metadata?.role;
       const name = u.user_metadata?.name || u.email;
 
+      const BRAND_AUTH_VIEWS = ["dashboard", "browse", "inbox", "messages", "detail", "edit", "builder", "gigbuilder", "reviews", "notifications", "brandprofile", "creatorprofile", "faq"];
+      const CREATOR_AUTH_VIEWS = ["creatordashboard", "creatorinbox", "creatormessages", "creatorprofile", "browse", "detail", "notifications", "faq"];
+      let persistedView = null;
+      try { persistedView = localStorage.getItem("nf_last_view"); } catch (e) {}
+
       if (role === 'brand') {
         setUser({ id: u.id, email: u.email, name });
         // Load brand's campaigns from Supabase
@@ -111,6 +116,11 @@ function NfluenceApp() {
             setShowToast(true);
           })
           .subscribe();
+
+        if (view === "landing") {
+          if (persistedView && BRAND_AUTH_VIEWS.includes(persistedView)) setView(persistedView);
+          else setView("dashboard");
+        }
 
       } else if (role === 'creator') {
         setCreatorUser({ id: u.id, email: u.email, name });
@@ -149,6 +159,11 @@ function NfluenceApp() {
           .order('created_at', { ascending: false })
           .limit(50)
           .then(({ data }) => { if (data) setNotifications(data); });
+
+        if (view === "landing") {
+          if (persistedView && CREATOR_AUTH_VIEWS.includes(persistedView)) setView(persistedView);
+          else setView("creatordashboard");
+        }
       }
     });
 
@@ -173,6 +188,11 @@ function NfluenceApp() {
       if (channelRef.current) sb.removeChannel(channelRef.current);
     };
   }, []);
+
+  // Persist current view to localStorage on every change
+  useEffect(() => {
+    try { localStorage.setItem("nf_last_view", view); } catch (e) {}
+  }, [view]);
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
