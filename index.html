@@ -135,9 +135,8 @@
 
     .actions {
       margin-top: -1px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(140px, 180px));
-      gap: 12px;
+      display: flex;
+      gap: 16px;
       justify-content: center;
       z-index: 1;
     }
@@ -381,13 +380,14 @@
 
     /* MOBILE OPTIMIZATIONS */
     @media (max-width: 600px) {
-      /* Stack hero buttons in a 2-col grid for symmetry */
+      /* Stack hero buttons full-width */
       .actions {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        flex-direction: column;
+        gap: 12px;
         width: 100%;
         padding: 0 20px;
-        justify-content: stretch;
+        align-items: center;
+        justify-content: center;
       }
 
       .actions .btn {
