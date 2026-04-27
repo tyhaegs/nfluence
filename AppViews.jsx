@@ -107,6 +107,7 @@ function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
         .suc-back:hover { opacity: 1; }
         .suc-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; }
         .suc-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); box-shadow: 0 0 18px rgba(255,255,255,.12); }
+        @media (max-width: 600px) { .suc-row { flex-direction: column !important; align-items: stretch !important; } .suc-btn { max-width: none !important; flex: 0 0 auto !important; } }
       `}</style>
 
       <PublicNav onSignIn={onSignIn} />
@@ -122,7 +123,7 @@ function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
             <div style={{ fontSize: ".95rem", opacity: .5 }}>how do you want to use the platform?</div>
           </div>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="suc-row" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={onBrand} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
               i'm a brand
             </button>
@@ -628,18 +629,19 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         .nf-campaign-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.22); box-shadow: 0 12px 35px rgba(0,0,0,.35); }
         @keyframes nf-border-shimmer { 0%,100% { border-color: rgba(255,140,30,.4); box-shadow: 0 0 0 1px rgba(255,140,30,.15), 0 0 14px rgba(255,140,30,.15); } 50% { border-color: rgba(255,165,50,1); box-shadow: 0 0 0 1px rgba(255,165,50,.5), 0 0 28px rgba(255,140,30,.45); } }
         @keyframes nf-confirm-shimmer { 0%,100% { border-color: rgba(100,255,150,.3); box-shadow: 0 0 0 1px rgba(100,255,150,.1), 0 0 10px rgba(100,255,150,.1); } 50% { border-color: rgba(100,255,150,1); box-shadow: 0 0 0 1px rgba(100,255,150,.5), 0 0 22px rgba(100,255,150,.4); } }
+        @media (max-width: 600px) { .nf-nav-secondary { display: none !important; } }
       `}</style>
 
       {/* Nav */}
       <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
         <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".85rem", opacity: .85 }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
-          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
-          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+          <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowSettingsMenu(v => !v)}>
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -2125,19 +2127,24 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         @keyframes nf-border-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 8px rgba(255,140,30,.08); } 50% { border-color: rgba(255,165,50,.85); box-shadow: 0 0 18px rgba(255,140,30,.3); } }
         @keyframes nf-confirm-shimmer { 0%,100% { border-color: rgba(100,255,150,.2); box-shadow: 0 0 8px rgba(100,255,150,.08); } 50% { border-color: rgba(100,255,150,.9); box-shadow: 0 0 18px rgba(100,255,150,.35); } }
         .nf-awaiting-tile { border: 1px solid rgba(255,140,30,.25); animation: nf-border-shimmer 2.5s ease-in-out infinite; }
+        @media (max-width: 600px) { .nf-nav-secondary, .nf-browse-back { display: none !important; } .nf-browse-back-mobile { display: inline-flex !important; } }
+        .nf-browse-back-mobile { display: none; }
       `}</style>
 
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)" }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span style={{ color: "#fff", cursor: "pointer" }}>campaigns</span>
-          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
-          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>sign in</span>
+        <div className="nf-browse-back-mobile" style={{ alignItems: "center", gap: 6, fontSize: ".88rem", opacity: .65, color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif" }} onClick={onBack}>
+          <span style={{ fontSize: "1.05rem" }}>←</span> back
+        </div>
+        <div className="nf-browse-back" style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }}>campaigns</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+          <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>sign in</span>
         </div>
       </div>
 

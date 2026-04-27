@@ -942,17 +942,18 @@ function NfluenceApp() {
         }
         @keyframes nf-gold-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
+        @media (max-width: 600px) { .nf-nav-secondary { display: none !important; } }
       `}</style>
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
-          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
-          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
+          <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           {user ? (
             <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("dashboard")}>dashboard</span>
           ) : creatorUser ? (
