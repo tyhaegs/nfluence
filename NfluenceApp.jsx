@@ -78,7 +78,9 @@ function NfluenceApp() {
 
     const channelRef = { current: null };
 
+    console.log('[auth] getSession() — calling on mount');
     sb.auth.getSession().then(({ data: { session } }) => {
+      console.log('[auth] getSession() result:', { hasSession: !!session, userId: session?.user?.id, role: session?.user?.user_metadata?.role });
       if (!session) return;
       setAuthSession(session);
       const u = session.user;
@@ -193,7 +195,9 @@ function NfluenceApp() {
     });
 
     // Listen for auth state changes (sign in / sign out)
+    console.log('[auth] onAuthStateChange() — subscribing');
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      console.log('[auth] onAuthStateChange event:', event, { hasSession: !!session, userId: session?.user?.id });
       if (event === 'SIGNED_OUT') {
         setAuthSession(null);
         setUser(null);
@@ -285,11 +289,13 @@ function NfluenceApp() {
     if (!activeUser && account?.email) {
       if (sb && account?.password) {
         try {
+          console.log('[auth] signUp() — handlePublish:', { email: account.email, brand: campaignData.brand });
           const { data, error } = await sb.auth.signUp({
             email: account.email,
             password: account.password,
             options: { data: { name: campaignData.brand, role: 'brand' } },
           });
+          console.log('[auth] signUp() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
           if (error) throw error;
           if (data.user) {
             activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
@@ -303,6 +309,7 @@ function NfluenceApp() {
       }
       // Demo-mode fallback: still populate the user state even without Supabase
       if (!activeUser) {
+        console.log('[auth] handlePublish — demo-mode fallback (no supabase user created)');
         activeUser = { ...brandProfile };
         setUser(activeUser);
       }
@@ -373,11 +380,13 @@ function NfluenceApp() {
     if (!activeUser && account?.email) {
       if (sb && account?.password) {
         try {
+          console.log('[auth] signUp() — handleGigPublish:', { email: account.email, brand: gigData.brand });
           const { data, error } = await sb.auth.signUp({
             email: account.email,
             password: account.password,
             options: { data: { name: gigData.brand, role: 'brand' } },
           });
+          console.log('[auth] signUp() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
           if (error) throw error;
           if (data.user) {
             activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
@@ -458,7 +467,9 @@ function NfluenceApp() {
     const _sb = getSB();
     if (_sb) {
       try {
+        console.log('[auth] signInWithPassword() — handleSignIn:', { email });
         const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+        console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
         if (error) throw error;
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
@@ -472,6 +483,7 @@ function NfluenceApp() {
         setUser({ email, name: name || email });
       }
     } else {
+      console.log('[auth] handleSignIn — demo mode (no supabase)');
       // Demo mode — no Supabase configured
       setUser({ email, name: name || email });
     }
@@ -486,7 +498,8 @@ function NfluenceApp() {
 
   const handleSignOut = async () => {
     const sb = getSB();
-    if (sb) await sb.auth.signOut().catch(console.error);
+    console.log('[auth] signOut() — handleSignOut');
+    if (sb) await sb.auth.signOut().then(r => console.log('[auth] signOut() result:', { error: r?.error?.message })).catch(console.error);
     setUser(null);
     setMyCampaigns([]);
     setNotifications([]);
@@ -500,7 +513,9 @@ function NfluenceApp() {
     const _sb = getSB();
     if (_sb) {
       try {
+        console.log('[auth] signInWithPassword() — handleCreatorSignIn:', { email });
         const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+        console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
         if (error) throw error;
         const u = data.user;
         const resolvedName = u.user_metadata?.name || name || email;
@@ -525,7 +540,8 @@ function NfluenceApp() {
 
   const handleCreatorSignOut = async () => {
     const sb = getSB();
-    if (sb) await sb.auth.signOut().catch(console.error);
+    console.log('[auth] signOut() — handleCreatorSignOut');
+    if (sb) await sb.auth.signOut().then(r => console.log('[auth] signOut() result:', { error: r?.error?.message })).catch(console.error);
     setCreatorUser(null);
     setCreatorProfile({});
     setCreatorApplied([]);
