@@ -80,8 +80,8 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .suc-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
         .suc-back:hover { opacity: 1; }
-        .suc-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 22px; padding: 36px 28px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, background .15s, box-shadow .15s; backdrop-filter: blur(20px); }
-        .suc-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.08); box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+        .suc-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 32px 24px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; display: flex; flex-direction: column; align-items: center; }
+        .suc-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.06); }
       `}</style>
 
       <div className="suc-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
@@ -97,15 +97,21 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
             <div className="suc-card" onClick={onBrand}>
-              <div style={{ fontSize: "2.4rem", marginBottom: 14 }}>🏷️</div>
-              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginBottom: 8 }}>i'm a brand</div>
-              <div style={{ fontSize: ".88rem", opacity: .5, lineHeight: 1.55 }}>launch campaigns, find creators, and scale your brand with our network of 5,000+ creators.</div>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 14 }}>
+                <path d="M3 9l1-5h16l1 5" />
+                <path d="M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9" />
+                <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" />
+                <path d="M9 21v-6h6v6" />
+              </svg>
+              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700 }}>i'm a brand</div>
             </div>
 
             <div className="suc-card" onClick={onCreator}>
-              <div style={{ fontSize: "2.4rem", marginBottom: 14 }}>🎬</div>
-              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginBottom: 8 }}>i'm a creator</div>
-              <div style={{ fontSize: ".88rem", opacity: .5, lineHeight: 1.55 }}>browse open campaigns, apply to brand collabs, and get paid for content you'd make anyway.</div>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 14 }}>
+                <path d="M23 7l-7 5 7 5V7z" />
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+              </svg>
+              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700 }}>i'm a creator</div>
             </div>
           </div>
         </div>
