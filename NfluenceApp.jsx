@@ -92,6 +92,29 @@ function NfluenceApp() {
 
       if (role === 'brand') {
         setUser({ id: u.id, email: u.email, name });
+        // Load extended brand profile fields and merge into user
+        sb.from('profiles')
+          .select('*')
+          .eq('id', u.id)
+          .single()
+          .then(({ data: p }) => {
+            if (!p) return;
+            setUser(prev => ({
+              ...prev,
+              name: p.name || prev?.name,
+              email: p.email || prev?.email,
+              phone: p.phone,
+              location: p.location,
+              city: p.city,
+              state: p.state,
+              country: p.country,
+              website: p.website,
+              industry: p.industry,
+              bio: p.bio,
+              logoUrl: p.logo_url || p.logoUrl,
+              bannerUrl: p.banner_url || p.bannerUrl,
+            }));
+          });
         // Load brand's campaigns from Supabase
         sb.from('campaigns')
           .select('*')
@@ -244,6 +267,10 @@ function NfluenceApp() {
       email: account?.email,
       phone: account?.phone,
       location: campaignData.location,
+      city: campaignData.city,
+      state: campaignData.state,
+      country: campaignData.country,
+      website: campaignData.website,
       logoUrl: campaignData.logoUrl,
       bannerUrl: campaignData.bannerUrl,
       industry: campaignData.industry,
@@ -327,6 +354,10 @@ function NfluenceApp() {
       email: account?.email,
       phone: account?.phone,
       location: gigData.location,
+      city: gigData.city,
+      state: gigData.state,
+      country: gigData.country,
+      website: gigData.website,
       logoUrl: gigData.logoUrl,
       bannerUrl: gigData.bannerUrl,
       industry: gigData.industry,

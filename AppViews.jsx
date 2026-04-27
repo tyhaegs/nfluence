@@ -560,7 +560,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>logo</div>
               <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
+                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
                 <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {brandEditForm.logoPreview
                     ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -574,7 +574,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>banner</div>
               <label style={{ display: "block", cursor: "pointer" }}>
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, bannerPreview: ev.target.result })); r.readAsDataURL(f); } }} />
+                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, bannerPreview: ev.target.result })); r.readAsDataURL(f); } }} />
                 <div style={{ width: "100%", height: 90, borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", overflow: "hidden", background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                   {brandEditForm.bannerPreview
                     ? <img src={brandEditForm.bannerPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -589,14 +589,14 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {/* Brand name */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>brand name</div>
-              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif" }}
+              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name" />
             </div>
 
             {/* Website */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>website</div>
-              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif" }}
+              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.website || ""} onChange={e => setBrandEditForm(f => ({ ...f, website: e.target.value }))} placeholder="yoursite.com" />
             </div>
 
@@ -604,7 +604,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>country</div>
               <div style={{ position: "relative" }}>
-                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none" }}
+                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
                   value={brandEditForm.country || ""} onChange={e => setBrandEditForm(f => ({ ...f, country: e.target.value, state: "" }))}>
                   <option value="">select country</option>
                   {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -618,10 +618,10 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>city & state</div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif" }}
+                  <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                     value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
                   <div style={{ position: "relative", flex: 1 }}>
-                    <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none" }}
+                    <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
                       value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))}>
                       <option value="">state</option>
                       {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -636,7 +636,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {brandEditForm.country && brandEditForm.country !== "US" && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>city</div>
-                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif" }}
+                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                   value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
               </div>
             )}
@@ -660,7 +660,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {/* Bio */}
             <div style={{ marginBottom: 28, marginTop: 4 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>bio</div>
-              <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical" }}
+              <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical", boxSizing: "border-box" }}
                 value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
             </div>
 
