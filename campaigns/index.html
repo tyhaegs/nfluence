@@ -7681,9 +7681,10 @@ function NfluenceApp() {
     // Build the brand profile from data collected in the builder
     const brandProfile = {
       name: campaignData.brand,
+      tagline: campaignData.tagline,
       email: account?.email,
       phone: account?.phone,
-      location: campaignData.location,
+      location: [campaignData.city, campaignData.state, campaignData.country].filter(Boolean).join(", "),
       city: campaignData.city,
       state: campaignData.state,
       country: campaignData.country,
@@ -7768,9 +7769,10 @@ function NfluenceApp() {
     // Build the brand profile from data collected in the builder
     const brandProfile = {
       name: gigData.brand,
+      tagline: gigData.tagline,
       email: account?.email,
       phone: account?.phone,
-      location: gigData.location,
+      location: [gigData.city, gigData.state, gigData.country].filter(Boolean).join(", "),
       city: gigData.city,
       state: gigData.state,
       country: gigData.country,
