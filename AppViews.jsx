@@ -2938,7 +2938,7 @@ function FAQPage({ onBack, onStart, onSignIn }) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(circle at 70% 15%, rgba(255,255,255,.05) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
