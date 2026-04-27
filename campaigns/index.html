@@ -5866,11 +5866,20 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
       </div>
 
       {/* Profile header */}
+      {(() => {
+        const tagline = meta.tagline || firstCampaign.tagline;
+        const location = meta.location || firstCampaign.location;
+        const bio = meta.bio || firstCampaign.bio;
+        const website = meta.website || firstCampaign.website;
+        const socials = firstCampaign.socials || meta.socials || {};
+        const socialEntries = Object.entries(socials).filter(([, url]) => url && String(url).trim());
+        return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
           <div>
             <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{brand}</div>
-            {meta.tagline && <div style={{ fontSize: "1rem", opacity: .4, fontStyle: "italic" }}>{meta.tagline}</div>}
+            {tagline && <div style={{ fontSize: "1rem", opacity: .4, fontStyle: "italic" }}>{tagline}</div>}
+            {location && <div style={{ fontSize: ".88rem", opacity: .5, marginTop: 6 }}>{location}</div>}
           </div>
           {/* Rating badge */}
           {avgRating && (
@@ -5883,16 +5892,29 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
         {/* Meta row */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 20, fontSize: ".85rem", opacity: .45 }}>
-          {meta.location && <span>{meta.location}</span>}
-          {meta.website && <a href={`https://${meta.website}`} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,.25)" }}>{meta.website}</a>}
+          {website && <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,.25)" }}>{website.replace(/^https?:\/\//, "")}</a>}
           {meta.founded && <span>est. {meta.founded}</span>}
           {meta.totalCampaigns && <span>{meta.totalCampaigns} campaigns run</span>}
           {meta.totalCreators && <span>{meta.totalCreators.toLocaleString()} creators worked with</span>}
         </div>
 
         {/* Bio */}
-        {meta.bio && (
-          <div style={{ fontSize: ".95rem", lineHeight: 1.7, opacity: .65, marginBottom: 28, maxWidth: 620 }}>{meta.bio}</div>
+        {bio && (
+          <div style={{ fontSize: ".95rem", lineHeight: 1.7, opacity: .65, marginBottom: 20, maxWidth: 620 }}>{bio}</div>
+        )}
+
+        {/* Social links */}
+        {socialEntries.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
+            {socialEntries.map(([key, url]) => (
+              <a key={key} href={String(url).startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer"
+                style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "border-color .15s, background .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.3)"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.background = "rgba(255,255,255,.06)"; }}>
+                {PLAT_SVGS_SMALL[key] || <span style={{ fontSize: ".7rem", opacity: .6 }}>{key.charAt(0)}</span>}
+              </a>
+            ))}
+          </div>
         )}
 
         {/* Tabs */}
@@ -6007,6 +6029,8 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
           </div>
         )}
       </div>
+        );
+      })()}
     </div>
   );
 }
