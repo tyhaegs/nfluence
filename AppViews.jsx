@@ -112,6 +112,8 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
 // ── BrandOnboarding ──
 
 function BrandOnboarding({ onBack, onComplete }) {
+  const [step, setStep] = useState(0);
+  const STEPS = ["account", "brand", "location", "socials"];
   const [form, setForm] = useState({
     name: "", tagline: "", bio: "", logoPreview: null,
     contactName: "", email: "", password: "", phone: "",
@@ -123,23 +125,26 @@ function BrandOnboarding({ onBack, onComplete }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-  const canSubmit =
-    form.name.trim() &&
-    form.bio.trim() &&
-    form.contactName.trim() &&
-    isValidEmail(form.email) &&
-    form.password.length >= 8 &&
-    form.agreeTerms;
+  const containerRef = useRef(null);
+  useEffect(() => { containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" }); window.scrollTo?.({ top: 0, behavior: "smooth" }); }, [step]);
 
-  const inputStyle = { borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "11px 14px", fontSize: ".9rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" };
-  const selectStyle = { ...inputStyle, padding: "11px 32px 11px 14px", appearance: "none" };
+  const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const canProceed = useMemo(() => {
+    if (step === 0) return form.contactName.trim() && isValidEmail(form.email) && form.password.length >= 8 && form.agreeTerms;
+    if (step === 1) return form.name.trim() && form.bio.trim();
+    if (step === 2) return true;
+    if (step === 3) return true;
+    return true;
+  }, [step, form]);
+
+  const inputStyle = { borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "12px 14px", fontSize: ".92rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" };
+  const selectStyle = { ...inputStyle, padding: "12px 32px 12px 14px", appearance: "none" };
   const labelStyle = { fontSize: ".75rem", opacity: .4, marginBottom: 5 };
   const fieldWrap = { marginBottom: 14 };
-  const sectionTitle = { fontSize: ".82rem", fontWeight: 600, opacity: .6, textTransform: "lowercase", letterSpacing: ".04em", marginBottom: 12, marginTop: 28 };
 
   const handleSubmit = async () => {
-    if (!canSubmit || submitting) return;
+    if (submitting) return;
     setSubmitting(true);
     setError("");
     try {
@@ -175,150 +180,185 @@ function BrandOnboarding({ onBack, onComplete }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .bo-input::placeholder, .bo-textarea::placeholder { color: rgba(255,255,255,.35); }
-        .bo-input:focus, .bo-textarea:focus, .bo-select:focus { border-color: rgba(255,255,255,.45); }
-        .bo-chip { padding: 6px 13px; border-radius: 20px; border: 1px solid rgba(255,255,255,.15); background: transparent; font-size: .78rem; color: rgba(255,255,255,.55); cursor: pointer; transition: all .12s; user-select: none; }
-        .bo-chip.selected { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.1); color: #fff; }
-        .bo-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
-        .bo-back:hover { opacity: 1; }
-        .bo-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
+        .bo-input:focus, .bo-textarea:focus, .bo-select:focus { border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(255,255,255,.15); background: rgba(0,0,0,.5); }
+        .bo-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; user-select: none; }
+        .bo-chip.selected { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; }
+        .bo-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
         .bo-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
         .bo-btn:disabled { opacity: .3; cursor: not-allowed; }
+        .bo-btn-back { background: transparent; border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.5); }
+        .bo-btn-back:hover { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.25) !important; color: rgba(255,255,255,.8) !important; transform: none !important; }
+        @keyframes nf-cta-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(100,255,150,.35); } 60% { box-shadow: 0 0 0 10px rgba(100,255,150,0); } }
+        .bo-btn-finish { animation: nf-cta-pulse 2s ease-out infinite; }
       `}</style>
 
-      <div className="bo-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
-        <span style={{ fontSize: "1.1rem" }}>←</span> back
+      {/* Header */}
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
+        <div style={{ fontSize: ".8rem", opacity: .35 }}>brand sign up</div>
       </div>
 
-      <div style={{ maxWidth: 560, margin: "0 auto", padding: "12px 24px 80px" }}>
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, marginBottom: 8 }}>create your brand profile</div>
-          <div style={{ fontSize: ".88rem", opacity: .5 }}>tell creators who you are</div>
-        </div>
-
-        {/* About your brand */}
-        <div style={sectionTitle}>about your brand</div>
-
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name *" maxLength={60} />
-        </div>
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
-        </div>
-        <div style={fieldWrap}>
-          <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
-        </div>
-
-        {/* Logo */}
-        <div style={fieldWrap}>
-          <div style={labelStyle}>logo</div>
-          <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "10px 14px", borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", background: "rgba(0,0,0,.25)" }}>
-            <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-            <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".7rem", opacity: .35 }}>logo</span>}
-            </div>
-            <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
-          </label>
-        </div>
-
-        {/* Industry */}
-        <div style={fieldWrap}>
-          <div style={labelStyle}>industry</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {INDUSTRIES.map(ind => {
-              const selected = form.industry === ind;
-              return (
-                <div key={ind} className={`bo-chip${selected ? " selected" : ""}`} onClick={() => setForm(f => ({ ...f, industry: selected ? "" : ind }))}>{ind}</div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Contact */}
-        <div style={sectionTitle}>contact</div>
-
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="contact name *" />
-        </div>
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email *" />
-          {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
-        </div>
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
-        </div>
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="phone number" />
-        </div>
-        <div style={fieldWrap}>
-          <input className="bo-input" style={inputStyle} value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="website" />
-        </div>
-
-        {/* Location */}
-        <div style={fieldWrap}>
-          <div style={labelStyle}>country</div>
-          <div style={{ position: "relative" }}>
-            <select className="bo-select" style={selectStyle} value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: "" }))}>
-              <option value="">select country</option>
-              {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
-          </div>
-        </div>
-        {form.country === "US" && (
-          <div style={{ ...fieldWrap, display: "flex", gap: 8 }}>
-            <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
-            <div style={{ position: "relative", flex: 1 }}>
-              <select className="bo-select" style={selectStyle} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
-                <option value="">state</option>
-                {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
-            </div>
-          </div>
-        )}
-        {form.country && form.country !== "US" && (
-          <div style={fieldWrap}>
-            <input className="bo-input" style={inputStyle} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
-          </div>
-        )}
-
-        {/* Social links */}
-        <div style={sectionTitle}>social links</div>
-
-        {[
-          { key: "instagram", placeholder: "instagram url" },
-          { key: "tiktok", placeholder: "tiktok url" },
-          { key: "youtube", placeholder: "youtube url" },
-          { key: "x", placeholder: "x url" },
-          { key: "facebook", placeholder: "facebook url" },
-        ].map(s => (
-          <div key={s.key} style={fieldWrap}>
-            <input className="bo-input" style={inputStyle} value={form[s.key]} onChange={e => setForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
-          </div>
+      {/* Step pips */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 16px 4px", maxWidth: 470, margin: "0 auto" }}>
+        {STEPS.map((s, i) => (
+          <div key={s} style={{ flex: 1, height: 3, borderRadius: 3, background: i < step ? "rgba(255,255,255,.25)" : i === step ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.08)", transition: "background .3s" }} />
         ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", maxWidth: 470, margin: "0 auto", padding: "6px 16px 0", fontSize: ".7rem", textTransform: "lowercase", letterSpacing: ".03em" }}>
+        {STEPS.map((s, i) => (
+          <span key={s} style={{ flex: 1, textAlign: "center", color: i === step ? "rgba(255,255,255,.85)" : i < step ? "rgba(255,255,255,.45)" : "rgba(255,255,255,.25)", transition: "color .3s" }}>{s}</span>
+        ))}
+      </div>
 
-        {/* Terms */}
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 16, marginBottom: 18 }}>
-          <input type="checkbox" checked={form.agreeTerms} onChange={e => setForm(f => ({ ...f, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
-          <span style={{ fontSize: ".78rem", opacity: .55, lineHeight: 1.55 }}>
-            I agree to Nfluence's{" "}
-            <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
-            {" "}and{" "}
-            <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
-            I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
-          </span>
-        </label>
+      {/* Content */}
+      <div style={{ maxWidth: 470, margin: "0 auto", padding: "28px 24px 80px" }}>
 
-        {error && <div style={{ fontSize: ".82rem", color: "rgba(255,120,120,.85)", marginBottom: 12 }}>{error}</div>}
+        {/* Step 0: Account */}
+        {step === 0 && (
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>create your account</div>
+            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>start launching campaigns in minutes</div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="contact name *" />
+            </div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email *" />
+              {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
+            </div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
+            </div>
 
-        <button className="bo-btn" disabled={!canSubmit || submitting} onClick={handleSubmit}>
-          {submitting ? "creating account…" : "create account"}
-        </button>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 8 }}>
+              <input type="checkbox" checked={form.agreeTerms} onChange={e => setForm(f => ({ ...f, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
+              <span style={{ fontSize: ".78rem", opacity: .55, lineHeight: 1.55 }}>
+                I agree to Nfluence's{" "}
+                <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
+                {" "}and{" "}
+                <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
+                I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* Step 1: Brand */}
+        {step === 1 && (
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>about your brand</div>
+            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>tell creators who you are</div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name *" maxLength={60} />
+            </div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
+            </div>
+            <div style={fieldWrap}>
+              <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
+            </div>
+            <div style={fieldWrap}>
+              <div style={labelStyle}>logo</div>
+              <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "10px 14px", borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", background: "rgba(0,0,0,.25)" }}>
+                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
+                <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".7rem", opacity: .35 }}>logo</span>}
+                </div>
+                <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
+              </label>
+            </div>
+            <div style={fieldWrap}>
+              <div style={labelStyle}>industry</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {INDUSTRIES.map(ind => {
+                  const selected = form.industry === ind;
+                  return (
+                    <div key={ind} className={`bo-chip${selected ? " selected" : ""}`} onClick={() => setForm(f => ({ ...f, industry: selected ? "" : ind }))}>{ind}</div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Location & contact */}
+        {step === 2 && (
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>where are you based?</div>
+            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>optional — helps creators find you</div>
+
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="phone number" />
+            </div>
+            <div style={fieldWrap}>
+              <input className="bo-input" style={inputStyle} value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="website" />
+            </div>
+            <div style={fieldWrap}>
+              <div style={labelStyle}>country</div>
+              <div style={{ position: "relative" }}>
+                <select className="bo-select" style={selectStyle} value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: "" }))}>
+                  <option value="">select country</option>
+                  {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
+              </div>
+            </div>
+            {form.country === "US" && (
+              <div style={{ ...fieldWrap, display: "flex", gap: 8 }}>
+                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+                <div style={{ position: "relative", flex: 1 }}>
+                  <select className="bo-select" style={selectStyle} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
+                    <option value="">state</option>
+                    {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
+                </div>
+              </div>
+            )}
+            {form.country && form.country !== "US" && (
+              <div style={fieldWrap}>
+                <input className="bo-input" style={inputStyle} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Socials */}
+        {step === 3 && (
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>connect your socials</div>
+            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>optional — helps build trust with creators</div>
+
+            {[
+              { key: "instagram", placeholder: "instagram url" },
+              { key: "tiktok", placeholder: "tiktok url" },
+              { key: "youtube", placeholder: "youtube url" },
+              { key: "x", placeholder: "x url" },
+              { key: "facebook", placeholder: "facebook url" },
+            ].map(s => (
+              <div key={s.key} style={fieldWrap}>
+                <input className="bo-input" style={inputStyle} value={form[s.key]} onChange={e => setForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
+              </div>
+            ))}
+
+            {error && <div style={{ fontSize: ".82rem", color: "rgba(255,120,120,.85)", marginTop: 12 }}>{error}</div>}
+            <div style={{ fontSize: ".82rem", opacity: .35, textAlign: "center", marginTop: 20 }}>you can edit all of this from your dashboard anytime</div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
+          <button className="bo-btn bo-btn-back" onClick={() => step === 0 ? onBack() : setStep(s => s - 1)}>← back</button>
+          {step < 3 ? (
+            <button className="bo-btn" style={{ flex: 1 }} disabled={!canProceed} onClick={() => setStep(s => s + 1)}>continue →</button>
+          ) : (
+            <button className="bo-btn bo-btn-finish" style={{ flex: 1, borderColor: "rgba(100,255,150,.35)", background: "rgba(100,255,150,.1)", color: "rgba(100,255,150,.95)" }} disabled={submitting} onClick={handleSubmit}>{submitting ? "creating account…" : "i'm in →"}</button>
+          )}
+        </div>
       </div>
     </div>
   );
