@@ -2900,6 +2900,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
               requirements: [terms.ageMin && `Must be ${terms.ageMin}`, terms.language && `Language: ${terms.language}`, terms.niches && `Niche: ${terms.niches}`, terms.publicRequired && "Public account required"].filter(Boolean).join(". "),
               featured: terms.featured,
               featuredWeeks: terms.featured ? terms.featuredWeeks : 0,
+              socialLinks: brand.socials,
             };
             const isPaid = terms.compType === "paid" || terms.compType === "product+paid";
             const perCreator = parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) || 0;

@@ -1548,7 +1548,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         const location = meta.location || firstCampaign.location;
         const bio = meta.bio || firstCampaign.bio;
         const website = meta.website || firstCampaign.website;
-        const socials = firstCampaign.socials || meta.socials || {};
+        const socials = firstCampaign.socialLinks || firstCampaign.socials || meta.socials || {};
         const socialEntries = Object.entries(socials).filter(([, url]) => url && String(url).trim());
         return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>
