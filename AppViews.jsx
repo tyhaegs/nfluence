@@ -1,5 +1,26 @@
 // ═══════════════════════════════════════════════
 
+function PublicNav({ onSignIn, hideSignIn = false }) {
+  return (
+    <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
+      <a href="https://nfluenceagency.com/" style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textDecoration: "none" }}>nfluence</a>
+      <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
+        <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+        <a href="/campaigns/#browse" style={{ color: "#fff", textDecoration: "none" }}>campaigns</a>
+        <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+        <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+        <a href="/campaigns/#faq" style={{ color: "#fff", textDecoration: "none" }}>faq</a>
+        {!hideSignIn && (
+          <>
+            <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -9,7 +30,9 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
   const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      <PublicNav hideSignIn={true} />
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
       <style>{`
         .nf-signin-input {
           border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
@@ -66,13 +89,14 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
           </span>
         </div>
       </div>
+      </div>
     </div>
   );
 }
 
 // ── SignUpChoice ──
 
-function SignUpChoice({ onBack, onBrand, onCreator }) {
+function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
   return (
     <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       <style>{`
@@ -83,6 +107,8 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
         .suc-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; }
         .suc-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); box-shadow: 0 0 18px rgba(255,255,255,.12); }
       `}</style>
+
+      <PublicNav onSignIn={onSignIn} />
 
       <div className="suc-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
         <span style={{ fontSize: "1.1rem" }}>←</span> back
@@ -111,7 +137,7 @@ function SignUpChoice({ onBack, onBrand, onCreator }) {
 
 // ── BrandOnboarding ──
 
-function BrandOnboarding({ onBack, onComplete }) {
+function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "brand", "location", "socials"];
   const [form, setForm] = useState({
@@ -198,10 +224,8 @@ function BrandOnboarding({ onBack, onComplete }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ fontSize: ".8rem", opacity: .35 }}>brand sign up</div>
-      </div>
+      <PublicNav onSignIn={onSignIn} />
+      <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 0", fontSize: ".8rem", opacity: .35 }}>brand sign up</div>
 
       {/* Step pips */}
       <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 16px 4px", maxWidth: 470, margin: "0 auto" }}>
@@ -2283,7 +2307,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
 
 // ── CreatorOnboarding ──
 
-function CreatorOnboarding({ onComplete, onBack }) {
+function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "profile", "platforms", "preview"];
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "", agreeTerms: false });
@@ -2376,10 +2400,8 @@ function CreatorOnboarding({ onComplete, onBack }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div style={{ fontSize: ".8rem", opacity: .35 }}>creator sign up</div>
-      </div>
+      <PublicNav onSignIn={onSignIn} />
+      <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 0", fontSize: ".8rem", opacity: .35 }}>creator sign up</div>
 
       {/* Step pips */}
       <div className="nf-step-row" style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 16px 4px", maxWidth: 470, margin: "0 auto" }}>
