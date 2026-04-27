@@ -108,6 +108,36 @@
       pointer-events: none;
     }
 
+    .nav-hamburger {
+      display: none;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+      cursor: pointer; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+    }
+    .nav-hamburger span {
+      display: block; width: 16px; height: 1.5px; background: rgba(255,255,255,.85); border-radius: 2px;
+    }
+
+    .nav-dropdown {
+      display: none;
+      position: absolute; top: 64px; right: 16px;
+      background: #0a1322; border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px; padding: 6px; min-width: 180px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.5); z-index: 50;
+    }
+    .nav-dropdown.open { display: block; }
+    .nav-dropdown a {
+      display: block; padding: 10px 14px; border-radius: 10px;
+      font-size: .9rem; color: rgba(255,255,255,.85); text-decoration: none; transition: background .12s;
+    }
+    .nav-dropdown a:hover { background: rgba(255,255,255,.08); }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+    }
+
     /* LOGO / HERO */
     .logo {
       display: flex;
@@ -358,6 +388,17 @@
     <span class="nav-divider">|</span>
     <a href="/campaigns/#signin" class="nav-signin">sign in</a>
   </nav>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="open menu" type="button">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-dropdown" id="nav-dropdown">
+    <a href="/">home</a>
+    <a href="/campaigns/">campaigns</a>
+    <a href="/#popular">services</a>
+    <a href="contact.html">contact us</a>
+    <a href="/campaigns/#faq">faq</a>
+    <a href="/campaigns/#signin">sign in</a>
+  </div>
 </header>
 
 <form action="https://formspree.io/f/xrbvdekl" method="POST" id="contact-form">
@@ -504,6 +545,22 @@ form.addEventListener('submit',e=>{
       alert('Something went wrong. Try again.');
     });
 });
+
+// Hamburger menu toggle
+(function () {
+  var ham = document.getElementById('nav-hamburger');
+  var drop = document.getElementById('nav-dropdown');
+  if (!ham || !drop) return;
+  ham.addEventListener('click', function (e) {
+    e.stopPropagation();
+    drop.classList.toggle('open');
+  });
+  document.addEventListener('click', function (e) {
+    if (!drop.contains(e.target) && !ham.contains(e.target)) {
+      drop.classList.remove('open');
+    }
+  });
+})();
 </script>
 
 </body>

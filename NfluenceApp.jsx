@@ -11,6 +11,7 @@ function getSB() {
 function NfluenceApp() {
   const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
+  const [showLandingMenu, setShowLandingMenu] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("Nike");
   const [pendingCampaign, setPendingCampaign] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(DEMO_CAMPAIGNS[0]);
@@ -942,10 +943,14 @@ function NfluenceApp() {
         }
         @keyframes nf-gold-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
-        @media (max-width: 600px) { .nf-nav-secondary { display: none !important; } }
+        .nf-mobile-hamburger { display: none; }
+        @media (max-width: 600px) {
+          .nf-nav-secondary { display: none !important; }
+          .nf-mobile-hamburger { display: flex !important; }
+        }
       `}</style>
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", position: "relative" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
@@ -961,7 +966,30 @@ function NfluenceApp() {
           ) : (
             <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("signin")}>sign in</span>
           )}
+          <div className="nf-mobile-hamburger" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setShowLandingMenu(v => !v); }}>
+            <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
+            <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
+            <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
+          </div>
         </div>
+        {showLandingMenu && (
+          <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: 60, right: 16, background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: 6, minWidth: 180, zIndex: 50, boxShadow: "0 18px 40px rgba(0,0,0,.5)" }}>
+            {[
+              { label: "home", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/"; } },
+              { label: "campaigns", action: () => { setShowLandingMenu(false); setView("browse"); } },
+              { label: "services", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/#popular"; } },
+              { label: "contact us", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/contact.html"; } },
+              { label: "faq", action: () => { setShowLandingMenu(false); setView("faq"); } },
+              { label: user ? "dashboard" : creatorUser ? "dashboard" : "sign in", action: () => { setShowLandingMenu(false); setView(user ? "dashboard" : creatorUser ? "creatordashboard" : "signin"); } },
+            ].map(item => (
+              <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".9rem", color: "rgba(255,255,255,.85)", cursor: "pointer", transition: "background .12s" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.08)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                {item.label}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Hero */}
