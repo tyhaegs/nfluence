@@ -2039,7 +2039,8 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     };
   }, [showPayModal]);
   const [brand, setBrand] = useState({
-    name: "", bio: "", manager: "", phone: "", email: "", phoneCode: "+1",
+    name: "", tagline: "", bio: "", manager: "", phone: "", email: "", website: "", phoneCode: "+1",
+    city: "", state: "", country: "",
     vibes: [], logoPreview: null, logoTransform: null, logoEditing: false,
     socialPills: { Instagram: false, TikTok: false, YouTube: false, X: false, Facebook: false, Website: false },
     socials: { Instagram: "", TikTok: "", YouTube: "", X: "", Facebook: "", Website: "" },
@@ -2504,6 +2505,10 @@ function CampaignBuilder({ onBack, onPublish, session }) {
             </div>
 
             <div className="nf-field-full">
+              <input className="nf-input" value={brand.tagline} onChange={e => setBrand(p => ({...p, tagline: e.target.value}))} placeholder="tagline" maxLength={120} />
+            </div>
+
+            <div className="nf-field-full">
               <textarea className="nf-textarea" value={brand.bio} onChange={e => setBrand(p => ({...p, bio: e.target.value}))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
             </div>
 
@@ -2549,22 +2554,6 @@ function CampaignBuilder({ onBack, onPublish, session }) {
             </label>
 
             <div className="nf-line" />
-            <div className="nf-section-title">brand voice</div>
-            <div className="nf-hint">(select all that describe your brand)</div>
-            <div className="nf-chip-grid">
-              {VIBES.map(v => (
-                <div key={v}
-                  className={`nf-chip ${brand.vibes.includes(v) ? "selected" : ""}`}
-                  onClick={() => setBrand(p => ({
-                    ...p,
-                    vibes: p.vibes.includes(v) ? p.vibes.filter(i => i !== v) : [...p.vibes, v],
-                  }))}>
-                  {v}
-                </div>
-              ))}
-            </div>
-
-            <div className="nf-line" />
             <div className="nf-section-title">contact</div>
 
             <div className="nf-field-full">
@@ -2576,6 +2565,9 @@ function CampaignBuilder({ onBack, onPublish, session }) {
               {brand.email && !isValidEmail(brand.email) && (
                 <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>
               )}
+            </div>
+            <div className="nf-field-full">
+              <input className="nf-input" value={brand.website} onChange={e => setBrand(p => ({...p, website: e.target.value}))} placeholder="website" />
             </div>
             <div className="nf-field-row">
               <div className="nf-field" style={{ maxWidth: 80 }}>
@@ -2589,6 +2581,26 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                 <input className="nf-input" value={brand.phone} onChange={e => setBrand(p => ({...p, phone: e.target.value}))} placeholder="phone number" />
               </div>
             </div>
+
+            <div className="nf-field-full">
+              <select className="nf-select" value={brand.country} onChange={e => setBrand(p => ({...p, country: e.target.value, state: ""}))}>
+                <option value="">country</option>
+                {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            {brand.country === "US" && (
+              <div className="nf-field-row">
+                <div className="nf-field">
+                  <input className="nf-input" value={brand.city} onChange={e => setBrand(p => ({...p, city: e.target.value}))} placeholder="city" />
+                </div>
+                <div className="nf-field">
+                  <select className="nf-select" value={brand.state} onChange={e => setBrand(p => ({...p, state: e.target.value}))}>
+                    <option value="">state</option>
+                    {US_STATES.map(s => <option key={s} value={s}>{s.toLowerCase()}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="nf-line" />
             <div className="nf-section-title">social links</div>
