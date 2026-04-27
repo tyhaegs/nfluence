@@ -257,7 +257,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, onUpdateUser, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, onUpdateUser, onFaq, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showBrandEdit, setShowBrandEdit] = useState(false);
@@ -314,8 +314,13 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {/* Nav */}
       <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
         <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
-          <span style={{ fontSize: ".85rem", opacity: .6, cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
+        <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".85rem", opacity: .85 }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowSettingsMenu(v => !v)}>
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
