@@ -70,6 +70,50 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
   );
 }
 
+// ── SignUpChoice ──
+
+function SignUpChoice({ onBack, onBrand, onCreator }) {
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .suc-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
+        .suc-back:hover { opacity: 1; }
+        .suc-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 22px; padding: 36px 28px; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, background .15s, box-shadow .15s; backdrop-filter: blur(20px); }
+        .suc-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.08); box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+      `}</style>
+
+      <div className="suc-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
+        <span style={{ fontSize: "1.1rem" }}>←</span> back
+      </div>
+
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px 60px" }}>
+        <div style={{ width: "100%", maxWidth: 720 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 10 }}>join nfluence</div>
+            <div style={{ fontSize: ".95rem", opacity: .5 }}>how do you want to use the platform?</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+            <div className="suc-card" onClick={onBrand}>
+              <div style={{ fontSize: "2.4rem", marginBottom: 14 }}>🏷️</div>
+              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginBottom: 8 }}>i'm a brand</div>
+              <div style={{ fontSize: ".88rem", opacity: .5, lineHeight: 1.55 }}>launch campaigns, find creators, and scale your brand with our network of 5,000+ creators.</div>
+            </div>
+
+            <div className="suc-card" onClick={onCreator}>
+              <div style={{ fontSize: "2.4rem", marginBottom: 14 }}>🎬</div>
+              <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.3rem", fontWeight: 700, marginBottom: 8 }}>i'm a creator</div>
+              <div style={{ fontSize: ".88rem", opacity: .5, lineHeight: 1.55 }}>browse open campaigns, apply to brand collabs, and get paid for content you'd make anyway.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── BrandOnboarding ──
 
 function BrandOnboarding({ onBack, onComplete }) {
