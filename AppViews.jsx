@@ -330,7 +330,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -658,15 +658,30 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             </div>
 
             {/* Bio */}
-            <div style={{ marginBottom: 28, marginTop: 4 }}>
+            <div style={{ marginBottom: 18, marginTop: 4 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>bio</div>
               <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical", boxSizing: "border-box" }}
                 value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
             </div>
 
+            {/* Social links */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>social links</div>
+              {[
+                { key: "instagram", placeholder: "instagram url" },
+                { key: "tiktok", placeholder: "tiktok url" },
+                { key: "youtube", placeholder: "youtube url" },
+                { key: "x", placeholder: "x url" },
+                { key: "facebook", placeholder: "facebook url" },
+              ].map(s => (
+                <input key={s.key} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", marginBottom: 8 }}
+                  value={brandEditForm[s.key] || ""} onChange={e => setBrandEditForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
+              ))}
+            </div>
+
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setShowBrandEdit(false)} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>cancel</button>
-              <button onClick={() => { const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); onUpdateUser?.({ ...user, ...brandEditForm, location }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", fontWeight: 600 }}>save</button>
+              <button onClick={() => { const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); const socialLinks = { Instagram: brandEditForm.instagram || "", TikTok: brandEditForm.tiktok || "", YouTube: brandEditForm.youtube || "", X: brandEditForm.x || "", Facebook: brandEditForm.facebook || "" }; onUpdateUser?.({ ...user, ...brandEditForm, location, socialLinks }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", fontWeight: 600 }}>save</button>
             </div>
           </div>
         </div>
