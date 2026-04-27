@@ -9,7 +9,7 @@ function getSB() {
 }
 
 function NfluenceApp() {
-  const initialHashView = (typeof window !== "undefined" && ["faq", "browse"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
+  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [selectedBrand, setSelectedBrand] = useState("Nike");
   const [pendingCampaign, setPendingCampaign] = useState(null);
