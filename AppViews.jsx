@@ -1690,7 +1690,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
 // ── BrowseCampaigns ──
 
-function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [] }) {
+function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn }) {
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
@@ -1773,8 +1773,12 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
           <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact</a>
+          <span style={{ color: "#fff", cursor: "pointer" }}>campaigns</span>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+          <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>sign in</span>
         </div>
       </div>
 
