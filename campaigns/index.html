@@ -8417,6 +8417,7 @@ function NfluenceApp() {
   };
 
   const handleSignOut = async () => {
+    console.log("[auth] handleSignOut called from:", new Error().stack);
     const sb = getSB();
     console.log('[auth] signOut() — handleSignOut');
     if (sb) await sb.auth.signOut().then(r => console.log('[auth] signOut() result:', { error: r?.error?.message })).catch(console.error);
