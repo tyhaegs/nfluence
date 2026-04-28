@@ -186,7 +186,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "brand", "location", "socials"];
   const [form, setForm] = useState({
-    name: "", tagline: "", bio: "", logoPreview: null,
+    name: "", tagline: "", bio: "", logoPreview: null, logoEditing: false, logoTransform: null,
     contactName: "", email: "", password: "", phone: "",
     website: "", country: "", city: "", state: "",
     industry: "",
@@ -232,6 +232,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         tagline: form.tagline,
         bio: form.bio,
         logoPreview: form.logoPreview,
+        logoTransform: form.logoTransform,
         contactName: form.contactName,
         email: form.email,
         password: form.password,
@@ -332,13 +333,28 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             </div>
             <div style={fieldWrap}>
               <div style={labelStyle}>logo</div>
-              <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer", padding: "10px 14px", borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", background: "rgba(0,0,0,.25)" }}>
-                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-                <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".7rem", opacity: .35 }}>logo</span>}
+              {form.logoEditing && form.logoPreview ? (
+                <ImageEditor src={form.logoPreview} shape="circle"
+                  initialScale={form.logoTransform?.scale} initialPos={form.logoTransform?.pos}
+                  onSave={(t) => setForm(p => ({ ...p, logoTransform: t, logoEditing: false }))}
+                  onCancel={() => setForm(p => ({ ...p, logoPreview: null, logoEditing: false, logoTransform: null }))} />
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                  <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
+                    <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
+                    <div style={{ width: 140, height: 140, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: "2px dashed rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".8rem", opacity: .35 }}>logo</span>}
+                    </div>
+                  </label>
+                  <div>
+                    <label style={{ cursor: "pointer" }}>
+                      <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
+                      <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
+                    </label>
+                    {form.logoPreview && <div onClick={() => setForm(p => ({ ...p, logoEditing: true }))} style={{ fontSize: ".75rem", opacity: .4, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>}
+                  </div>
                 </div>
-                <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
-              </label>
+              )}
             </div>
             <div style={fieldWrap}>
               <div style={labelStyle}>industry</div>
