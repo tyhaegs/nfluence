@@ -741,10 +741,6 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           return (
             <div style={{ paddingTop: 64, marginBottom: 24 }}>
               <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{(user?.name && user.name !== user?.email) ? user.name : (user?.brandName || (user?.email ? user.email.split("@")[0] : "your brand"))}</div>
-              {user?.tagline && <div style={{ fontSize: "1rem", opacity: .55, marginTop: 4 }}>{user.tagline}</div>}
-              {user?.location && <div style={{ fontSize: ".9rem", opacity: .35, marginTop: 3 }}>{user.location.split(",").map(s => s.trim()).filter(Boolean).join(", ")}</div>}
-              {user?.website && <a href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: ".88rem", opacity: .4, color: "rgba(255,255,255,.4)", textDecoration: "underline", display: "inline-block", marginTop: 3 }}>{user.website}</a>}
-              {user?.bio && <div style={{ fontSize: ".9rem", opacity: .55, marginTop: 6, lineHeight: 1.6, maxWidth: "min(520px, 100%)" }}>{user.bio}</div>}
               {(() => {
                 const hrs = allCampaigns.flatMap(c => (c.reviews || []));
                 const ht = hrs.length;
@@ -761,6 +757,10 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                   </div>
                 );
               })()}
+              {user?.tagline && <div style={{ fontSize: "1rem", opacity: .55, marginTop: 4 }}>{user.tagline}</div>}
+              {user?.location && <div style={{ fontSize: ".9rem", opacity: .35, marginTop: 3 }}>{user.location.split(",").map(s => s.trim()).filter(Boolean).join(", ")}</div>}
+              {user?.website && <a href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: ".88rem", opacity: .65, color: "rgba(255,255,255,.4)", textDecoration: "underline", display: "inline-block", marginTop: 3 }}>{user.website}</a>}
+              {user?.bio && <div style={{ fontSize: ".9rem", opacity: .55, marginTop: 6, lineHeight: 1.6, maxWidth: "min(520px, 100%)" }}>{user.bio}</div>}
             </div>
           );
         })()}
