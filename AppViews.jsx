@@ -1,22 +1,65 @@
 // ═══════════════════════════════════════════════
 
 function PublicNav({ onSignIn, hideSignIn = false }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth <= 600);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 600);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   return (
     <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
       <a href="https://nfluenceagency.com/" style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textDecoration: "none" }}>nfluence</a>
-      <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
-        <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-        <a href="/campaigns/#browse" style={{ color: "#fff", textDecoration: "none" }}>campaigns</a>
-        <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-        <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-        <a href="/campaigns/#faq" style={{ color: "#fff", textDecoration: "none" }}>faq</a>
-        {!hideSignIn && (
-          <>
-            <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-            <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
-          </>
-        )}
-      </div>
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
+          <a href="/campaigns/#browse" style={{ color: "#fff", textDecoration: "none" }}>campaigns</a>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
+          <a href="/campaigns/#faq" style={{ color: "#fff", textDecoration: "none" }}>faq</a>
+          {!hideSignIn && (
+            <>
+              <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
+              <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
+            </>
+          )}
+        </div>
+      )}
+      {isMobile && (
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowMenu(v => !v)}>
+          <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+          <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+          <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
+          {showMenu && (
+            <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 180, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
+              {[
+                { label: "home", href: "https://nfluenceagency.com/" },
+                { label: "campaigns", href: "/campaigns/#browse" },
+                { label: "services", href: "https://nfluenceagency.com/#popular" },
+                { label: "contact us", href: "https://nfluenceagency.com/contact.html" },
+                { label: "faq", href: "/campaigns/#faq" },
+              ].map(item => (
+                <a key={item.label} href={item.href} onClick={() => setShowMenu(false)} style={{ display: "block", padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", textDecoration: "none", transition: "background .12s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  {item.label}
+                </a>
+              ))}
+              {!hideSignIn && (
+                <>
+                  <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 8px" }} />
+                  <div onClick={() => { setShowMenu(false); onSignIn?.(); }} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "#fff", cursor: "pointer", transition: "background .12s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.06)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    sign in
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -630,6 +673,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         @keyframes nf-border-shimmer { 0%,100% { border-color: rgba(255,140,30,.4); box-shadow: 0 0 0 1px rgba(255,140,30,.15), 0 0 14px rgba(255,140,30,.15); } 50% { border-color: rgba(255,165,50,1); box-shadow: 0 0 0 1px rgba(255,165,50,.5), 0 0 28px rgba(255,140,30,.45); } }
         @keyframes nf-confirm-shimmer { 0%,100% { border-color: rgba(100,255,150,.3); box-shadow: 0 0 0 1px rgba(100,255,150,.1), 0 0 10px rgba(100,255,150,.1); } 50% { border-color: rgba(100,255,150,1); box-shadow: 0 0 0 1px rgba(100,255,150,.5), 0 0 22px rgba(100,255,150,.4); } }
         @media (max-width: 600px) { .nf-nav-secondary { display: none !important; } }
+        @media (max-width: 600px) { .nf-dash-content { padding-left: 16px !important; padding-right: 16px !important; } }
       `}</style>
 
       {/* Nav */}
@@ -675,7 +719,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         </div>
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 80px" }}>
+      <div className="nf-dash-content" style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 80px" }}>
         {/* Profile info */}
         {(() => {
           return (
@@ -2282,7 +2326,8 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
+      <PublicNav onSignIn={() => {}} />
       <style>{`
         .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
@@ -2291,6 +2336,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
         .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
         .nf-signin-btn:disabled { opacity: .3; cursor: not-allowed; }
       `}</style>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
       <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
         <div style={{ textAlign: "center", marginBottom: 12 }}>
           <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
@@ -2308,6 +2354,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
           don't have an account?{" "}
           <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={onSignUp}>sign up for free!</span>
         </div>
+      </div>
       </div>
     </div>
   );

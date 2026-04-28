@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════
 
 let _sbClient = null;
+if (typeof window !== 'undefined') console.log('[supabase config]', { SUPABASE_URL: !!window.SUPABASE_URL, SUPABASE_ANON_KEY: !!window.SUPABASE_ANON_KEY });
 function getSB() {
   if (_sbClient) return _sbClient;
   if (typeof window === 'undefined' || !window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
