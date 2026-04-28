@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nfluence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Monda:wght@400..700&display=swap" rel="stylesheet">
   <style>html, body { margin: 0; padding: 0; background: #040b15; }</style>
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -8783,7 +8786,7 @@ function NfluenceApp() {
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif" }}>home</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("browse")}>campaigns</span>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("landing")}>campaigns</span>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
@@ -8805,7 +8808,7 @@ function NfluenceApp() {
           <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: 60, right: 16, background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: 6, minWidth: 180, zIndex: 50, boxShadow: "0 18px 40px rgba(0,0,0,.5)" }}>
             {[
               { label: "home", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/"; } },
-              { label: "campaigns", action: () => { setShowLandingMenu(false); setView("browse"); } },
+              { label: "campaigns", action: () => { setShowLandingMenu(false); setView("landing"); } },
               { label: "services", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/#popular"; } },
               { label: "contact us", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/contact.html"; } },
               { label: "faq", action: () => { setShowLandingMenu(false); setView("faq"); } },
