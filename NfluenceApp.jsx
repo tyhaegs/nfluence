@@ -75,13 +75,15 @@ function NfluenceApp() {
   // When the app loads, check if the user already has a session.
   // If so, restore their state without requiring them to sign in again.
   useEffect(() => {
+    console.log("[auth] mount effect running");
     const sb = getSB();
     if (!sb) return; // not wired yet — demo mode
 
     const channelRef = { current: null };
 
     console.log('[auth] getSession() — calling on mount');
-    sb.auth.getSession().then(({ data: { session } }) => {
+    sb.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("[auth] getSession result:", { hasSession: !!session, userId: session?.user?.id, error: error?.message });
       console.log('[auth] getSession() result:', { hasSession: !!session, userId: session?.user?.id, role: session?.user?.user_metadata?.role });
       if (!session) return;
       setAuthSession(session);
