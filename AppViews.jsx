@@ -342,7 +342,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
                   <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
                     <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
-                    <div style={{ width: 140, height: 140, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: "2px dashed rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 120, height: 120, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: "2px dashed rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".8rem", opacity: .35 }}>logo</span>}
                     </div>
                   </label>
@@ -711,7 +711,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -741,7 +741,10 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           return (
             <div style={{ paddingTop: 64, marginBottom: 24 }}>
               <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", letterSpacing: "-.01em" }}>{(user?.name && user.name !== user?.email) ? user.name : (user?.brandName || (user?.email ? user.email.split("@")[0] : "your brand"))}</div>
-              {user?.location && <div style={{ fontSize: ".85rem", opacity: .35, marginTop: 3 }}>{user.location}</div>}
+              {user?.tagline && <div style={{ fontSize: ".95rem", opacity: .55, marginTop: 4 }}>{user.tagline}</div>}
+              {user?.location && <div style={{ fontSize: ".85rem", opacity: .35, marginTop: 3 }}>{user.location.split(",").map(s => s.trim()).filter(Boolean).join(", ")}</div>}
+              {user?.website && <a href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: ".82rem", opacity: .4, color: "inherit", textDecoration: "underline", display: "inline-block", marginTop: 3 }}>{user.website}</a>}
+              {user?.bio && <div style={{ fontSize: ".85rem", opacity: .55, marginTop: 6, lineHeight: 1.6, maxWidth: 520 }}>{user.bio}</div>}
               {(() => {
                 const hrs = allCampaigns.flatMap(c => (c.reviews || []));
                 const ht = hrs.length;
@@ -972,6 +975,13 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>brand name</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name" />
+            </div>
+
+            {/* Tagline */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>tagline</div>
+              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
+                value={brandEditForm.tagline || ""} onChange={e => setBrandEditForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
             </div>
 
             {/* Website */}
