@@ -187,7 +187,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   const STEPS = ["account", "brand", "location", "socials"];
   const [form, setForm] = useState({
     name: "", tagline: "", bio: "", logoPreview: null, logoEditing: false, logoTransform: null,
-    contactName: "", email: "", password: "", phone: "",
+    contactName: "", email: "", password: "", confirmPassword: "", phone: "",
     website: "", country: "", city: "", state: "",
     industry: "",
     instagram: "", tiktok: "", youtube: "", x: "", facebook: "",
@@ -195,6 +195,8 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const containerRef = useRef(null);
   useEffect(() => { containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" }); window.scrollTo?.({ top: 0, behavior: "smooth" }); }, [step]);
@@ -202,7 +204,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const canProceed = useMemo(() => {
-    if (step === 0) return form.contactName.trim() && isValidEmail(form.email) && form.password.length >= 8 && form.agreeTerms;
+    if (step === 0) return form.contactName.trim() && isValidEmail(form.email) && form.password.length >= 8 && form.password === form.confirmPassword && form.agreeTerms;
     if (step === 1) return form.name.trim() && form.bio.trim();
     if (step === 2) return true;
     if (step === 3) return true;
@@ -301,7 +303,23 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
               {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
             </div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
+              <div style={{ position: "relative" }}>
+                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
+                <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+                  {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </div>
+              </div>
+            </div>
+            <div style={fieldWrap}>
+              <div style={{ position: "relative" }}>
+                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showConfirmPass ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="confirm password *" />
+                <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex" }}>
+                  {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </div>
+              </div>
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.8)", marginTop: 5 }}>passwords don't match</div>
+              )}
             </div>
 
             <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 8 }}>
