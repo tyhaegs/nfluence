@@ -472,6 +472,43 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function () {
+      var SUPABASE_URL = "https://xynujmscxjxbfivylfne.supabase.co";
+      var SUPABASE_ANON_KEY = "sb_publishable_WgxWdFozCUuUbWAUy9VKTQ_zbxdyvxE";
+      function init() {
+        if (!window.supabase) return;
+        var links = document.querySelectorAll('a[href="/campaigns/#signin"]');
+        if (!links.length) return;
+        var originals = [];
+        for (var i = 0; i < links.length; i++) {
+          originals.push({ el: links[i], href: links[i].getAttribute("href"), text: links[i].textContent });
+        }
+        function apply(session) {
+          var signedIn = !!session;
+          for (var j = 0; j < originals.length; j++) {
+            var o = originals[j];
+            if (signedIn) {
+              o.el.textContent = "dashboard";
+              o.el.setAttribute("href", "/campaigns/");
+            } else {
+              o.el.textContent = o.text;
+              o.el.setAttribute("href", o.href);
+            }
+          }
+        }
+        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        sb.auth.getSession().then(function (res) { apply(res && res.data && res.data.session); });
+        sb.auth.onAuthStateChange(function (_, session) { apply(session); });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
 </head>
 <body>
   <header>
