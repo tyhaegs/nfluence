@@ -7894,6 +7894,7 @@ function NfluenceApp() {
   const [selectedCampaign, setSelectedCampaign] = useState(DEMO_CAMPAIGNS[0]);
   const [user, setUser] = useState(null); // { email, name }
   const [authSession, setAuthSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
@@ -7961,8 +7962,9 @@ function NfluenceApp() {
     sb.auth.getSession().then(({ data: { session }, error }) => {
       console.log("[auth] getSession result:", { hasSession: !!session, userId: session?.user?.id, error: error?.message });
       console.log('[auth] getSession() result:', { hasSession: !!session, userId: session?.user?.id, role: session?.user?.user_metadata?.role });
-      if (!session) return;
+      if (!session) { setAuthLoading(false); return; }
       setAuthSession(session);
+      setAuthLoading(false);
       const u = session.user;
       const role = u.user_metadata?.role;
       const name = u.user_metadata?.name || u.email;
@@ -8774,6 +8776,8 @@ function NfluenceApp() {
     const isOwner = isOwnCampaign || isDemoFromDashboard;
     return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
+
+  if (authLoading) return null;
 
   return (
     <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
