@@ -711,9 +711,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       `}</style>
 
       {/* Nav */}
-      <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+      <div style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px" }}>
         <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".85rem", opacity: .85 }}>
+        <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", opacity: .85 }}>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
           <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
@@ -2817,7 +2817,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", flexShrink: 0 }}>
         <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 14, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ position: "relative" }}>
