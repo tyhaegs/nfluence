@@ -805,7 +805,7 @@ function NfluenceApp() {
   };
 
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
-  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => setView("signin")} />;
+  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("signupchoice")} />;
   if (view === "signupchoice") return <SignUpChoice onBack={() => setView("signin")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
@@ -863,7 +863,7 @@ function NfluenceApp() {
     setView("dashboard");
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
-  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} />;
+  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages

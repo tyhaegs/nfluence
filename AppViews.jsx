@@ -2138,7 +2138,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
 // ── BrowseCampaigns ──
 
-function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn }) {
+function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn, user, creatorUser }) {
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
@@ -2232,7 +2232,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>sign in</span>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
@@ -3350,7 +3350,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
 // ── FAQPage ──
 
-function FAQPage({ onBack, onStart, onSignIn }) {
+function FAQPage({ onBack, onStart, onSignIn, user, creatorUser }) {
   const [openIdx, setOpenIdx] = useState(null);
 
   const sections = [
@@ -3423,7 +3423,7 @@ function FAQPage({ onBack, onStart, onSignIn }) {
           <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span style={{ color: "#fff", cursor: "pointer" }}>faq</span>
           <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 

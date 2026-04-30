@@ -6466,7 +6466,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
 // ── BrowseCampaigns ──
 
-function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn }) {
+function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn, user, creatorUser }) {
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
@@ -6560,7 +6560,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>sign in</span>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
@@ -7678,7 +7678,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
 // ── FAQPage ──
 
-function FAQPage({ onBack, onStart, onSignIn }) {
+function FAQPage({ onBack, onStart, onSignIn, user, creatorUser }) {
   const [openIdx, setOpenIdx] = useState(null);
 
   const sections = [
@@ -7751,7 +7751,7 @@ function FAQPage({ onBack, onStart, onSignIn }) {
           <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span style={{ color: "#fff", cursor: "pointer" }}>faq</span>
           <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
+          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
@@ -8681,7 +8681,7 @@ function NfluenceApp() {
   };
 
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
-  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => setView("signin")} />;
+  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("signupchoice")} />;
   if (view === "signupchoice") return <SignUpChoice onBack={() => setView("signin")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
@@ -8739,7 +8739,7 @@ function NfluenceApp() {
     setView("dashboard");
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
-  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} />;
+  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages
