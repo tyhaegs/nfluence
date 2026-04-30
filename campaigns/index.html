@@ -8399,6 +8399,9 @@ function NfluenceApp() {
           };
           setAuthSession(signUpData.session);
           setUser(activeUser);
+          if (!signUpData.session) {
+            await _sb.auth.signInWithPassword({ email: data.email, password: data.password });
+          }
           await _sb.from('profiles').upsert({
             id: signUpData.user.id,
             email: signUpData.user.email,
