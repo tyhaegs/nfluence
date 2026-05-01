@@ -239,6 +239,38 @@ create table payments (
 );
 
 -- ============================================================
+-- SUBSCRIPTIONS (Stripe billing)
+-- ============================================================
+
+create table subscriptions (
+  id                     uuid        primary key default gen_random_uuid(),
+  brand_id               uuid        not null references profiles(id) on delete cascade,
+  stripe_customer_id     text,
+  stripe_subscription_id text        unique,
+  status                 text        not null default 'incomplete',
+  -- status values: 'incomplete' | 'active' | 'past_due' | 'canceled' | 'unpaid'
+  plan                   text        not null default 'annual',
+  current_period_start   timestamptz,
+  current_period_end     timestamptz,
+  cancel_at_period_end   boolean     not null default false,
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now()
+);
+
+-- ============================================================
+-- PROMO REDEMPTIONS (one-use promo tracking)
+-- ============================================================
+
+create table promo_redemptions (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    uuid        not null references profiles(id) on delete cascade,
+  promo_code text        not null,
+  payment_id uuid        references payments(id) on delete set null,
+  created_at timestamptz not null default now(),
+  unique (user_id, promo_code)
+);
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 
@@ -253,6 +285,8 @@ alter table scheduled_calls enable row level security;
 alter table notifications enable row level security;
 alter table content_uploads enable row level security;
 alter table payments enable row level security;
+alter table subscriptions enable row level security;
+alter table promo_redemptions enable row level security;
 
 -- profiles: users can read all, only update their own
 create policy "profiles_read_all" on profiles for select using (true);
@@ -312,6 +346,12 @@ create policy "uploads_brand_update" on content_uploads for update using (
 create policy "payments_read_own" on payments for select using (auth.uid() = brand_id);
 create policy "payments_insert_own" on payments for insert with check (auth.uid() = brand_id);
 
+-- subscriptions: own read only — writes via service_role (Edge Function) only
+create policy "subscriptions_select_own" on subscriptions for select to authenticated using (auth.uid() = brand_id);
+
+-- promo_redemptions: own read only — writes via service_role (Edge Function) only
+create policy "promo_redemptions_select_own" on promo_redemptions for select to authenticated using (auth.uid() = user_id);
+
 -- ============================================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================================
@@ -367,3 +407,6 @@ create index idx_notifications_unread on notifications(user_id, read) where read
 create index idx_reviews_brand_id on reviews(brand_id);
 create index idx_scheduled_calls_creator_id on scheduled_calls(creator_id);
 create index idx_scheduled_calls_brand_id on scheduled_calls(brand_id);
+create index idx_subscriptions_brand_id on subscriptions(brand_id);
+create index idx_subscriptions_status on subscriptions(status);
+create index idx_promo_redemptions_user_id on promo_redemptions(user_id);
