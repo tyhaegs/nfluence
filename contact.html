@@ -382,28 +382,51 @@
       var SUPABASE_ANON_KEY = "sb_publishable_WgxWdFozCUuUbWAUy9VKTQ_zbxdyvxE";
       function init() {
         if (!window.supabase) return;
-        var links = document.querySelectorAll('a[href="/campaigns/#signin"]');
-        if (!links.length) return;
-        var originals = [];
-        for (var i = 0; i < links.length; i++) {
-          originals.push({ el: links[i], href: links[i].getAttribute("href"), text: links[i].textContent });
-        }
+        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        var authSignin   = document.getElementById("nav-auth");
+        var authWrap     = document.getElementById("auth-menu-wrap");
+        var authBtn      = document.getElementById("auth-menu-btn");
+        var authDrop     = document.getElementById("auth-menu-drop");
+        var mobileSignin = document.getElementById("mobile-nav-signin");
+        var mobileAuth   = document.getElementById("mobile-nav-auth");
+
         function apply(session) {
-          var signedIn = !!session;
-          for (var j = 0; j < originals.length; j++) {
-            var o = originals[j];
-            if (signedIn) {
-              o.el.textContent = "dashboard";
-              o.el.setAttribute("href", "/campaigns/");
-            } else {
-              o.el.textContent = o.text;
-              o.el.setAttribute("href", o.href);
-            }
+          if (session) {
+            if (authSignin)  authSignin.style.display  = "none";
+            if (authWrap)    authWrap.style.display    = "flex";
+            if (mobileSignin) mobileSignin.style.display = "none";
+            if (mobileAuth)   mobileAuth.style.display   = "block";
+          } else {
+            if (authSignin)  authSignin.style.display  = "";
+            if (authWrap)    authWrap.style.display    = "none";
+            if (mobileSignin) mobileSignin.style.display = "";
+            if (mobileAuth)   mobileAuth.style.display   = "none";
           }
         }
-        var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         sb.auth.getSession().then(function (res) { apply(res && res.data && res.data.session); });
         sb.auth.onAuthStateChange(function (_, session) { apply(session); });
+
+        // auth hamburger toggle
+        if (authBtn && authDrop) {
+          authBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var open = authDrop.style.display === "block";
+            authDrop.style.display = open ? "none" : "block";
+          });
+          document.addEventListener("click", function () { authDrop.style.display = "none"; });
+          document.addEventListener("keydown", function (e) { if (e.key === "Escape") authDrop.style.display = "none"; });
+        }
+
+        // sign out handler
+        var handleSignOut = async function () {
+          await sb.auth.signOut();
+          window.location.href = "/";
+        };
+        var signOutBtn = document.getElementById("auth-signout");
+        var signOutBtnMobile = document.getElementById("auth-signout-mobile");
+        if (signOutBtn) signOutBtn.addEventListener("click", handleSignOut);
+        if (signOutBtnMobile) signOutBtnMobile.addEventListener("click", handleSignOut);
       }
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", init);
@@ -423,7 +446,18 @@
     <a href="contact.html">contact us</a>
     <a href="/campaigns/#faq">faq</a>
     <span class="nav-divider">|</span>
-    <a href="/campaigns/#signin" class="nav-signin">sign in</a>
+    <a href="/campaigns/#signin" class="nav-signin" id="nav-auth">sign in</a>
+    <div id="auth-menu-wrap" style="display:none;position:relative;align-items:center;">
+      <button id="auth-menu-btn" aria-label="account menu" type="button" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div id="auth-menu-drop" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#0d1b2a;border:1px solid rgba(255,255,255,.12);border-radius:8px;min-width:160px;z-index:9999;overflow:hidden;">
+        <a href="/campaigns/#dashboard" style="display:block;padding:10px 16px;color:#e8eaf0;text-decoration:none;font-size:.875rem;">dashboard</a>
+        <a href="/campaigns/#editprofile" style="display:block;padding:10px 16px;color:#e8eaf0;text-decoration:none;font-size:.875rem;">edit profile</a>
+        <a href="/campaigns/#inbox" style="display:block;padding:10px 16px;color:#e8eaf0;text-decoration:none;font-size:.875rem;">messages</a>
+        <button id="auth-signout" type="button" style="display:block;width:100%;text-align:left;padding:10px 16px;color:#e8eaf0;background:none;border:none;cursor:pointer;font-size:.875rem;">sign out</button>
+      </div>
+    </div>
   </nav>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="open menu" type="button">
     <span></span><span></span><span></span>
@@ -434,7 +468,13 @@
     <a href="/#popular">services</a>
     <a href="contact.html">contact us</a>
     <a href="/campaigns/#faq">faq</a>
-    <a href="/campaigns/#signin">sign in</a>
+    <a href="/campaigns/#signin" id="mobile-nav-signin">sign in</a>
+    <div id="mobile-nav-auth" style="display:none;">
+      <a href="/campaigns/#dashboard">dashboard</a>
+      <a href="/campaigns/#editprofile">edit profile</a>
+      <a href="/campaigns/#inbox">messages</a>
+      <button id="auth-signout-mobile" type="button" style="display:block;width:100%;text-align:left;padding:10px 16px;color:inherit;background:none;border:none;cursor:pointer;font-size:inherit;">sign out</button>
+    </div>
   </div>
 </header>
 
