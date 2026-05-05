@@ -485,6 +485,7 @@
         for (var i = 0; i < links.length; i++) {
           originals.push({ el: links[i], href: links[i].getAttribute("href"), text: links[i].textContent });
         }
+        var campaignLinks = document.querySelectorAll('a[href="/campaigns/"]');
         function apply(session) {
           var signedIn = !!session;
           for (var j = 0; j < originals.length; j++) {
@@ -496,6 +497,9 @@
               o.el.textContent = o.text;
               o.el.setAttribute("href", o.href);
             }
+          }
+          for (var k = 0; k < campaignLinks.length; k++) {
+            campaignLinks[k].setAttribute("href", signedIn ? "/campaigns/#browse" : "/campaigns/");
           }
         }
         var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -515,7 +519,7 @@
     <div class="nav-brand">nfluence</div>
     <nav class="nav-links">
       <a href="/" class="nav-home">home</a>
-      <a href="/campaigns/#browse" class="nav-campaigns">campaigns</a>
+      <a href="/campaigns/" class="nav-campaigns">campaigns</a>
       <a href="/#popular" class="nav-services">services</a>
       <a href="contact.html" class="nav-contact">contact us</a>
       <a href="/campaigns/#faq" class="nav-faq">faq</a>
@@ -527,7 +531,7 @@
     </button>
     <div class="nav-dropdown" id="nav-dropdown">
       <a href="/">home</a>
-      <a href="/campaigns/#browse">campaigns</a>
+      <a href="/campaigns/">campaigns</a>
       <a href="/#popular">services</a>
       <a href="contact.html">contact us</a>
       <a href="/campaigns/#faq">faq</a>
@@ -539,7 +543,7 @@
     <img src="https://imgur.com/tpcqXvh.png" alt="Logo" />
     <div class="actions">
       <a href="#popular" class="btn">view services</a>
-      <a href="/campaigns/#browse" class="btn">campaigns</a>
+      <a href="/campaigns/" class="btn">campaigns</a>
     </div>
     <div class="hero-line" aria-hidden="true"></div>
 
