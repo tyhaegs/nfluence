@@ -41,12 +41,6 @@ function NfluenceApp() {
     { brand: "Alo", campaign: "Mindful Movement", logoUrl: "/assets/logo_alo.jpg", myStage: "product_shipped", deadline: "07/01/26", comp: "$500" },
   ]);
 
-  // Edit profile modal state
-  const [showBrandEdit, setShowBrandEdit] = useState(false);
-  const [brandEditForm, setBrandEditForm] = useState({});
-  const [showCreatorEdit, setShowCreatorEdit] = useState(false);
-  const [creatorEditForm, setCreatorEditForm] = useState({});
-
   // Messaging state
   const [allMessages, setAllMessages] = useState(DEMO_MESSAGES); // key → message[]
   const [messageCreator, setMessageCreator] = useState(null); // creator name for current thread
@@ -264,33 +258,6 @@ function NfluenceApp() {
     const t = setTimeout(() => setShowToast(false), 5000);
     return () => clearTimeout(t);
   }, [showToast]);
-
-  // Esc to close landing nav menu
-  useEffect(() => {
-    if (!showLandingMenu) return;
-    const h = e => { if (e.key === "Escape") setShowLandingMenu(false); };
-    document.addEventListener("keydown", h);
-    return () => document.removeEventListener("keydown", h);
-  }, [showLandingMenu]);
-
-  // Handle deep-link hashes from static pages (#dashboard, #inbox, #editprofile)
-  useEffect(() => {
-    if (authLoading) return;
-    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
-    if (!["dashboard", "inbox", "editprofile"].includes(hash)) return;
-    if (!user && !creatorUser) return;
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
-    if (hash === "dashboard") {
-      if (user) setView("dashboard");
-      else if (creatorUser) setView("creatordashboard");
-    } else if (hash === "inbox") {
-      if (user) setView("inbox");
-      else if (creatorUser) setView("creatorinbox");
-    } else if (hash === "editprofile") {
-      if (user) openBrandEdit();
-      else if (creatorUser) openCreatorEdit();
-    }
-  }, [authLoading, user, creatorUser, view]);
 
   // Merged demo campaigns with any overrides (from applications or review responses)
   const mergedDemos = React.useMemo(() => {
@@ -837,275 +804,6 @@ function NfluenceApp() {
     }));
   };
 
-  const handleUpdateUser = async (updatedUser) => {
-    setUser(prev => ({ ...prev, ...updatedUser }));
-    const sb = getSB();
-    if (updatedUser?.id && sb) {
-      try {
-        await sb.from('profiles').upsert({
-          id: updatedUser.id,
-          email: updatedUser.email,
-          name: updatedUser.name,
-          phone: updatedUser.phone,
-          location: updatedUser.location,
-          city: updatedUser.city,
-          state: updatedUser.state,
-          country: updatedUser.country,
-          website: updatedUser.website,
-          industry: updatedUser.industry,
-          bio: updatedUser.bio,
-          tagline: updatedUser.tagline,
-          logo_url: updatedUser.logoUrl || updatedUser.logoPreview,
-          banner_url: updatedUser.bannerUrl || updatedUser.bannerPreview,
-          social_links: updatedUser.socialLinks,
-          role: 'brand',
-        });
-      } catch (err) { console.error('profile upsert failed:', err); }
-    }
-  };
-
-  const handleUpdateCreator = async (form) => {
-    setCreatorProfile(prev => ({
-      ...prev, ...form,
-      platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x },
-    }));
-    const sb = getSB();
-    const id = creatorUser?.id;
-    if (!id || !sb) return;
-    try {
-      await Promise.all([
-        sb.from('profiles').upsert({ id, name: form.name, role: 'creator' }),
-        sb.from('creator_profiles').upsert({
-          id,
-          bio: form.bio || null,
-          location: form.location || null,
-          age: form.age || null,
-          languages: form.languages || null,
-          niches: form.niches || null,
-          instagram: form.instagram || null,
-          instagram_followers: form.instagramFollowers || null,
-          tiktok: form.tiktok || null,
-          tiktok_followers: form.tiktokFollowers || null,
-          youtube: form.youtube || null,
-          youtube_followers: form.youtubeFollowers || null,
-          x: form.x || null,
-          x_followers: form.xFollowers || null,
-          facebook: form.facebook || null,
-          facebook_followers: form.facebookFollowers || null,
-        }),
-      ]);
-    } catch (err) { console.error('creator profile upsert failed:', err); }
-  };
-
-  const openBrandEdit = () => {
-    const parts = (user?.location || "").split(",").map(s => s.trim());
-    const sl = user?.socialLinks || {};
-    setBrandEditForm({
-      name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""),
-      tagline: user?.tagline || "",
-      city: user?.city || parts[0] || "",
-      state: user?.state || parts[1] || "",
-      country: user?.country || parts[2] || "",
-      website: user?.website || "",
-      industry: user?.industry || "",
-      bio: user?.bio || "",
-      logoPreview: user?.logoPreview || user?.logoUrl || null,
-      bannerPreview: user?.bannerPreview || user?.bannerUrl || null,
-      instagram: sl.Instagram || "",
-      tiktok: sl.TikTok || "",
-      youtube: sl.YouTube || "",
-      x: sl.X || "",
-      facebook: sl.Facebook || "",
-    });
-    setShowBrandEdit(true);
-  };
-
-  const openCreatorEdit = () => {
-    const parts = (creatorProfile?.location || "").split(",").map(s => s.trim());
-    setCreatorEditForm({
-      ...creatorProfile,
-      city: creatorProfile?.city || parts[0] || "",
-      state: creatorProfile?.state || parts[1] || "",
-      country: creatorProfile?.country || parts[2] || "",
-    });
-    setShowCreatorEdit(true);
-  };
-
-  // Edit profile portals — rendered to document.body so they appear on any view
-  const brandEditPortal = showBrandEdit ? ReactDOM.createPortal(
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setShowBrandEdit(false)}>
-      <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "88vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700 }}>edit profile</div>
-          <div onClick={() => setShowBrandEdit(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>logo</div>
-          <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-            <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-            <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {brandEditForm.logoPreview ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
-            </div>
-            <div style={{ fontSize: ".8rem", opacity: .4 }}>{brandEditForm.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
-          </label>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>banner</div>
-          <label style={{ display: "block", cursor: "pointer" }}>
-            <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, bannerPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-            <div style={{ width: "100%", height: 90, borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", overflow: "hidden", background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-              {brandEditForm.bannerPreview ? <img src={brandEditForm.bannerPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span style={{ fontSize: ".75rem", opacity: .35 }}>click to upload banner</span></div>}
-            </div>
-          </label>
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>brand name</div>
-          <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name" />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>tagline</div>
-          <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} value={brandEditForm.tagline || ""} onChange={e => setBrandEditForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>website</div>
-          <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} value={brandEditForm.website || ""} onChange={e => setBrandEditForm(f => ({ ...f, website: e.target.value }))} placeholder="yoursite.com" />
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>country</div>
-          <div style={{ position: "relative" }}>
-            <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }} value={brandEditForm.country || ""} onChange={e => setBrandEditForm(f => ({ ...f, country: e.target.value, state: "" }))}>
-              <option value="">select country</option>
-              {REGION_CODES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
-          </div>
-        </div>
-
-        {brandEditForm.country === "US" && (
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>city & state</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
-              <div style={{ position: "relative", flex: 1 }}>
-                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }} value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))}>
-                  <option value="">state</option>
-                  {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: .4 }}>▾</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {brandEditForm.country && brandEditForm.country !== "US" && (
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>city</div>
-            <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
-          </div>
-        )}
-
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>industry</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {INDUSTRIES.map(ind => {
-              const selected = brandEditForm.industry === ind;
-              return <div key={ind} onClick={() => setBrandEditForm(f => ({ ...f, industry: selected ? "" : ind }))} style={{ padding: "6px 13px", borderRadius: 20, border: `1px solid ${selected ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.15)"}`, background: selected ? "rgba(255,255,255,.1)" : "transparent", fontSize: ".78rem", color: selected ? "#fff" : "rgba(255,255,255,.55)", cursor: "pointer", transition: "all .12s", userSelect: "none" }}>{ind}</div>;
-            })}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 18, marginTop: 4 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>bio</div>
-          <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical", boxSizing: "border-box" }} value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
-        </div>
-
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>social links</div>
-          {[{ key: "instagram", placeholder: "instagram url" }, { key: "tiktok", placeholder: "tiktok url" }, { key: "youtube", placeholder: "youtube url" }, { key: "x", placeholder: "x url" }, { key: "facebook", placeholder: "facebook url" }].map(s => (
-            <input key={s.key} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", marginBottom: 8 }} value={brandEditForm[s.key] || ""} onChange={e => setBrandEditForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
-          ))}
-        </div>
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => setShowBrandEdit(false)} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>cancel</button>
-          <button onClick={() => { const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); const socialLinks = { Instagram: brandEditForm.instagram || "", TikTok: brandEditForm.tiktok || "", YouTube: brandEditForm.youtube || "", X: brandEditForm.x || "", Facebook: brandEditForm.facebook || "" }; handleUpdateUser({ ...user, ...brandEditForm, location, socialLinks }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", fontWeight: 600 }}>save</button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null;
-
-  const creatorEditPortal = showCreatorEdit ? ReactDOM.createPortal(
-    <div onClick={() => setShowCreatorEdit(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>edit profile</div>
-          <div onClick={() => setShowCreatorEdit(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em" }}>basic info</div>
-          {[["name", "your name"], ["bio", "short bio (shown on profile)"]].map(([field, placeholder]) => (
-            <div key={field}>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
-              <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} placeholder={placeholder} value={creatorEditForm[field] || ""} onChange={e => setCreatorEditForm(f => ({ ...f, [field]: e.target.value }))} />
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 10 }}>
-            {[["city", "city"], ["state", "state"], ["country", "country"]].map(([field, placeholder]) => (
-              <div key={field} style={{ flex: 1 }}>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
-                <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} placeholder={placeholder} value={creatorEditForm[field] || ""} onChange={e => { const val = e.target.value; setCreatorEditForm(f => { const updated = { ...f, [field]: val }; updated.location = [updated.city, updated.state, updated.country].filter(Boolean).join(", "); return updated; }); }} />
-              </div>
-            ))}
-          </div>
-          {[["age", "your age"], ["languages", "e.g. English, Spanish"]].map(([field, placeholder]) => (
-            <div key={field}>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{field}</div>
-              <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} placeholder={placeholder} value={creatorEditForm[field] || ""} onChange={e => setCreatorEditForm(f => ({ ...f, [field]: e.target.value }))} />
-            </div>
-          ))}
-          <div>
-            <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>niches</div>
-            <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} placeholder="e.g. fitness, wellness, travel (comma separated)" value={creatorEditForm.niches || ""} onChange={e => setCreatorEditForm(f => ({ ...f, niches: e.target.value }))} />
-          </div>
-          <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em", marginTop: 4 }}>skills</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {GIG_SKILLS.map(skill => {
-              const isSelected = (creatorEditForm.skills || []).includes(skill);
-              return <div key={skill} onClick={() => setCreatorEditForm(f => ({ ...f, skills: isSelected ? (f.skills || []).filter(s => s !== skill) : [...(f.skills || []), skill] }))} style={{ flex: 1, padding: "8px 12px", borderRadius: 12, cursor: "pointer", textAlign: "center", fontSize: ".82rem", transition: "all .15s", border: `1px solid ${isSelected ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`, background: isSelected ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)", color: isSelected ? "#fff" : "rgba(255,255,255,.5)" }}>{skill}</div>;
-            })}
-          </div>
-          <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em", marginTop: 4 }}>platforms</div>
-          <div style={{ fontSize: ".72rem", opacity: .3, marginTop: -8 }}>follower counts are self-reported — verification coming soon</div>
-          {[["instagram", "Instagram handle", "instagramFollowers", "followers"], ["tiktok", "TikTok handle", "tiktokFollowers", "followers"], ["youtube", "YouTube channel", "youtubeFollowers", "subscribers"], ["x", "X handle", "xFollowers", "followers"], ["facebook", "Facebook page / profile", "facebookFollowers", "followers"]].map(([handleField, handlePlaceholder, countField, countLabel]) => (
-            <div key={handleField}>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>{handleField}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", flex: 2 }} placeholder={handlePlaceholder} value={creatorEditForm[handleField] || ""} onChange={e => setCreatorEditForm(f => ({ ...f, [handleField]: e.target.value }))} />
-                <input style={{ borderRadius: 11, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", padding: "11px 14px", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", flex: 1 }} placeholder={countLabel} value={creatorEditForm[countField] || ""} onChange={e => setCreatorEditForm(f => ({ ...f, [countField]: e.target.value }))} />
-              </div>
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-            <button style={{ flex: 1, padding: "9px 20px", borderRadius: 11, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "rgba(255,255,255,.8)", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif" }} onClick={() => setShowCreatorEdit(false)}>cancel</button>
-            <button onClick={() => { handleUpdateCreator(creatorEditForm); setShowCreatorEdit(false); }} style={{ flex: 2, padding: "11px", borderRadius: 11, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".88rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", transition: "all .12s" }}>save profile</button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null;
-
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("signupchoice")} />;
@@ -1114,9 +812,8 @@ function NfluenceApp() {
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} onSignIn={() => setView("signin")} />;
   if (view === "creatordashboard") return <>
-    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenCreatorEdit={openCreatorEdit} />
+    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
-    {creatorEditPortal}
   </>;
   if (view === "creatorinbox") {
     const brandAvatarMap = Object.fromEntries(DEMO_CAMPAIGNS.map(c => [c.brand, c.logoUrl || null]));
@@ -1130,9 +827,33 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={handleUpdateUser} onFaq={() => setView("faq")} onOpenBrandEdit={openBrandEdit} />
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      const sb = getSB();
+      if (updatedUser?.id && sb) {
+        try {
+          await sb.from('profiles').upsert({
+            id: updatedUser.id,
+            email: updatedUser.email,
+            name: updatedUser.name,
+            phone: updatedUser.phone,
+            location: updatedUser.location,
+            city: updatedUser.city,
+            state: updatedUser.state,
+            country: updatedUser.country,
+            website: updatedUser.website,
+            industry: updatedUser.industry,
+            bio: updatedUser.bio,
+            tagline: updatedUser.tagline,
+            logo_url: updatedUser.logoUrl || updatedUser.logoPreview,
+            banner_url: updatedUser.bannerUrl || updatedUser.bannerPreview,
+            social_links: updatedUser.socialLinks,
+            role: 'brand',
+          });
+        } catch (err) { console.error('profile upsert failed:', err); }
+      }
+    }} onFaq={() => setView("faq")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
-    {brandEditPortal}
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
   if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} session={authSession} />;
@@ -1142,11 +863,7 @@ function NfluenceApp() {
     setView("dashboard");
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
-  if (view === "browse") return <>
-    <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} onSignOut={user ? handleSignOut : handleCreatorSignOut} onOpenMessages={() => user ? setView("inbox") : setView("creatorinbox")} onEditProfile={user ? openBrandEdit : openCreatorEdit} />
-    {brandEditPortal}
-    {creatorEditPortal}
-  </>;
+  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages
@@ -1253,10 +970,13 @@ function NfluenceApp() {
           <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
           <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("faq")}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          {(user || creatorUser)
-            ? <HeaderAuthMenu onDashboard={() => setView(user ? "dashboard" : "creatordashboard")} onEditProfile={user ? openBrandEdit : openCreatorEdit} onMessages={() => setView(user ? "inbox" : "creatorinbox")} onSignOut={user ? handleSignOut : handleCreatorSignOut} />
-            : <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("signin")}>sign in</span>
-          }
+          {user ? (
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("dashboard")}>dashboard</span>
+          ) : creatorUser ? (
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("creatordashboard")}>dashboard</span>
+          ) : (
+            <span style={{ color: "#fff", cursor: "pointer" }} onClick={() => setView("signin")}>sign in</span>
+          )}
           <div className="nf-mobile-hamburger" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setShowLandingMenu(v => !v); }}>
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
@@ -1271,7 +991,7 @@ function NfluenceApp() {
               { label: "services", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/#popular"; } },
               { label: "contact us", action: () => { setShowLandingMenu(false); window.location.href = "https://nfluenceagency.com/contact.html"; } },
               { label: "faq", action: () => { setShowLandingMenu(false); setView("faq"); } },
-              ...(!user && !creatorUser ? [{ label: "sign in", action: () => { setShowLandingMenu(false); setView("signin"); } }] : []),
+              { label: user ? "dashboard" : creatorUser ? "dashboard" : "sign in", action: () => { setShowLandingMenu(false); setView(user ? "dashboard" : creatorUser ? "creatordashboard" : "signin"); } },
             ].map(item => (
               <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".9rem", color: "rgba(255,255,255,.85)", cursor: "pointer", transition: "background .12s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.08)"}
@@ -1399,8 +1119,6 @@ function NfluenceApp() {
           <div>© 2026 nfluence</div>
         </div>
       </div>
-      {brandEditPortal}
-      {creatorEditPortal}
     </div>
   );
 }
