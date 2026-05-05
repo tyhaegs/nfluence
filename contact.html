@@ -90,17 +90,21 @@
       display: flex;
       gap: 18px;
       font-size: .9rem;
-      opacity: .85;
     }
 
     .nav-links a {
       color: #fff;
       text-decoration: none;
       cursor: pointer;
+      opacity: .85;
+      transition: opacity .15s;
     }
 
     .nav-links a:hover {
       opacity: 1;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 1.5px;
     }
 
     .nav-divider {
