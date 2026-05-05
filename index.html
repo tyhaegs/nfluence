@@ -116,7 +116,10 @@
       flex-direction: column;
       align-items: center;
       position: relative;
+      pointer-events: none;
     }
+
+    .logo .btn { pointer-events: auto; }
 
     .logo::before {
       content: "";
@@ -250,6 +253,7 @@
       font-size: 23px;
       line-height: 1.4;
       z-index: 1;
+      pointer-events: none;
        /* tighten edges on mobile */
     }
 
