@@ -1,5 +1,10 @@
 // ═══════════════════════════════════════════════
 
+const _nlh = {
+  onMouseEnter: e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.textDecoration = "underline"; e.currentTarget.style.textUnderlineOffset = "4px"; e.currentTarget.style.textDecorationThickness = "1.5px"; },
+  onMouseLeave: e => { e.currentTarget.style.opacity = ".85"; e.currentTarget.style.textDecoration = "none"; }
+};
+
 function PublicNav({ onSignIn, hideSignIn = false }) {
   const [showMenu, setShowMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth <= 600);
@@ -12,16 +17,16 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
     <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
       <a href="https://nfluenceagency.com/" style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textDecoration: "none" }}>nfluence</a>
       {!isMobile && (
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <a href="/campaigns/#browse" style={{ color: "#fff", textDecoration: "none" }}>campaigns</a>
-          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <a href="/campaigns/#faq" style={{ color: "#fff", textDecoration: "none" }}>faq</a>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>home</a>
+          <a href="/campaigns/#browse" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>campaigns</a>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>contact us</a>
+          <a href="/campaigns/#faq" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>faq</a>
           {!hideSignIn && (
             <>
               <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-              <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>sign in</span>
+              <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={onSignIn} {..._nlh}>sign in</span>
             </>
           )}
         </div>
@@ -713,12 +718,12 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {/* Nav */}
       <div style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px" }}>
         <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", opacity: .85 }}>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onBrowse?.()}>campaigns</span>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+        <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>home</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => onBrowse?.()} {..._nlh}>campaigns</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>services</a>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>contact us</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => onFaq?.()} {..._nlh}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowSettingsMenu(v => !v)}>
@@ -2225,14 +2230,14 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         <div className="nf-browse-back-mobile" style={{ alignItems: "center", gap: 6, fontSize: ".88rem", opacity: .65, color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif" }} onClick={onBack}>
           <span style={{ fontSize: "1.05rem" }}>←</span> back
         </div>
-        <div className="nf-browse-back" style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }}>campaigns</span>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onFaq?.()}>faq</span>
+        <div className="nf-browse-back" style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>home</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} {..._nlh}>campaigns</span>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>services</a>
+          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>contact us</a>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => onFaq?.()} {..._nlh}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer" }} onClick={() => onSignIn?.()}>{user || creatorUser ? "dashboard" : "sign in"}</span>
+          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => onSignIn?.()} {..._nlh}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
@@ -3416,14 +3421,14 @@ function FAQPage({ onBack, onStart, onSignIn, user, creatorUser }) {
 
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "system-ui, sans-serif" }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", opacity: .85, fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
-          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none" }}>home</a>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onBack}>campaigns</span>
-          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none" }}>services</a>
-          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none" }}>contact us</a>
-          <span style={{ color: "#fff", cursor: "pointer" }}>faq</span>
+        <div style={{ display: "flex", gap: 18, fontSize: ".9rem", fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
+          <a href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>home</a>
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={onBack} {..._nlh}>campaigns</span>
+          <a href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>services</a>
+          <a href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} {..._nlh}>contact us</a>
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} {..._nlh}>faq</span>
           <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span style={{ color: "#fff", cursor: "pointer" }} onClick={onSignIn}>{user || creatorUser ? "dashboard" : "sign in"}</span>
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={onSignIn} {..._nlh}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
