@@ -38,7 +38,11 @@ cat > "$OUT" <<HTMLEOF
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Monda:wght@400..700&display=swap" rel="stylesheet">
-  <style>html, body { margin: 0; padding: 0; background: #040b15; }</style>
+  <style>
+    html, body { margin: 0; padding: 0; background: #040b15; }
+    .nf-nl { opacity: .85; transition: opacity .15s; cursor: pointer; text-decoration: none; }
+    .nf-nl:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+  </style>
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
