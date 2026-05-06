@@ -954,6 +954,8 @@ function NfluenceApp() {
         }
         @keyframes nf-gold-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
+        .nf-nl { opacity: .85; transition: opacity .15s; cursor: pointer; text-decoration: none; }
+        .nf-nl:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
         .nf-mobile-hamburger { display: none; }
         @media (max-width: 600px) {
           .nf-nav-secondary { display: none !important; }
@@ -961,21 +963,21 @@ function NfluenceApp() {
         }
       `}</style>
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", position: "relative" }}>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", position: "relative", zIndex: 1 }}>
         <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", textDecoration: "none", fontFamily: "system-ui, sans-serif", opacity: .85, transition: "opacity .15s" }} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>home</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => setView(user || creatorUser ? "browse" : "landing")} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>campaigns</span>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>services</a>
-          <a className="nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff", textDecoration: "none", opacity: .85, transition: "opacity .15s" }} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>contact us</a>
-          <span className="nf-nav-secondary" style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => setView("faq")} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>faq</span>
+          <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", fontFamily: "system-ui, sans-serif" }}>home</a>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => setView(user || creatorUser ? "browse" : "landing")}>campaigns</span>
+          <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff" }}>services</a>
+          <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff" }}>contact us</a>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => setView("faq")}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           {user ? (
-            <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => setView("dashboard")} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>dashboard</span>
+            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("dashboard")}>dashboard</span>
           ) : creatorUser ? (
-            <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => setView("creatordashboard")} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>dashboard</span>
+            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("creatordashboard")}>dashboard</span>
           ) : (
-            <span style={{ color: "#fff", cursor: "pointer", opacity: .85, transition: "opacity .15s" }} onClick={() => setView("signin")} onMouseEnter={e => { e.currentTarget.style.opacity="1"; e.currentTarget.style.textDecoration="underline"; e.currentTarget.style.textUnderlineOffset="4px"; e.currentTarget.style.textDecorationThickness="1.5px"; }} onMouseLeave={e => { e.currentTarget.style.opacity=".85"; e.currentTarget.style.textDecoration="none"; }}>sign in</span>
+            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("signin")}>sign in</span>
           )}
           <div className="nf-mobile-hamburger" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setShowLandingMenu(v => !v); }}>
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
