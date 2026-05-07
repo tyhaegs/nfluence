@@ -355,7 +355,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
               {form.logoEditing && form.logoPreview ? (
                 <ImageEditor src={form.logoPreview} shape="circle"
                   initialScale={form.logoTransform?.scale} initialPos={form.logoTransform?.pos}
-                  onSave={(t) => setForm(p => ({ ...p, logoTransform: t, logoEditing: false }))}
+                  onSave={(t) => setForm(p => ({ ...p, logoPreview: t.croppedDataUrl, logoTransform: t, logoEditing: false }))}
                   onCancel={() => setForm(p => ({ ...p, logoPreview: null, logoEditing: false, logoTransform: null }))} />
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
@@ -2585,7 +2585,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               {profile.bannerEditing && profile.bannerPreview ? (
                 <ImageEditor src={profile.bannerPreview} shape="banner"
                   initialScale={profile.bannerTransform?.scale} initialPos={profile.bannerTransform?.pos}
-                  onSave={(t) => setProfile(p => ({ ...p, bannerTransform: t, bannerEditing: false }))}
+                  onSave={(t) => setProfile(p => ({ ...p, bannerPreview: t.croppedDataUrl, bannerTransform: t, bannerEditing: false }))}
                   onCancel={() => setProfile(p => ({ ...p, bannerPreview: null, bannerEditing: false, bannerTransform: null }))} />
               ) : profile.bannerPreview ? (
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", height: 120, marginBottom: 4 }}>
@@ -2610,7 +2610,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               {profile.avatarEditing && profile.avatarPreview ? (
                 <ImageEditor src={profile.avatarPreview} shape="square"
                   initialScale={profile.avatarTransform?.scale} initialPos={profile.avatarTransform?.pos}
-                  onSave={(t) => setProfile(p => ({ ...p, avatarTransform: t, avatarEditing: false }))}
+                  onSave={(t) => setProfile(p => ({ ...p, avatarPreview: t.croppedDataUrl, avatarTransform: t, avatarEditing: false }))}
                   onCancel={() => setProfile(p => ({ ...p, avatarPreview: null, avatarEditing: false, avatarTransform: null }))} />
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

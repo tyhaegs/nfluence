@@ -63,6 +63,24 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   }, []);
 
 
+  const handleDone = () => {
+    const img = containerRef.current?.querySelector('img');
+    if (!img) { onSave({ scale, pos }); return; }
+    const outputW = (isCircle || isSquare) ? 512 : 1200;
+    const outputH = (isCircle || isSquare) ? 512 : 450;
+    const sf = outputW / cropW;
+    const baseScale = Math.max(cropW / img.naturalWidth, cropH / img.naturalHeight);
+    const drawW = img.naturalWidth * baseScale * scale * sf;
+    const drawH = img.naturalHeight * baseScale * scale * sf;
+    const canvas = document.createElement('canvas');
+    canvas.width = outputW;
+    canvas.height = outputH;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, outputW / 2 + pos.x * sf - drawW / 2, outputH / 2 + pos.y * sf - drawH / 2, drawW, drawH);
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    onSave({ croppedDataUrl, scale, pos });
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
@@ -92,7 +110,7 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
         <span style={{ fontSize: ".7rem", opacity: .5, minWidth: 34, textAlign: "right" }}>{scale.toFixed(1)}x</span>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
-        <div onClick={() => onSave({ scale, pos })}
+        <div onClick={handleDone}
           style={{ padding: "8px 20px", borderRadius: 10, border: "1px solid rgba(255,255,255,.3)", fontSize: ".82rem", color: "#fff", cursor: "pointer" }}>
           done
         </div>
