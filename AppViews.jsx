@@ -976,7 +976,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               ) : (
                 <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
                   <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
-                  <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {brandEditForm.logoPreview
                       ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}

@@ -845,8 +845,8 @@ function NfluenceApp() {
             industry: updatedUser.industry,
             bio: updatedUser.bio,
             tagline: updatedUser.tagline,
-            logo_url: updatedUser.logoUrl || updatedUser.logoPreview,
-            banner_url: updatedUser.bannerUrl || updatedUser.bannerPreview,
+            logo_url: updatedUser.logoPreview || updatedUser.logoUrl,
+            banner_url: updatedUser.bannerPreview || updatedUser.bannerUrl,
             social_links: updatedUser.socialLinks,
             role: 'brand',
           });

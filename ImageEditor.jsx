@@ -93,7 +93,7 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
         onTouchStart={onTouchStart}
         onTouchEnd={() => { dragging.current = false; }}
       >
-        <img src={src} alt="edit" draggable={false} style={{
+        <img src={src} alt="edit" draggable={false} crossOrigin="anonymous" style={{
           position: "absolute",
           left: "50%", top: "50%",
           transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px)) scale(${scale})`,
