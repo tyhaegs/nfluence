@@ -68,6 +68,7 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
 function SignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [name, setName] = useState("");
   const isSignUp = false;
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -107,7 +108,12 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
             <input className="nf-signin-input" value={name} onChange={e => setName(e.target.value)} placeholder="brand or company name" />
           )}
           <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
-          <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
+          <div style={{ position: "relative" }}>
+            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="password" style={{ paddingRight: 44 }} />
+            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+              {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+            </div>
+          </div>
           {isSignUp && (
             <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)" }}>
               <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
@@ -659,7 +665,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showBrandEdit, setShowBrandEdit] = useState(false);
-  const [brandEditForm, setBrandEditForm] = useState({ name: "", location: "", website: "" });
+  const [brandEditForm, setBrandEditForm] = useState({ name: "", location: "", website: "", logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null });
   const [showAttentionModal, setShowAttentionModal] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
   const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
@@ -730,7 +736,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: user?.industry || "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -962,31 +968,55 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {/* Logo */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>logo</div>
-              <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-                <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {brandEditForm.logoPreview
-                    ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
-                </div>
-                <div style={{ fontSize: ".8rem", opacity: .4 }}>{brandEditForm.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
-              </label>
+              {brandEditForm.logoEditing && brandEditForm.logoPreview ? (
+                <ImageEditor src={brandEditForm.logoPreview} shape="circle"
+                  initialScale={brandEditForm.logoTransform?.scale} initialPos={brandEditForm.logoTransform?.pos}
+                  onSave={(t) => setBrandEditForm(p => ({ ...p, logoPreview: t.croppedDataUrl, logoTransform: t, logoEditing: false }))}
+                  onCancel={() => setBrandEditForm(p => ({ ...p, logoPreview: null, logoEditing: false, logoTransform: null }))} />
+              ) : (
+                <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+                  <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
+                  <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {brandEditForm.logoPreview
+                      ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: ".8rem", opacity: .4 }}>{brandEditForm.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
+                    {brandEditForm.logoPreview && (
+                      <div onClick={e => { e.preventDefault(); setBrandEditForm(p => ({ ...p, logoEditing: true })); }} style={{ fontSize: ".75rem", opacity: .4, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>
+                    )}
+                  </div>
+                </label>
+              )}
             </div>
 
             {/* Banner */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>banner</div>
-              <label style={{ display: "block", cursor: "pointer" }}>
-                <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, bannerPreview: ev.target.result })); r.readAsDataURL(f); } }} />
-                <div style={{ width: "100%", height: 90, borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", overflow: "hidden", background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                  {brandEditForm.bannerPreview
-                    ? <img src={brandEditForm.bannerPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span style={{ fontSize: ".75rem", opacity: .35 }}>click to upload banner</span>
-                      </div>}
-                </div>
-              </label>
+              {brandEditForm.bannerEditing && brandEditForm.bannerPreview ? (
+                <ImageEditor src={brandEditForm.bannerPreview} shape="banner"
+                  initialScale={brandEditForm.bannerTransform?.scale} initialPos={brandEditForm.bannerTransform?.pos}
+                  onSave={(t) => setBrandEditForm(p => ({ ...p, bannerPreview: t.croppedDataUrl, bannerTransform: t, bannerEditing: false }))}
+                  onCancel={() => setBrandEditForm(p => ({ ...p, bannerPreview: null, bannerEditing: false, bannerTransform: null }))} />
+              ) : (
+                <label style={{ display: "block", cursor: "pointer" }}>
+                  <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, bannerPreview: ev.target.result, bannerEditing: true, bannerTransform: null })); r.readAsDataURL(f); } }} />
+                  <div style={{ width: "100%", height: 90, borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", overflow: "hidden", background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                    {brandEditForm.bannerPreview
+                      ? <>
+                          <img src={brandEditForm.bannerPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <div onClick={e => { e.preventDefault(); setBrandEditForm(p => ({ ...p, bannerEditing: true })); }} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: ".82rem", color: "#fff", background: "rgba(0,0,0,.4)", padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,.2)" }}>reposition</span>
+                          </div>
+                        </>
+                      : <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          <span style={{ fontSize: ".75rem", opacity: .35 }}>click to upload banner</span>
+                        </div>}
+                  </div>
+                </label>
+              )}
             </div>
 
             {/* Brand name */}
@@ -2368,6 +2398,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
 function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
@@ -2389,7 +2420,12 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
-          <input className="nf-signin-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
+          <div style={{ position: "relative" }}>
+            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="password" style={{ paddingRight: 44 }} />
+            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+              {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+            </div>
+          </div>
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
             <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, null, password)}>sign in</button>
