@@ -127,10 +127,16 @@ function NfluenceApp() {
           });
         // Load brand's campaigns from Supabase
         sb.from('campaigns')
-          .select('*')
+          .select('*, profiles!brand_id(logo_url, banner_url)')
           .eq('brand_id', u.id)
           .order('created_at', { ascending: false })
-          .then(({ data }) => { if (data) setMyCampaigns(data); });
+          .then(({ data }) => {
+            if (data) setMyCampaigns(data.map(c => ({
+              ...c,
+              logoUrl: c.logo_url || c.profiles?.logo_url || null,
+              bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+            })));
+          });
         // Load notifications
         sb.from('notifications')
           .select('*')
@@ -165,23 +171,23 @@ function NfluenceApp() {
           .then(({ data }) => { if (data) setCreatorProfile({ ...data, name: data.profiles?.name || name }); });
         // Load creator applications
         sb.from('applications')
-          .select('*, campaigns(brand_name, name, logo_url, comp_type, comp)')
+          .select('*, campaigns(brand_name, name, logo_url, comp_type, comp, profiles!brand_id(logo_url, banner_url))')
           .eq('creator_id', u.id)
           .then(({ data }) => {
             if (!data) return;
             setCreatorApplied(data.map(a => ({
-              brand: a.campaigns.brand_name,
-              campaign: a.campaigns.name,
-              logoUrl: a.campaigns.logo_url,
+              brand: a.campaigns?.brand_name,
+              campaign: a.campaigns?.name,
+              logoUrl: a.campaigns?.logo_url || a.campaigns?.profiles?.logo_url || null,
               status: a.status,
             })));
             const ACTIVE_STAGES = ['accepted', 'product_shipped', 'product_delivered', 'content_submitted', 'approved'];
             setCreatorActive(data.filter(a => ACTIVE_STAGES.includes(a.stage)).map(a => ({
-              brand: a.campaigns.brand_name,
-              campaign: a.campaigns.name,
-              logoUrl: a.campaigns.logo_url,
+              brand: a.campaigns?.brand_name,
+              campaign: a.campaigns?.name,
+              logoUrl: a.campaigns?.logo_url || a.campaigns?.profiles?.logo_url || null,
               myStage: a.stage,
-              comp: a.campaigns.comp,
+              comp: a.campaigns?.comp,
               applicationId: a.id,
             })));
           });
@@ -572,8 +578,12 @@ function NfluenceApp() {
         setAuthSession(data.session);
         setUser({ id: u.id, email: u.email, name: resolvedName });
         // Load brand campaigns
-        const { data: campaigns } = await _sb.from('campaigns').select('*').eq('brand_id', u.id).order('created_at', { ascending: false });
-        if (campaigns) setMyCampaigns(campaigns);
+        const { data: campaigns } = await _sb.from('campaigns').select('*, profiles!brand_id(logo_url, banner_url)').eq('brand_id', u.id).order('created_at', { ascending: false });
+        if (campaigns) setMyCampaigns(campaigns.map(c => ({
+          ...c,
+          logoUrl: c.logo_url || c.profiles?.logo_url || null,
+          bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+        })));
         // Load full brand profile — same fields as session restore path
         const { data: p } = await _sb.from('profiles').select('*').eq('id', u.id).single();
         if (p) setUser(prev => ({
