@@ -1,113 +1,69 @@
-// ── ImageEditor ──
+// ── ImageEditor (cropperjs v1 wrapper) ──
 
 function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos }) {
-  const [scale, setScale] = useState(initialScale || 1);
-  const [pos, setPos] = useState(initialPos || { x: 0, y: 0 });
-  const dragging = useRef(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const containerRef = useRef(null);
+  const imgRef = useRef(null);
+  const cropperRef = useRef(null);
+  const readyRatioRef = useRef(1);
+  const [zoom, setZoom] = useState(1);
 
   const isCircle = shape === "circle";
   const isSquare = shape === "square";
-  const cropW = (isCircle || isSquare) ? 160 : 320;
-  const cropH = (isCircle || isSquare) ? 160 : 120;
-
-  const onMouseDown = useCallback((e) => {
-    e.preventDefault();
-    dragging.current = true;
-    lastPos.current = { x: e.clientX, y: e.clientY };
-  }, []);
-
-  const onMouseMove = useCallback((e) => {
-    if (!dragging.current) return;
-    setPos(p => ({
-      x: p.x + (e.clientX - lastPos.current.x),
-      y: p.y + (e.clientY - lastPos.current.y),
-    }));
-    lastPos.current = { x: e.clientX, y: e.clientY };
-  }, []);
-
-  const onMouseUp = useCallback(() => { dragging.current = false; }, []);
-
-  const onTouchStart = useCallback((e) => {
-    dragging.current = true;
-    const t = e.touches[0];
-    lastPos.current = { x: t.clientX, y: t.clientY };
-  }, []);
+  const outputW = (isCircle || isSquare) ? 512 : 1200;
+  const outputH = (isCircle || isSquare) ? 512 : 450;
+  const boxW = (isCircle || isSquare) ? 280 : 320;
+  const boxH = (isCircle || isSquare) ? 280 : 120;
 
   useEffect(() => {
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [onMouseMove, onMouseUp]);
-
-  // Must be non-passive to call preventDefault and prevent page scroll during drag
-  useEffect(() => {
-    const el = containerRef.current;
+    const el = imgRef.current;
     if (!el) return;
-    const handler = (e) => {
-      if (!dragging.current) return;
-      e.preventDefault();
-      const t = e.touches[0];
-      setPos(p => ({
-        x: p.x + (t.clientX - lastPos.current.x),
-        y: p.y + (t.clientY - lastPos.current.y),
-      }));
-      lastPos.current = { x: t.clientX, y: t.clientY };
-    };
-    el.addEventListener("touchmove", handler, { passive: false });
-    return () => el.removeEventListener("touchmove", handler);
-  }, []);
-
+    const cropper = new window.Cropper(el, {
+      aspectRatio: outputW / outputH,
+      viewMode: 1,
+      dragMode: "move",
+      cropBoxResizable: false,
+      cropBoxMovable: false,
+      background: false,
+      autoCropArea: 1,
+      ready() {
+        const d = cropper.getCanvasData();
+        readyRatioRef.current = d.width / d.naturalWidth;
+        if (initialScale && initialScale > 1) {
+          cropper.zoomTo(readyRatioRef.current * initialScale);
+          setZoom(initialScale);
+        }
+      },
+    });
+    cropperRef.current = cropper;
+    const onZoom = (e) => setZoom(+(e.detail.ratio / readyRatioRef.current).toFixed(2));
+    el.addEventListener("zoom", onZoom);
+    return () => { el.removeEventListener("zoom", onZoom); cropper.destroy(); };
+  }, [src]);
 
   const handleDone = () => {
-    const img = containerRef.current?.querySelector('img');
-    if (!img) { onSave({ scale, pos }); return; }
-    const outputW = (isCircle || isSquare) ? 512 : 1200;
-    const outputH = (isCircle || isSquare) ? 512 : 450;
-    const sf = outputW / cropW;
-    const baseScale = Math.max(cropW / img.naturalWidth, cropH / img.naturalHeight);
-    const drawW = img.naturalWidth * baseScale * scale * sf;
-    const drawH = img.naturalHeight * baseScale * scale * sf;
-    const canvas = document.createElement('canvas');
-    canvas.width = outputW;
-    canvas.height = outputH;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, outputW / 2 + pos.x * sf - drawW / 2, outputH / 2 + pos.y * sf - drawH / 2, drawW, drawH);
-    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-    onSave({ croppedDataUrl, scale, pos });
+    const canvas = cropperRef.current.getCroppedCanvas({ width: outputW, height: outputH });
+    onSave({ croppedDataUrl: canvas.toDataURL("image/jpeg", 0.92), scale: zoom, pos: { x: 0, y: 0 } });
+  };
+
+  const handleZoom = (e) => {
+    const v = parseFloat(e.target.value);
+    setZoom(v);
+    cropperRef.current?.zoomTo(readyRatioRef.current * v);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
-      <div ref={containerRef} style={{
-        width: cropW, height: cropH, borderRadius: isCircle ? "50%" : isSquare ? 14 : 12,
-        overflow: "hidden", border: "2px solid rgba(255,255,255,.3)",
-        cursor: "grab", position: "relative", background: "#000",
-      }}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-        onTouchEnd={() => { dragging.current = false; }}
-      >
-        <img src={src} alt="edit" draggable={false} crossOrigin="anonymous" style={{
-          position: "absolute",
-          left: "50%", top: "50%",
-          transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px)) scale(${scale})`,
-          minWidth: "100%", minHeight: "100%",
-          objectFit: "cover", pointerEvents: "none", userSelect: "none",
-        }} />
+      <div className={isCircle ? "crop-circle" : undefined}
+        style={{ width: boxW, height: boxH, background: "#000" }}>
+        <img ref={imgRef} src={src} alt="edit" crossOrigin="anonymous"
+          style={{ display: "block", maxWidth: "100%" }} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, width: cropW }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, width: boxW }}>
         <span style={{ fontSize: ".7rem", opacity: .4 }}>-</span>
-        <input type="range" min="1" max="3" step="0.05" value={scale}
-          onChange={e => setScale(parseFloat(e.target.value))}
+        <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={handleZoom}
           style={{ flex: 1, accentColor: "rgba(255,255,255,.5)" }} />
         <span style={{ fontSize: ".7rem", opacity: .4 }}>+</span>
-        <span style={{ fontSize: ".7rem", opacity: .5, minWidth: 34, textAlign: "right" }}>{scale.toFixed(1)}x</span>
+        <span style={{ fontSize: ".7rem", opacity: .5, minWidth: 34, textAlign: "right" }}>{zoom.toFixed(1)}x</span>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         <div onClick={handleDone}
@@ -122,6 +78,3 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
     </div>
   );
 }
-
-
-
