@@ -301,8 +301,8 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   const isSquare = shape === "square";
   const outputW = (isCircle || isSquare) ? 512 : 1200;
   const outputH = (isCircle || isSquare) ? 512 : 450;
-  const boxW = (isCircle || isSquare) ? 280 : 320;
-  const boxH = (isCircle || isSquare) ? 280 : 120;
+  const boxW = (isCircle || isSquare) ? 280 : 600;
+  const boxH = (isCircle || isSquare) ? 280 : 225;
 
   useEffect(() => {
     const el = imgRef.current;
@@ -310,12 +310,14 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
     setCropperReady(false);
     const cropper = new window.Cropper(el, {
       aspectRatio: outputW / outputH,
-      viewMode: 1,
+      viewMode: 3,
       dragMode: "move",
       cropBoxResizable: false,
       cropBoxMovable: false,
       background: false,
       autoCropArea: 1,
+      minContainerWidth: boxW,
+      minContainerHeight: boxH,
       ready() {
         const d = cropper.getCanvasData();
         readyRatioRef.current = d.width / d.naturalWidth;
@@ -347,9 +349,9 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
-      <div className={isCircle || isSquare ? "crop-rounded" : undefined} style={{ width: boxW, height: boxH, background: "#000" }}>
+      <div className={isCircle || isSquare ? "crop-rounded" : undefined} style={{ width: boxW, height: boxH, background: "#000", overflow: "hidden" }}>
         <img ref={imgRef} src={src} alt="edit" crossOrigin="anonymous"
-          style={{ display: "block", maxWidth: "100%" }} />
+          style={{ display: "block", width: "100%", height: "100%" }} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, width: boxW }}>
         <span style={{ fontSize: ".7rem", opacity: .4 }}>-</span>
