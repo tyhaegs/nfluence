@@ -26,8 +26,6 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
       cropBoxMovable: false,
       background: false,
       autoCropArea: 1,
-      minContainerWidth: boxW,
-      minContainerHeight: boxH,
       ready() {
         const d = cropper.getCanvasData();
         readyRatioRef.current = d.width / d.naturalWidth;
@@ -59,11 +57,14 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
-      <div className={isCircle || isSquare ? "crop-rounded" : undefined} style={{ width: boxW, height: boxH, background: "#000", overflow: "hidden" }}>
+      <div className={isCircle || isSquare ? "crop-rounded" : undefined}
+        style={isCircle || isSquare
+          ? { width: boxW, height: boxH, background: "#000", overflow: "hidden" }
+          : { width: "100%", maxWidth: boxW, aspectRatio: `${outputW}/${outputH}`, background: "#000", overflow: "hidden" }}>
         <img ref={imgRef} src={src} alt="edit" crossOrigin="anonymous"
           style={{ display: "block", width: "100%", height: "100%" }} />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, width: boxW }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, ...(isCircle || isSquare ? { width: boxW } : { width: "100%", maxWidth: boxW }) }}>
         <span style={{ fontSize: ".7rem", opacity: .4 }}>-</span>
         <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={handleZoom}
           style={{ flex: 1, accentColor: "rgba(255,255,255,.5)" }} />

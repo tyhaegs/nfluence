@@ -961,12 +961,12 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Brand edit modal */}
       {showBrandEdit && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setShowBrandEdit(false)}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "88vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 24 }}>edit profile</div>
 
             {/* Logo */}
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>logo</div>
               {brandEditForm.logoEditing && brandEditForm.logoPreview ? (
                 <ImageEditor src={brandEditForm.logoPreview} shape="circle"
