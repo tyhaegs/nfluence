@@ -574,6 +574,25 @@ function NfluenceApp() {
         // Load brand campaigns
         const { data: campaigns } = await _sb.from('campaigns').select('*').eq('brand_id', u.id).order('created_at', { ascending: false });
         if (campaigns) setMyCampaigns(campaigns);
+        // Load full brand profile — same fields as session restore path
+        const { data: p } = await _sb.from('profiles').select('*').eq('id', u.id).single();
+        if (p) setUser(prev => ({
+          ...prev,
+          name: p.name || prev?.name,
+          email: p.email || prev?.email,
+          phone: p.phone,
+          location: p.location,
+          city: p.city,
+          state: p.state,
+          country: p.country,
+          website: p.website,
+          industry: p.industry,
+          bio: p.bio,
+          tagline: p.tagline,
+          logoUrl: p.logo_url || p.logoUrl,
+          bannerUrl: p.banner_url || p.bannerUrl,
+          socialLinks: p.social_links || p.socialLinks,
+        }));
       } catch (err) {
         console.error('Supabase sign in failed, falling back to demo mode:', err);
         setUser({ email, name: name || email });
