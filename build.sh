@@ -43,8 +43,8 @@ cat > "$OUT" <<HTMLEOF
     html, body { margin: 0; padding: 0; background: #040b15; }
     .nf-nl { opacity: .85; transition: opacity .15s; cursor: pointer; text-decoration: none; }
     .nf-nl:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
-    .crop-circle .cropper-view-box,
-    .crop-circle .cropper-face { border-radius: 50%; }
+    .crop-rounded .cropper-view-box,
+    .crop-rounded .cropper-face { border-radius: 14px; }
   </style>
   <script src="https://unpkg.com/cropperjs@1/dist/cropper.js"></script>
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>

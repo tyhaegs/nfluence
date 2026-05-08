@@ -367,7 +367,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
                   <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
                     <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
-                    <div style={{ width: 120, height: 120, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,.04)", border: "2px dashed rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 120, height: 120, borderRadius: 14, overflow: "hidden", background: "rgba(255,255,255,.04)", border: "2px dashed rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {form.logoPreview ? <img src={form.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".8rem", opacity: .35 }}>logo</span>}
                     </div>
                   </label>
@@ -569,7 +569,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
                 <div key={campaignKey}>
                   {/* Campaign header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#0c1424", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 14, background: "#0c1424", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {group.campaign.logoUrl ? <img src={group.campaign.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -878,9 +878,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                       {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
                     </div>
                     {c.logoUrl ? (
-                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
+                      <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
                     ) : (
-                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
+                      <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                     )}
                     {isUserCampaign && (
                       <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
@@ -976,7 +976,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               ) : (
                 <label style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
                   <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setBrandEditForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
-                  <div style={{ width: 64, height: 64, borderRadius: "50%", border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {brandEditForm.logoPreview
                       ? <img src={brandEditForm.logoPreview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
@@ -1990,9 +1990,9 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         {/* Logo */}
         <div style={{ position: "absolute", bottom: -52, left: 28 }}>
           {firstCampaign.logoUrl ? (
-            <img src={firstCampaign.logoUrl} alt={brand} style={{ width: 104, height: 104, borderRadius: "50%", border: "4px solid #040b15", objectFit: "cover" }} />
+            <img src={firstCampaign.logoUrl} alt={brand} style={{ width: 104, height: 104, borderRadius: 14, border: "4px solid #040b15", objectFit: "cover" }} />
           ) : (
-            <div style={{ width: 104, height: 104, borderRadius: "50%", background: "#0c1424", border: "4px solid #040b15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".75rem", opacity: .5 }}>logo</div>
+            <div style={{ width: 104, height: 104, borderRadius: 14, background: "#0c1424", border: "4px solid #040b15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".75rem", opacity: .5 }}>logo</div>
           )}
         </div>
       </div>
@@ -2324,9 +2324,9 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
                     {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ fontSize: "2.8rem", opacity: .25 }}>{c.imgIcon}</div>}
                   </div>
                   {c.logoUrl ? (
-                    <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
+                    <img src={c.logoUrl} alt={c.brand} style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, border: "3px solid rgba(255,255,255,.15)", objectFit: "cover", zIndex: 2 }} />
                   ) : (
-                    <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: "50%", background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
+                    <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                   )}
                 </div>
                 <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -2993,7 +2993,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                 return (
                   <div key={i} className="nf-creator-card" style={{ padding: "20px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                      <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0, background: "#0c1424", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 54, height: 54, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,.12)", flexShrink: 0, background: "#0c1424", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {c.logoUrl ? <img src={c.logoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: ".6rem", opacity: .4 }}>logo</span>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -3100,7 +3100,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                   return (
                     <div key={i} style={{ padding: "18px 20px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,.12)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,.12)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {c.logoUrl ? <img src={c.logoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -3145,7 +3145,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {appliedCampaigns.filter(c => c.status === "accepted").map((c, i) => (
                   <div key={i} style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,.1)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,.1)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {c.logoUrl ? <img src={c.logoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -3177,7 +3177,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                   const statusStyle = APPLICATION_STATUS_COLORS[c.status] || APPLICATION_STATUS_COLORS.applied;
                   return (
                     <div key={i} style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,.1)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,.1)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {c.logoUrl ? <img src={c.logoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>

@@ -57,7 +57,7 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: 8 }}>
       <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 4 }}>drag to reposition · use slider to zoom</div>
-      <div style={{ width: boxW, height: boxH, background: "#000" }}>
+      <div className={isCircle || isSquare ? "crop-rounded" : undefined} style={{ width: boxW, height: boxH, background: "#000" }}>
         <img ref={imgRef} src={src} alt="edit" crossOrigin="anonymous"
           style={{ display: "block", maxWidth: "100%" }} />
       </div>
