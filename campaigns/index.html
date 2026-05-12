@@ -478,6 +478,9 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newApproved = [...(prev.creators?.approved || []), { ...creator, stage: "accepted", acceptedAt: new Date().toISOString() }];
       return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creator.applicationId)
+      sb.from('applications').update({ status: 'accepted', stage: 'accepted', accepted_at: new Date().toISOString() }).eq('id', creator.applicationId).catch(console.error);
     onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted!", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
   };
 
@@ -486,33 +489,41 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newPending = (prev.creators?.pending || []).filter(cr => cr.name !== creator.name);
       return { ...prev, creators: { ...prev.creators, pending: newPending } };
     });
+    const sb = getSB();
+    if (sb && creator.applicationId)
+      sb.from('applications').update({ status: 'rejected' }).eq('id', creator.applicationId).catch(console.error);
     onNotify?.({ for: "creator", type: "application_rejected", title: "application update", body: `Your application to ${initialCampaign.brand} · ${initialCampaign.campaign} was not selected this time.` });
   };
 
   const advanceCreator = (creatorName) => {
+    const creatorObj = (c.creators?.approved || []).find(cr => cr.name === creatorName);
+    const currentIdx = INFLUENCER_STAGES.indexOf(creatorObj?.stage || '');
+    const nextStage = currentIdx >= 0 && currentIdx < INFLUENCER_STAGES.length - 1 ? INFLUENCER_STAGES[currentIdx + 1] : null;
     setC(prev => {
       const newApproved = (prev.creators?.approved || []).map(cr => {
         if (cr.name !== creatorName) return cr;
-        const currentIdx = INFLUENCER_STAGES.indexOf(cr.stage);
-        if (currentIdx < INFLUENCER_STAGES.length - 1) {
-          const nextStage = INFLUENCER_STAGES[currentIdx + 1];
-          // Fire creator notification for content_approved → paid
-          if (nextStage === "paid") {
-            onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
-          }
-          // Notify creator their content stage has been updated
-          if (nextStage === "content_submitted") {
-            onNotify?.({ for: "creator", type: "content_submitted", title: "content marked as submitted", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} is now under review.` });
-          }
-          return { ...cr, stage: nextStage };
+        const idx = INFLUENCER_STAGES.indexOf(cr.stage);
+        if (idx < INFLUENCER_STAGES.length - 1) {
+          const ns = INFLUENCER_STAGES[idx + 1];
+          if (ns === "paid") onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
+          if (ns === "content_submitted") onNotify?.({ for: "creator", type: "content_submitted", title: "content marked as submitted", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} is now under review.` });
+          return { ...cr, stage: ns };
         }
         return cr;
       });
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creatorObj?.applicationId && nextStage) {
+      const tsMap = { content_submitted: 'content_submitted_at', approved: 'approved_at', paid: 'paid_at' };
+      const tsField = tsMap[nextStage];
+      sb.from('applications').update({ stage: nextStage, ...(tsField ? { [tsField]: new Date().toISOString() } : {}) })
+        .eq('id', creatorObj.applicationId).catch(console.error);
+    }
   };
 
   const shipCreator = (creatorName, trackingNumber) => {
+    const creatorObj = (c.creators?.approved || []).find(cr => cr.name === creatorName);
     setC(prev => {
       const newApproved = (prev.creators?.approved || []).map(cr => {
         if (cr.name !== creatorName) return cr;
@@ -520,6 +531,9 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       });
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creatorObj?.applicationId)
+      sb.from('applications').update({ stage: 'product_shipped', tracking_number: trackingNumber.trim() || null, shipped_at: new Date().toISOString() }).eq('id', creatorObj.applicationId).catch(console.error);
     const trackingMsg = trackingNumber.trim() ? ` Tracking: ${trackingNumber.trim()}` : "";
     onNotify?.({ for: "creator", type: "product_shipped", title: "product shipped!", body: `${initialCampaign.brand} has shipped your product for ${initialCampaign.campaign}.${trackingMsg}` });
   };
@@ -8026,17 +8040,33 @@ function NfluenceApp() {
               socialLinks: p.social_links || p.socialLinks,
             }));
           });
-        // Load brand's campaigns from Supabase
+        // Load brand's campaigns from Supabase (join applications for creator management)
         sb.from('campaigns')
-          .select('*, profiles!brand_id(logo_url, banner_url)')
+          .select('*, profiles!brand_id(logo_url, banner_url), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)')
           .eq('brand_id', u.id)
           .order('created_at', { ascending: false })
           .then(({ data }) => {
-            if (data) setMyCampaigns(data.map(c => ({
-              ...c,
-              logoUrl: c.logo_url || c.profiles?.logo_url || null,
-              bannerUrl: c.banner_url || c.profiles?.banner_url || null,
-            })));
+            if (data) setMyCampaigns(data.map(c => {
+              const mkCreator = (a) => ({
+                applicationId: a.id,
+                name: a.name || '',
+                avatar: (a.name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?',
+                platforms: a.platforms || {},
+                pitch: a.pitch || '',
+                portfolio: a.portfolio || '',
+                stage: a.stage || 'applied',
+                trackingNumber: a.tracking_number || null,
+              });
+              return {
+                ...c,
+                logoUrl: c.logo_url || c.profiles?.logo_url || null,
+                bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+                creators: {
+                  pending: (c.applications || []).filter(a => a.status === 'applied').map(mkCreator),
+                  approved: (c.applications || []).filter(a => a.status === 'accepted').map(mkCreator),
+                },
+              };
+            }));
           });
         // Load notifications
         sb.from('notifications')
@@ -8478,13 +8508,29 @@ function NfluenceApp() {
         const resolvedName = u.user_metadata?.name || name || email;
         setAuthSession(data.session);
         setUser({ id: u.id, email: u.email, name: resolvedName });
-        // Load brand campaigns
-        const { data: campaigns } = await _sb.from('campaigns').select('*, profiles!brand_id(logo_url, banner_url)').eq('brand_id', u.id).order('created_at', { ascending: false });
-        if (campaigns) setMyCampaigns(campaigns.map(c => ({
-          ...c,
-          logoUrl: c.logo_url || c.profiles?.logo_url || null,
-          bannerUrl: c.banner_url || c.profiles?.banner_url || null,
-        })));
+        // Load brand campaigns (join applications for creator management)
+        const { data: campaigns } = await _sb.from('campaigns').select('*, profiles!brand_id(logo_url, banner_url), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)').eq('brand_id', u.id).order('created_at', { ascending: false });
+        if (campaigns) setMyCampaigns(campaigns.map(c => {
+          const mkCreator = (a) => ({
+            applicationId: a.id,
+            name: a.name || '',
+            avatar: (a.name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?',
+            platforms: a.platforms || {},
+            pitch: a.pitch || '',
+            portfolio: a.portfolio || '',
+            stage: a.stage || 'applied',
+            trackingNumber: a.tracking_number || null,
+          });
+          return {
+            ...c,
+            logoUrl: c.logo_url || c.profiles?.logo_url || null,
+            bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+            creators: {
+              pending: (c.applications || []).filter(a => a.status === 'applied').map(mkCreator),
+              approved: (c.applications || []).filter(a => a.status === 'accepted').map(mkCreator),
+            },
+          };
+        }));
         // Load full brand profile — same fields as session restore path
         const { data: p } = await _sb.from('profiles').select('*').eq('id', u.id).single();
         if (p) setUser(prev => ({
@@ -8528,8 +8574,23 @@ function NfluenceApp() {
     console.log('[auth] signOut() — handleSignOut');
     if (sb) await sb.auth.signOut().then(r => console.log('[auth] signOut() result:', { error: r?.error?.message })).catch(console.error);
     setUser(null);
+    setAuthSession(null);
     setMyCampaigns([]);
     setNotifications([]);
+    setAppliedCampaigns([]);
+    setDemoCampaignOverrides({});
+    setDemoCampaignReviewOverrides({});
+    setSignInRedirect(null);
+    setAutoApply(false);
+    setLastReviewsVisitedAt(null);
+    setPendingCampaign(null);
+    setSelectedCampaign(DEMO_CAMPAIGNS[0]);
+    setAllMessages(DEMO_MESSAGES);
+    setScheduledCalls({});
+    setCreatorMessageThread(null);
+    setSelectedCreatorProfile(null);
+    setMessageCreator(null);
+    setShowToast(false);
     setCreatorProfile({});
     setCreatorApplied([]);
     setCreatorActive([]);
@@ -8578,7 +8639,25 @@ function NfluenceApp() {
     setView('landing');
   };
 
-  const handleApply = (campaign, applicationData) => {
+  const handleApply = async (campaign, applicationData) => {
+    let enriched = applicationData;
+    const sb = getSB();
+    if (sb && campaign.id && !String(campaign.id).startsWith('demo-') && creatorUser?.id) {
+      try {
+        const { data: appRow } = await sb.from('applications').insert({
+          campaign_id: campaign.id,
+          creator_id: creatorUser.id,
+          brand_id: campaign.brand_id,
+          status: 'applied',
+          stage: 'applied',
+          name: applicationData.name,
+          pitch: applicationData.pitch,
+          portfolio: applicationData.portfolio,
+          platforms: applicationData.platforms,
+        }).select('id').single();
+        if (appRow?.id) enriched = { ...applicationData, applicationId: appRow.id };
+      } catch (err) { console.error('application insert failed:', err); }
+    }
     const key = campaign.brand + "::" + campaign.campaign;
     setAppliedCampaigns(prev => [...prev, key]);
     const demoIdx = DEMO_CAMPAIGNS.findIndex(d => d.brand === campaign.brand && d.campaign === campaign.campaign);
@@ -8592,7 +8671,7 @@ function NfluenceApp() {
             ...existing,
             creators: {
               ...existingCreators,
-              pending: [...(existingCreators.pending || []), applicationData],
+              pending: [...(existingCreators.pending || []), enriched],
             },
           },
         };
@@ -8602,11 +8681,10 @@ function NfluenceApp() {
     if (userIdx >= 0) {
       setMyCampaigns(prev => prev.map((c, i) => {
         if (i !== userIdx) return c;
-        return { ...c, creators: { ...c.creators, pending: [...(c.creators?.pending || []), applicationData] } };
+        return { ...c, creators: { ...c.creators, pending: [...(c.creators?.pending || []), enriched] } };
       }));
     }
-    // Notify brand of new application
-    addNotification({ for: "brand", type: "new_application", title: "new application received", body: `${applicationData.name} applied to ${campaign.brand} · ${campaign.campaign}` });
+    addNotification({ for: "brand", type: "new_application", title: "new application received", body: `${enriched.name} applied to ${campaign.brand} · ${campaign.campaign}` });
   };
 
   const handleSignInRedirect = () => {
@@ -8742,7 +8820,28 @@ function NfluenceApp() {
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} onSignIn={() => setView("signin")} />;
   if (view === "creatordashboard") return <>
-    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={(form) => setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }))} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={async (form) => {
+        setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }));
+        const sb = getSB();
+        if (sb && creatorUser?.id) await sb.from('creator_profiles').upsert({
+          id: creatorUser.id,
+          bio: form.bio,
+          location: form.location,
+          age: form.age,
+          languages: form.languages,
+          niches: form.niches,
+          instagram: form.instagram,
+          instagram_followers: form.instagramFollowers,
+          tiktok: form.tiktok,
+          tiktok_followers: form.tiktokFollowers,
+          youtube: form.youtube,
+          youtube_followers: form.youtubeFollowers,
+          x: form.x,
+          x_followers: form.xFollowers,
+          facebook: form.facebook,
+          facebook_followers: form.facebookFollowers,
+        }).catch(console.error);
+      }} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "creatorinbox") {
@@ -8787,10 +8886,28 @@ function NfluenceApp() {
   </>;
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
   if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} session={authSession} />;
-  if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={(updated) => {
+  if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={async (updated) => {
     setMyCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCampaign(updated);
     setView("dashboard");
+    const sb = getSB();
+    if (sb && updated.id && !String(updated.id).startsWith('demo-'))
+      await sb.from('campaigns').update({
+        name: updated.name,
+        brand_name: updated.brand_name,
+        description: updated.description,
+        comp_type: updated.comp_type,
+        comp: updated.comp,
+        platforms: updated.platforms,
+        deliverables: updated.deliverables,
+        requirements: updated.requirements,
+        deadline: updated.deadline,
+        status: updated.status,
+        following: updated.following,
+        spots_total: updated.spots_total,
+        location: updated.location,
+        niches: updated.niches,
+      }).eq('id', updated.id).catch(console.error);
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
   if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;

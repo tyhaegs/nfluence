@@ -102,6 +102,9 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newApproved = [...(prev.creators?.approved || []), { ...creator, stage: "accepted", acceptedAt: new Date().toISOString() }];
       return { ...prev, creators: { ...prev.creators, pending: newPending, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creator.applicationId)
+      sb.from('applications').update({ status: 'accepted', stage: 'accepted', accepted_at: new Date().toISOString() }).eq('id', creator.applicationId).catch(console.error);
     onNotify?.({ for: "creator", type: "application_accepted", title: "application accepted!", body: `You've been accepted into ${initialCampaign.brand} · ${initialCampaign.campaign}. Check your dashboard for next steps.` });
   };
 
@@ -110,33 +113,41 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       const newPending = (prev.creators?.pending || []).filter(cr => cr.name !== creator.name);
       return { ...prev, creators: { ...prev.creators, pending: newPending } };
     });
+    const sb = getSB();
+    if (sb && creator.applicationId)
+      sb.from('applications').update({ status: 'rejected' }).eq('id', creator.applicationId).catch(console.error);
     onNotify?.({ for: "creator", type: "application_rejected", title: "application update", body: `Your application to ${initialCampaign.brand} · ${initialCampaign.campaign} was not selected this time.` });
   };
 
   const advanceCreator = (creatorName) => {
+    const creatorObj = (c.creators?.approved || []).find(cr => cr.name === creatorName);
+    const currentIdx = INFLUENCER_STAGES.indexOf(creatorObj?.stage || '');
+    const nextStage = currentIdx >= 0 && currentIdx < INFLUENCER_STAGES.length - 1 ? INFLUENCER_STAGES[currentIdx + 1] : null;
     setC(prev => {
       const newApproved = (prev.creators?.approved || []).map(cr => {
         if (cr.name !== creatorName) return cr;
-        const currentIdx = INFLUENCER_STAGES.indexOf(cr.stage);
-        if (currentIdx < INFLUENCER_STAGES.length - 1) {
-          const nextStage = INFLUENCER_STAGES[currentIdx + 1];
-          // Fire creator notification for content_approved → paid
-          if (nextStage === "paid") {
-            onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
-          }
-          // Notify creator their content stage has been updated
-          if (nextStage === "content_submitted") {
-            onNotify?.({ for: "creator", type: "content_submitted", title: "content marked as submitted", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} is now under review.` });
-          }
-          return { ...cr, stage: nextStage };
+        const idx = INFLUENCER_STAGES.indexOf(cr.stage);
+        if (idx < INFLUENCER_STAGES.length - 1) {
+          const ns = INFLUENCER_STAGES[idx + 1];
+          if (ns === "paid") onNotify?.({ for: "creator", type: "content_approved", title: "content approved — payment released!", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} has been approved and payment is on its way.` });
+          if (ns === "content_submitted") onNotify?.({ for: "creator", type: "content_submitted", title: "content marked as submitted", body: `Your content for ${initialCampaign.brand} · ${initialCampaign.campaign} is now under review.` });
+          return { ...cr, stage: ns };
         }
         return cr;
       });
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creatorObj?.applicationId && nextStage) {
+      const tsMap = { content_submitted: 'content_submitted_at', approved: 'approved_at', paid: 'paid_at' };
+      const tsField = tsMap[nextStage];
+      sb.from('applications').update({ stage: nextStage, ...(tsField ? { [tsField]: new Date().toISOString() } : {}) })
+        .eq('id', creatorObj.applicationId).catch(console.error);
+    }
   };
 
   const shipCreator = (creatorName, trackingNumber) => {
+    const creatorObj = (c.creators?.approved || []).find(cr => cr.name === creatorName);
     setC(prev => {
       const newApproved = (prev.creators?.approved || []).map(cr => {
         if (cr.name !== creatorName) return cr;
@@ -144,6 +155,9 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       });
       return { ...prev, creators: { ...prev.creators, approved: newApproved } };
     });
+    const sb = getSB();
+    if (sb && creatorObj?.applicationId)
+      sb.from('applications').update({ stage: 'product_shipped', tracking_number: trackingNumber.trim() || null, shipped_at: new Date().toISOString() }).eq('id', creatorObj.applicationId).catch(console.error);
     const trackingMsg = trackingNumber.trim() ? ` Tracking: ${trackingNumber.trim()}` : "";
     onNotify?.({ for: "creator", type: "product_shipped", title: "product shipped!", body: `${initialCampaign.brand} has shipped your product for ${initialCampaign.campaign}.${trackingMsg}` });
   };
