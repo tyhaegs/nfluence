@@ -732,7 +732,6 @@ function NfluenceApp() {
         const { data: appRow } = await sb.from('applications').insert({
           campaign_id: campaign.id,
           creator_id: creatorUser.id,
-          brand_id: campaign.brand_id,
           status: 'applied',
           stage: 'applied',
           name: applicationData.name,
