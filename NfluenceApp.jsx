@@ -184,7 +184,7 @@ function NfluenceApp() {
           .select('*, profiles(name, email)')
           .eq('id', u.id)
           .single()
-          .then(({ data }) => { if (data) setCreatorProfile({ ...data, name: data.profiles?.name || name }); });
+          .then(({ data }) => { if (data) setCreatorProfile({ ...data, name: data.profiles?.name || name, avatarUrl: data.avatar_url || null, bannerUrl: data.banner_url || null }); });
         // Load creator applications
         sb.from('applications')
           .select('*, campaigns(brand_name, name, logo_url, comp_type, comp)')
@@ -695,7 +695,7 @@ function NfluenceApp() {
         setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
         const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
         if (profile) {
-          setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName });
+          setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
         } else if (profileData) {
           setCreatorProfile(profileData);
         }
@@ -924,6 +924,8 @@ function NfluenceApp() {
           x_followers: form.xFollowers,
           facebook: form.facebook,
           facebook_followers: form.facebookFollowers,
+          avatar_url: form.avatarUrl || null,
+          banner_url: form.bannerUrl || null,
         }).catch(console.error);
       }} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}

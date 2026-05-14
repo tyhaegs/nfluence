@@ -754,9 +754,13 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Banner */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 24px 0", position: "relative" }}>
-        <div style={{ width: "100%", height: 220, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))" }} />
-        <div style={{ position: "absolute", bottom: -48, left: 40, width: 96, height: 96, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
-          {(user?.name || user?.email || "B").charAt(0).toUpperCase()}
+        <div style={{ width: "100%", height: 220, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg, rgba(100,80,255,.3), rgba(255,80,160,.18))" }}>
+          {(user?.bannerPreview || user?.bannerUrl) && <img src={user.bannerPreview || user.bannerUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+        </div>
+        <div style={{ position: "absolute", bottom: -48, left: 40, width: 96, height: 96, borderRadius: 18, border: "4px solid #040b15", background: "#1a1f35", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>
+          {(user?.logoPreview || user?.logoUrl)
+            ? <img src={user.logoPreview || user.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : (user?.name || user?.email || "B").charAt(0).toUpperCase()}
         </div>
       </div>
 
@@ -2870,7 +2874,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                   {[
                     { label: "view profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>', action: () => { setShowMenu(false); onViewOwnProfile?.(); } },
                     { label: "messages", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', action: () => { setShowMenu(false); onOpenMessages?.(); } },
-                    { label: "edit profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action: () => { setShowMenu(false); const parts = (creatorProfile.location || "").split(",").map(s => s.trim()); const baseForm = { ...creatorProfile, city: creatorProfile.city || parts[0] || "", state: creatorProfile.state || parts[1] || "", country: creatorProfile.country || parts[2] || "" }; setEditForm(baseForm); setShowEditModal(true); } },
+                    { label: "edit profile", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', action: () => { setShowMenu(false); const parts = (creatorProfile.location || "").split(",").map(s => s.trim()); const baseForm = { ...creatorProfile, city: creatorProfile.city || parts[0] || "", state: creatorProfile.state || parts[1] || "", country: creatorProfile.country || parts[2] || "", avatarEditing: false, bannerEditing: false }; setEditForm(baseForm); setShowEditModal(true); } },
                     { label: "sign out", icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>', action: () => { setShowMenu(false); onSignOut(); } },
                   ].map((item, i, arr) => (
                     <div key={item.label} onClick={item.action} style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,.06)" : "none", transition: "background .1s" }}
@@ -3308,6 +3312,39 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               <div onClick={() => setShowEditModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Avatar */}
+              <div>
+                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>profile photo</div>
+                {editForm.avatarEditing && editForm.avatarUrl ? (
+                  <ImageEditor src={editForm.avatarUrl} shape="circle"
+                    onSave={(t) => setEditForm(p => ({ ...p, avatarUrl: t.croppedDataUrl, avatarEditing: false }))}
+                    onCancel={() => setEditForm(p => ({ ...p, avatarEditing: false }))} />
+                ) : (
+                  <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setEditForm(p => ({ ...p, avatarUrl: ev.target.result, avatarEditing: true })); r.readAsDataURL(f); } }} />
+                    <div style={{ width: 56, height: 56, borderRadius: 14, border: "1px dashed rgba(255,255,255,.25)", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {editForm.avatarUrl ? <img src={editForm.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".65rem", opacity: .35 }}>photo</span>}
+                    </div>
+                    <span style={{ fontSize: ".78rem", opacity: .4 }}>{editForm.avatarUrl ? "click to change" : "click to upload profile photo"}</span>
+                  </label>
+                )}
+              </div>
+              {/* Banner */}
+              <div>
+                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5, textTransform: "lowercase" }}>banner</div>
+                {editForm.bannerEditing && editForm.bannerUrl ? (
+                  <ImageEditor src={editForm.bannerUrl} shape="banner"
+                    onSave={(t) => setEditForm(p => ({ ...p, bannerUrl: t.croppedDataUrl, bannerEditing: false }))}
+                    onCancel={() => setEditForm(p => ({ ...p, bannerEditing: false }))} />
+                ) : (
+                  <label style={{ display: "block", cursor: "pointer" }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setEditForm(p => ({ ...p, bannerUrl: ev.target.result, bannerEditing: true })); r.readAsDataURL(f); } }} />
+                    <div style={{ width: "100%", height: 70, borderRadius: 12, border: "1px dashed rgba(255,255,255,.2)", overflow: "hidden", background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {editForm.bannerUrl ? <img src={editForm.bannerUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: ".72rem", opacity: .35 }}>click to upload banner</span>}
+                    </div>
+                  </label>
+                )}
+              </div>
               {/* Basic info */}
               <div style={{ fontSize: ".7rem", opacity: .3, textTransform: "uppercase", letterSpacing: ".08em" }}>basic info</div>
               {[["name", "your name"], ["bio", "short bio (shown on profile)"]].map(([field, placeholder]) => (
