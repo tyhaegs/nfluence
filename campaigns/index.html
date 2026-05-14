@@ -4402,6 +4402,8 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
   const [name, setName] = useState("");
   const isSignUp = false;
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [loading, setLoading] = useState(false);
   const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
   return (
@@ -4456,10 +4458,16 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
               </span>
             </label>
           )}
+          {authError && (
+            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
+              {authError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : null, password)}>
-              {isSignUp ? "create account" : "sign in"}
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
+              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, isSignUp ? name : null, password); setLoading(false); if (err) setAuthError(err); }}>
+              {loading ? "signing in…" : isSignUp ? "create account" : "sign in"}
             </button>
           </div>
         </div>
@@ -6733,6 +6741,8 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [loading, setLoading] = useState(false);
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
@@ -6760,9 +6770,17 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
+          {authError && (
+            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
+              {authError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, null, password)}>sign in</button>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
+              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, null, password); setLoading(false); if (err) setAuthError(err); }}>
+              {loading ? "signing in…" : "sign in"}
+            </button>
           </div>
         </div>
         <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
@@ -8588,12 +8606,15 @@ function NfluenceApp() {
           socialLinks: p.social_links || p.socialLinks,
         }));
       } catch (err) {
-        console.error('Supabase sign in failed, falling back to demo mode:', err);
-        setUser({ email, name: name || email });
+        console.error('Supabase sign in failed:', err);
+        return err.message?.includes('Email not confirmed')
+          ? 'Please check your email for a confirmation link before signing in.'
+          : err.message?.includes('Invalid login credentials')
+          ? 'Incorrect email or password.'
+          : (err.message || 'Sign in failed. Please try again.');
       }
     } else {
       console.log('[auth] handleSignIn — demo mode (no supabase)');
-      // Demo mode — no Supabase configured
       setUser({ email, name: name || email });
     }
     if (signInRedirect) {
@@ -8637,26 +8658,62 @@ function NfluenceApp() {
   const handleCreatorSignIn = async (email, name, password, profileData = null) => {
     const _sb = getSB();
     if (_sb) {
-      try {
-        console.log('[auth] signInWithPassword() — handleCreatorSignIn:', { email });
-        const { data, error } = await _sb.auth.signInWithPassword({ email, password });
-        console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
-        if (error) throw error;
-        const u = data.user;
-        const resolvedName = u.user_metadata?.name || name || email;
-        setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
-        const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
-        if (profile) {
-          setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
-        } else if (profileData) {
-          setCreatorProfile(profileData);
+      // Attempt sign-in first (works for existing accounts)
+      console.log('[auth] signInWithPassword() — handleCreatorSignIn:', { email });
+      let { data, error } = await _sb.auth.signInWithPassword({ email, password });
+      console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
+
+      // New creator from onboarding whose account doesn't exist yet → sign up
+      if (error && profileData && error.message?.includes('Invalid login credentials')) {
+        console.log('[auth] signUp() — handleCreatorSignIn (new creator):', { email });
+        const { data: signUpData, error: signUpError } = await _sb.auth.signUp({
+          email, password,
+          options: { data: { name, role: 'creator' } },
+        });
+        console.log('[auth] signUp() result:', { hasUser: !!signUpData?.user, hasSession: !!signUpData?.session, userId: signUpData?.user?.id, error: signUpError?.message });
+        if (signUpError) {
+          console.error('Creator signup failed:', signUpError);
+          return signUpError.message || 'Sign up failed. Please try again.';
         }
-      } catch (err) {
-        console.error('Supabase creator sign in failed, demo mode:', err);
-        setCreatorUser({ email, name: name || email });
-        setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
+        if (signUpData?.user && !signUpData.session) {
+          // Email confirmation required — don't navigate yet
+          setToastMessage('Check your email for a confirmation link, then sign in.');
+          setShowToast(true);
+          return;
+        }
+        if (signUpData?.user) {
+          await _sb.from('profiles').upsert({ id: signUpData.user.id, email, name, role: 'creator' }).catch(console.error);
+          await _sb.from('creator_profiles').upsert({ id: signUpData.user.id }).catch(console.error);
+          setAuthSession(signUpData.session);
+          setCreatorUser({ id: signUpData.user.id, email, name });
+          setCreatorProfile({ ...profileData, name });
+          setView('creatordashboard');
+          return;
+        }
+      }
+
+      // Surface auth errors to the user — no silent demo-mode fallback
+      if (error) {
+        console.error('Supabase creator sign in failed:', error);
+        return error.message?.includes('Email not confirmed')
+          ? 'Please check your email for a confirmation link before signing in.'
+          : error.message?.includes('Invalid login credentials')
+          ? 'Incorrect email or password.'
+          : (error.message || 'Sign in failed. Please try again.');
+      }
+
+      // Successful sign-in
+      const u = data.user;
+      const resolvedName = u.user_metadata?.name || name || email;
+      setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
+      const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
+      if (profile) {
+        setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
+      } else if (profileData) {
+        setCreatorProfile(profileData);
       }
     } else {
+      // Demo mode — Supabase not configured
       setCreatorUser({ email, name: name || email });
       setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
     }

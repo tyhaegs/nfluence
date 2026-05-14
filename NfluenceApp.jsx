@@ -636,12 +636,15 @@ function NfluenceApp() {
           socialLinks: p.social_links || p.socialLinks,
         }));
       } catch (err) {
-        console.error('Supabase sign in failed, falling back to demo mode:', err);
-        setUser({ email, name: name || email });
+        console.error('Supabase sign in failed:', err);
+        return err.message?.includes('Email not confirmed')
+          ? 'Please check your email for a confirmation link before signing in.'
+          : err.message?.includes('Invalid login credentials')
+          ? 'Incorrect email or password.'
+          : (err.message || 'Sign in failed. Please try again.');
       }
     } else {
       console.log('[auth] handleSignIn — demo mode (no supabase)');
-      // Demo mode — no Supabase configured
       setUser({ email, name: name || email });
     }
     if (signInRedirect) {
@@ -685,26 +688,62 @@ function NfluenceApp() {
   const handleCreatorSignIn = async (email, name, password, profileData = null) => {
     const _sb = getSB();
     if (_sb) {
-      try {
-        console.log('[auth] signInWithPassword() — handleCreatorSignIn:', { email });
-        const { data, error } = await _sb.auth.signInWithPassword({ email, password });
-        console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
-        if (error) throw error;
-        const u = data.user;
-        const resolvedName = u.user_metadata?.name || name || email;
-        setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
-        const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
-        if (profile) {
-          setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
-        } else if (profileData) {
-          setCreatorProfile(profileData);
+      // Attempt sign-in first (works for existing accounts)
+      console.log('[auth] signInWithPassword() — handleCreatorSignIn:', { email });
+      let { data, error } = await _sb.auth.signInWithPassword({ email, password });
+      console.log('[auth] signInWithPassword() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
+
+      // New creator from onboarding whose account doesn't exist yet → sign up
+      if (error && profileData && error.message?.includes('Invalid login credentials')) {
+        console.log('[auth] signUp() — handleCreatorSignIn (new creator):', { email });
+        const { data: signUpData, error: signUpError } = await _sb.auth.signUp({
+          email, password,
+          options: { data: { name, role: 'creator' } },
+        });
+        console.log('[auth] signUp() result:', { hasUser: !!signUpData?.user, hasSession: !!signUpData?.session, userId: signUpData?.user?.id, error: signUpError?.message });
+        if (signUpError) {
+          console.error('Creator signup failed:', signUpError);
+          return signUpError.message || 'Sign up failed. Please try again.';
         }
-      } catch (err) {
-        console.error('Supabase creator sign in failed, demo mode:', err);
-        setCreatorUser({ email, name: name || email });
-        setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
+        if (signUpData?.user && !signUpData.session) {
+          // Email confirmation required — don't navigate yet
+          setToastMessage('Check your email for a confirmation link, then sign in.');
+          setShowToast(true);
+          return;
+        }
+        if (signUpData?.user) {
+          await _sb.from('profiles').upsert({ id: signUpData.user.id, email, name, role: 'creator' }).catch(console.error);
+          await _sb.from('creator_profiles').upsert({ id: signUpData.user.id }).catch(console.error);
+          setAuthSession(signUpData.session);
+          setCreatorUser({ id: signUpData.user.id, email, name });
+          setCreatorProfile({ ...profileData, name });
+          setView('creatordashboard');
+          return;
+        }
+      }
+
+      // Surface auth errors to the user — no silent demo-mode fallback
+      if (error) {
+        console.error('Supabase creator sign in failed:', error);
+        return error.message?.includes('Email not confirmed')
+          ? 'Please check your email for a confirmation link before signing in.'
+          : error.message?.includes('Invalid login credentials')
+          ? 'Incorrect email or password.'
+          : (error.message || 'Sign in failed. Please try again.');
+      }
+
+      // Successful sign-in
+      const u = data.user;
+      const resolvedName = u.user_metadata?.name || name || email;
+      setCreatorUser({ id: u.id, email: u.email, name: resolvedName });
+      const { data: profile } = await _sb.from('creator_profiles').select('*, profiles(name, email)').eq('id', u.id).single();
+      if (profile) {
+        setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
+      } else if (profileData) {
+        setCreatorProfile(profileData);
       }
     } else {
+      // Demo mode — Supabase not configured
       setCreatorUser({ email, name: name || email });
       setCreatorProfile(prev => ({ ...prev, ...(profileData || {}), name: profileData?.name || prev.name || name }));
     }

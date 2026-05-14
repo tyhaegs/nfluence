@@ -72,6 +72,8 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
   const [name, setName] = useState("");
   const isSignUp = false;
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [loading, setLoading] = useState(false);
   const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
 
   return (
@@ -126,10 +128,16 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
               </span>
             </label>
           )}
+          {authError && (
+            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
+              {authError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, isSignUp ? name : null, password)}>
-              {isSignUp ? "create account" : "sign in"}
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
+              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, isSignUp ? name : null, password); setLoading(false); if (err) setAuthError(err); }}>
+              {loading ? "signing in…" : isSignUp ? "create account" : "sign in"}
             </button>
           </div>
         </div>
@@ -2403,6 +2411,8 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [loading, setLoading] = useState(false);
   const isValid = email.includes("@") && password.length >= 8;
 
   return (
@@ -2430,9 +2440,17 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
+          {authError && (
+            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
+              {authError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid} onClick={() => onSignIn(email, null, password)}>sign in</button>
+            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
+              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, null, password); setLoading(false); if (err) setAuthError(err); }}>
+              {loading ? "signing in…" : "sign in"}
+            </button>
           </div>
         </div>
         <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
