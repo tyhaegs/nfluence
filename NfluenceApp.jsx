@@ -187,21 +187,21 @@ function NfluenceApp() {
           .then(({ data }) => { if (data) setCreatorProfile({ ...data, name: data.profiles?.name || name }); });
         // Load creator applications
         sb.from('applications')
-          .select('*, campaigns(brand_name, name, logo_url, comp_type, comp, profiles!brand_id(logo_url, banner_url))')
+          .select('*, campaigns(brand_name, name, logo_url, comp_type, comp)')
           .eq('creator_id', u.id)
           .then(({ data }) => {
             if (!data) return;
             setCreatorApplied(data.map(a => ({
               brand: a.campaigns?.brand_name,
               campaign: a.campaigns?.name,
-              logoUrl: a.campaigns?.logo_url || a.campaigns?.profiles?.logo_url || null,
+              logoUrl: a.campaigns?.logo_url || null,
               status: a.status,
             })));
             const ACTIVE_STAGES = ['accepted', 'product_shipped', 'product_delivered', 'content_submitted', 'approved'];
             setCreatorActive(data.filter(a => ACTIVE_STAGES.includes(a.stage)).map(a => ({
               brand: a.campaigns?.brand_name,
               campaign: a.campaigns?.name,
-              logoUrl: a.campaigns?.logo_url || a.campaigns?.profiles?.logo_url || null,
+              logoUrl: a.campaigns?.logo_url || null,
               myStage: a.stage,
               comp: a.campaigns?.comp,
               applicationId: a.id,
