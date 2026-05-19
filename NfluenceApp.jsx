@@ -573,6 +573,7 @@ function NfluenceApp() {
         }
       } catch (err) {
         console.error('Brand onboarding sign up failed:', err);
+        throw err;
       }
     }
     if (!activeUser) {
