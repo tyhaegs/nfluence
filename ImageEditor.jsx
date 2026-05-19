@@ -60,7 +60,7 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
       <div className={isCircle || isSquare ? "crop-rounded" : undefined}
         style={isCircle || isSquare
           ? { width: boxW, height: boxH, background: "#000", overflow: "hidden" }
-          : { width: "100%", maxWidth: boxW, aspectRatio: `${outputW}/${outputH}`, background: "#000", overflow: "hidden" }}>
+          : { width: "100%", maxWidth: boxW, aspectRatio: `${outputW}/${outputH}`, background: "#000", overflow: "hidden", borderRadius: 16 }}>
         <img ref={imgRef} src={src} alt="edit" crossOrigin="anonymous"
           style={{ display: "block", width: "100%", height: "100%" }} />
       </div>

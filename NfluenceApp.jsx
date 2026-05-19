@@ -122,12 +122,12 @@ function NfluenceApp() {
               tagline: p.tagline,
               logoUrl: p.logo_url || p.logoUrl,
               bannerUrl: p.banner_url || p.bannerUrl,
-              socialLinks: p.social_links || p.socialLinks,
+              socialLinks: p.social_links || p.socialLinks || prev?.socialLinks,
             }));
           });
         // Load brand's campaigns from Supabase (join applications for creator management)
         sb.from('campaigns')
-          .select('*, profiles!brand_id(logo_url, banner_url), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)')
+          .select('*, profiles!brand_id(logo_url, banner_url, social_links), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)')
           .eq('brand_id', u.id)
           .order('created_at', { ascending: false })
           .then(({ data }) => {
@@ -146,6 +146,7 @@ function NfluenceApp() {
                 ...c,
                 logoUrl: c.logo_url || c.profiles?.logo_url || null,
                 bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+                socialLinks: c.profiles?.social_links || null,
                 creators: {
                   pending: (c.applications || []).filter(a => a.status === 'applied').map(mkCreator),
                   approved: (c.applications || []).filter(a => a.status === 'accepted').map(mkCreator),
@@ -598,7 +599,7 @@ function NfluenceApp() {
         setAuthSession(data.session);
         setUser({ id: u.id, email: u.email, name: resolvedName });
         // Load brand campaigns (join applications for creator management)
-        const { data: campaigns } = await _sb.from('campaigns').select('*, profiles!brand_id(logo_url, banner_url), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)').eq('brand_id', u.id).order('created_at', { ascending: false });
+        const { data: campaigns } = await _sb.from('campaigns').select('*, profiles!brand_id(logo_url, banner_url, social_links), applications(id, status, stage, name, pitch, portfolio, platforms, tracking_number)').eq('brand_id', u.id).order('created_at', { ascending: false });
         if (campaigns) setMyCampaigns(campaigns.map(c => {
           const mkCreator = (a) => ({
             applicationId: a.id,
@@ -614,6 +615,7 @@ function NfluenceApp() {
             ...c,
             logoUrl: c.logo_url || c.profiles?.logo_url || null,
             bannerUrl: c.banner_url || c.profiles?.banner_url || null,
+            socialLinks: c.profiles?.social_links || null,
             creators: {
               pending: (c.applications || []).filter(a => a.status === 'applied').map(mkCreator),
               approved: (c.applications || []).filter(a => a.status === 'accepted').map(mkCreator),
@@ -637,7 +639,7 @@ function NfluenceApp() {
           tagline: p.tagline,
           logoUrl: p.logo_url || p.logoUrl,
           bannerUrl: p.banner_url || p.bannerUrl,
-          socialLinks: p.social_links || p.socialLinks,
+          socialLinks: p.social_links || p.socialLinks || prev?.socialLinks,
         }));
       } catch (err) {
         console.error('Supabase sign in failed:', err);
