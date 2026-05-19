@@ -26,6 +26,17 @@ const STEPS = ["brand", "campaign", "platforms", "terms", "account", "preview"];
 const VIBES = ["bold", "playful", "minimal", "luxury", "edgy", "warm", "professional", "raw", "inspirational", "witty", "clean", "authentic"];
 const SOCIAL_OPTIONS = ["Instagram", "TikTok", "YouTube", "X", "Facebook", "Website"];
 
+const REGION_NAMES = {
+  US: "United States", CA: "Canada", MX: "Mexico", GB: "United Kingdom", IE: "Ireland",
+  FR: "France", DE: "Germany", ES: "Spain", PT: "Portugal", IT: "Italy",
+  CH: "Switzerland", AT: "Austria", NL: "Netherlands", BE: "Belgium", DK: "Denmark",
+  NO: "Norway", SE: "Sweden", FI: "Finland", PL: "Poland", CZ: "Czech Republic",
+  HU: "Hungary", RO: "Romania", GR: "Greece", TR: "Turkey", IL: "Israel",
+  AE: "United Arab Emirates", SA: "Saudi Arabia", EG: "Egypt", ZA: "South Africa",
+  IN: "India", CN: "China", JP: "Japan", KR: "South Korea", TH: "Thailand",
+  SG: "Singapore", AU: "Australia", NZ: "New Zealand", BR: "Brazil", AR: "Argentina",
+  CL: "Chile", CO: "Colombia",
+};
 const REGION_CODES = ["US","CA","MX","GB","IE","FR","DE","ES","PT","IT","CH","AT","NL","BE","DK","NO","SE","FI","PL","CZ","HU","RO","GR","TR","IL","AE","SA","EG","ZA","IN","CN","JP","KR","TH","SG","AU","NZ","BR","AR","CL","CO"];
 const US_STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
 

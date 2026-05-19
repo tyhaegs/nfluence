@@ -9,10 +9,10 @@ function ImageEditor({ src, shape, onSave, onCancel, initialScale, initialPos })
 
   const isCircle = shape === "circle";
   const isSquare = shape === "square";
-  const outputW = (isCircle || isSquare) ? 512 : 1200;
-  const outputH = (isCircle || isSquare) ? 512 : 450;
-  const boxW = (isCircle || isSquare) ? 280 : 600;
-  const boxH = (isCircle || isSquare) ? 280 : 225;
+  const outputW = (isCircle || isSquare) ? 512 : 1400;
+  const outputH = (isCircle || isSquare) ? 512 : 504;
+  const boxW = (isCircle || isSquare) ? 280 : 560;
+  const boxH = (isCircle || isSquare) ? 280 : 202;
 
   useEffect(() => {
     const el = imgRef.current;

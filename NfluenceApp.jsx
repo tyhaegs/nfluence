@@ -535,6 +535,8 @@ function NfluenceApp() {
             bio: data.bio,
             logoPreview: data.logoPreview,
             logoUrl: data.logoPreview,
+            bannerPreview: data.bannerPreview,
+            bannerUrl: data.bannerPreview,
             contactName: data.contactName,
             phone: data.phone,
             website: data.website,
@@ -564,6 +566,7 @@ function NfluenceApp() {
             location: data.location,
             industry: data.industry,
             logo_url: data.logoPreview,
+            banner_url: data.bannerPreview,
             social_links: data.socialLinks,
             role: 'brand',
           });
@@ -574,7 +577,7 @@ function NfluenceApp() {
     }
     if (!activeUser) {
       // demo-mode fallback so the user can still proceed without supabase
-      activeUser = { ...data, logoUrl: data.logoPreview };
+      activeUser = { ...data, logoUrl: data.logoPreview, bannerUrl: data.bannerPreview };
       setUser(activeUser);
     }
     setView('dashboard');
