@@ -197,6 +197,49 @@ function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
 
 // ── BrandOnboarding ──
 
+// Multi-select industry picker shared by brand onboarding and the dashboard edit modal.
+// `value` is an array of industry strings; `onChange` receives the new array.
+function IndustryMultiSelect({ value = [], onChange }) {
+  const [otherInput, setOtherInput] = useState("");
+  const selected = Array.isArray(value) ? value : [];
+  const toggle = (ind) => onChange(selected.includes(ind) ? selected.filter(x => x !== ind) : [...selected, ind]);
+  const remove = (ind) => onChange(selected.filter(x => x !== ind));
+  const addOther = () => {
+    const v = otherInput.trim().replace(/,/g, "");
+    if (v && !selected.some(s => s.toLowerCase() === v.toLowerCase())) onChange([...selected, v]);
+    setOtherInput("");
+  };
+  const chipBase = { padding: "6px 13px", borderRadius: 20, fontSize: ".78rem", cursor: "pointer", transition: "all .12s", userSelect: "none" };
+  return (
+    <div>
+      {/* Selected chips with remove (×) */}
+      {selected.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
+          {selected.map(ind => (
+            <div key={ind} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 8px 6px 13px", borderRadius: 20, border: "1px solid rgba(255,255,255,.5)", background: "rgba(255,255,255,.12)", fontSize: ".78rem", color: "#fff", userSelect: "none" }}>
+              {ind}
+              <span onClick={() => remove(ind)} title="remove" style={{ cursor: "pointer", width: 17, height: 17, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,.18)", fontSize: ".95rem", lineHeight: 1 }}>×</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Available options (presets not yet selected) */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+        {INDUSTRIES.filter(ind => !selected.includes(ind)).map(ind => (
+          <div key={ind} onClick={() => toggle(ind)} style={{ ...chipBase, border: "1px solid rgba(255,255,255,.15)", background: "transparent", color: "rgba(255,255,255,.55)" }}>{ind}</div>
+        ))}
+      </div>
+      {/* Add a custom industry */}
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <input value={otherInput} onChange={e => setOtherInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addOther(); } }}
+          placeholder="add another industry" maxLength={60}
+          style={{ flex: 1, borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".82rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
+        <button type="button" onClick={addOther} disabled={!otherInput.trim()} style={{ padding: "9px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: otherInput.trim() ? "pointer" : "not-allowed", opacity: otherInput.trim() ? 1 : .4, fontFamily: "system-ui, sans-serif" }}>add</button>
+      </div>
+    </div>
+  );
+}
+
 function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   const [step, setStep] = useState(0);
   const STEPS = ["account", "brand", "location", "socials"];
@@ -204,7 +247,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
     name: "", tagline: "", bio: "", logoPreview: null, logoEditing: false, logoTransform: null, bannerPreview: null, bannerEditing: false, bannerTransform: null,
     contactName: "", email: "", password: "", confirmPassword: "", phone: "",
     website: "", country: "", city: "", state: "",
-    industry: "", industryOther: "",
+    industries: [],
     instagram: "", tiktok: "", youtube: "", x: "", facebook: "",
     agreeTerms: false,
   });
@@ -228,8 +271,11 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
 
   const inputStyle = { borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "12px 14px", fontSize: ".92rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" };
   const selectStyle = { ...inputStyle, padding: "12px 32px 12px 14px", appearance: "none" };
-  const labelStyle = { fontSize: ".75rem", opacity: .4, marginBottom: 5 };
-  const fieldWrap = { marginBottom: 14 };
+  // Prominent section labels: uppercase + letter-spacing + weight so titles don't blend into content above.
+  const labelStyle = { fontSize: ".72rem", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.55)", marginBottom: 9 };
+  const fieldWrap = { marginBottom: 18 };
+  // Extra separation for a major sub-section (logo / banner / industry) within a step.
+  const sectionWrap = { marginBottom: 18, marginTop: 28, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.08)" };
 
   const handleSubmit = async () => {
     if (submitting) return;
@@ -261,7 +307,8 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         city: form.city,
         state: form.state,
         location,
-        industry: form.industry === "__other__" ? form.industryOther.trim() : form.industry,
+        industry: serializeIndustries(form.industries),
+        industries: form.industries,
         socialLinks,
       });
     } catch (err) {
@@ -366,7 +413,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={fieldWrap}>
               <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
             </div>
-            <div style={fieldWrap}>
+            <div style={sectionWrap}>
               <div style={labelStyle}>logo</div>
               {form.logoEditing && form.logoPreview ? (
                 <ImageEditor src={form.logoPreview} shape="circle"
@@ -391,7 +438,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                 </div>
               )}
             </div>
-            <div style={fieldWrap}>
+            <div style={sectionWrap}>
               <div style={labelStyle}>banner</div>
               {form.bannerEditing && form.bannerPreview ? (
                 <ImageEditor src={form.bannerPreview} shape="banner"
@@ -412,20 +459,10 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                 <div onClick={() => setForm(p => ({ ...p, bannerEditing: true }))} style={{ fontSize: ".75rem", opacity: .4, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>
               )}
             </div>
-            <div style={fieldWrap}>
+            <div style={sectionWrap}>
               <div style={labelStyle}>industry</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                {INDUSTRIES.map(ind => {
-                  const selected = form.industry === ind;
-                  return (
-                    <div key={ind} className={`bo-chip${selected ? " selected" : ""}`} onClick={() => setForm(f => ({ ...f, industry: selected ? "" : ind, industryOther: "" }))}>{ind}</div>
-                  );
-                })}
-                <div className={`bo-chip${form.industry === "__other__" ? " selected" : ""}`} onClick={() => setForm(f => ({ ...f, industry: f.industry === "__other__" ? "" : "__other__" }))}>other</div>
-              </div>
-              {form.industry === "__other__" && (
-                <input className="bo-input" style={{ ...inputStyle, marginTop: 10 }} value={form.industryOther} onChange={e => setForm(f => ({ ...f, industryOther: e.target.value }))} placeholder="describe your industry" maxLength={60} />
-              )}
+              <div style={{ fontSize: ".78rem", opacity: .35, marginBottom: 10, marginTop: -2 }}>select all that apply</div>
+              <IndustryMultiSelect value={form.industries} onChange={inds => setForm(f => ({ ...f, industries: inds }))} />
             </div>
           </div>
         )}
@@ -706,6 +743,10 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
   const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
   const STAGE_COLORS = { draft: "rgba(255,255,255,.15)", open: "rgba(100,200,255,.25)", active: "rgba(255,200,100,.25)", fulfillment: "rgba(200,100,255,.25)", wrap_up: "rgba(100,255,150,.25)" };
+  // Item 2 — edit-modal section styling: prominent uppercase labels + a divider/gap before each
+  // major section so titles don't blend into the content above them.
+  const editLabel = { fontSize: ".7rem", fontWeight: 700, letterSpacing: ".09em", textTransform: "uppercase", color: "rgba(255,255,255,.5)", marginBottom: 9 };
+  const editSection = { marginBottom: 14, marginTop: 30, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,.08)" };
 
   const allCampaigns = [...campaigns, ...demoCampaigns.map((d, i) => ({
     ...d, id: `demo-${i}`, createdAt: new Date(Date.now() - (i + 1) * 86400000 * 7).toISOString(),
@@ -772,7 +813,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               <div style={{ position: "absolute", top: 44, right: 0, background: "#0a1020", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "6px", minWidth: 160, zIndex: 50, boxShadow: "0 16px 40px rgba(0,0,0,.5)" }} onClick={e => e.stopPropagation()}>
                 {[
                   { label: "messages", action: () => { setShowSettingsMenu(false); onOpenMessages?.(); } },
-                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; const savedInd = user?.industry || ""; const indIsCustom = savedInd && !INDUSTRIES.includes(savedInd); setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industry: indIsCustom ? "__other__" : savedInd, industryOther: indIsCustom ? savedInd : "", bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
+                  { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industries: parseIndustries(user?.industry), bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
                   <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
@@ -1006,8 +1047,8 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 24 }}>edit profile</div>
 
             {/* Logo */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>logo</div>
+            <div style={{ marginBottom: 24 }}>
+              <div style={editLabel}>logo</div>
               {brandEditForm.logoEditing && brandEditForm.logoPreview ? (
                 <ImageEditor src={brandEditForm.logoPreview} shape="circle"
                   initialScale={brandEditForm.logoTransform?.scale} initialPos={brandEditForm.logoTransform?.pos}
@@ -1032,8 +1073,8 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             </div>
 
             {/* Banner */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>banner</div>
+            <div style={{ marginBottom: 24 }}>
+              <div style={editLabel}>banner</div>
               {brandEditForm.bannerEditing && brandEditForm.bannerPreview ? (
                 <ImageEditor src={brandEditForm.bannerPreview} shape="banner"
                   initialScale={brandEditForm.bannerTransform?.scale} initialPos={brandEditForm.bannerTransform?.pos}
@@ -1060,29 +1101,29 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             </div>
 
             {/* Brand name */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>brand name</div>
+            <div style={editSection}>
+              <div style={editLabel}>brand name</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name" />
             </div>
 
             {/* Tagline */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>tagline</div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={editLabel}>tagline</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.tagline || ""} onChange={e => setBrandEditForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
             </div>
 
             {/* Website */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>website</div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={editLabel}>website</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
                 value={brandEditForm.website || ""} onChange={e => setBrandEditForm(f => ({ ...f, website: e.target.value }))} placeholder="yoursite.com" />
             </div>
 
             {/* Country first */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>country</div>
+            <div style={editSection}>
+              <div style={editLabel}>location</div>
               <div style={{ position: "relative" }}>
                 <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
                   value={brandEditForm.country || ""} onChange={e => setBrandEditForm(f => ({ ...f, country: e.target.value, state: "" }))}>
@@ -1121,40 +1162,23 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               </div>
             )}
 
-            {/* Industry */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>industry</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                {INDUSTRIES.map(ind => {
-                  const selected = brandEditForm.industry === ind;
-                  return (
-                    <div key={ind} onClick={() => setBrandEditForm(f => ({ ...f, industry: selected ? "" : ind, industryOther: "" }))}
-                      style={{ padding: "6px 13px", borderRadius: 20, border: `1px solid ${selected ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.15)"}`, background: selected ? "rgba(255,255,255,.1)" : "transparent", fontSize: ".78rem", color: selected ? "#fff" : "rgba(255,255,255,.55)", cursor: "pointer", transition: "all .12s", userSelect: "none" }}>
-                      {ind}
-                    </div>
-                  );
-                })}
-                <div onClick={() => setBrandEditForm(f => ({ ...f, industry: f.industry === "__other__" ? "" : "__other__" }))}
-                  style={{ padding: "6px 13px", borderRadius: 20, border: `1px solid ${brandEditForm.industry === "__other__" ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.15)"}`, background: brandEditForm.industry === "__other__" ? "rgba(255,255,255,.1)" : "transparent", fontSize: ".78rem", color: brandEditForm.industry === "__other__" ? "#fff" : "rgba(255,255,255,.55)", cursor: "pointer", transition: "all .12s", userSelect: "none" }}>
-                  other
-                </div>
-              </div>
-              {brandEditForm.industry === "__other__" && (
-                <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", marginTop: 10 }}
-                  value={brandEditForm.industryOther || ""} onChange={e => setBrandEditForm(f => ({ ...f, industryOther: e.target.value }))} placeholder="describe your industry" maxLength={60} />
-              )}
+            {/* Industry — multi-select */}
+            <div style={editSection}>
+              <div style={editLabel}>industry</div>
+              <div style={{ fontSize: ".78rem", opacity: .35, marginBottom: 10, marginTop: -2 }}>select all that apply</div>
+              <IndustryMultiSelect value={brandEditForm.industries} onChange={inds => setBrandEditForm(f => ({ ...f, industries: inds }))} />
             </div>
 
             {/* Bio */}
-            <div style={{ marginBottom: 18, marginTop: 4 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>bio</div>
+            <div style={editSection}>
+              <div style={editLabel}>bio</div>
               <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical", boxSizing: "border-box" }}
                 value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
             </div>
 
             {/* Social links */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 8 }}>social links</div>
+            <div style={{ ...editSection, marginBottom: 28 }}>
+              <div style={editLabel}>social links</div>
               {[
                 { key: "instagram", placeholder: "instagram url" },
                 { key: "tiktok", placeholder: "tiktok url" },
@@ -1169,7 +1193,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setShowBrandEdit(false)} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>cancel</button>
-              <button onClick={() => { const resolvedIndustry = brandEditForm.industry === "__other__" ? (brandEditForm.industryOther || "").trim() : brandEditForm.industry; const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); const socialLinks = { Instagram: brandEditForm.instagram || "", TikTok: brandEditForm.tiktok || "", YouTube: brandEditForm.youtube || "", X: brandEditForm.x || "", Facebook: brandEditForm.facebook || "" }; onUpdateUser?.({ ...user, ...brandEditForm, industry: resolvedIndustry, location, socialLinks }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", fontWeight: 600 }}>save</button>
+              <button onClick={() => { const location = [brandEditForm.city, brandEditForm.state, brandEditForm.country].filter(Boolean).join(", "); const socialLinks = { Instagram: brandEditForm.instagram || "", TikTok: brandEditForm.tiktok || "", YouTube: brandEditForm.youtube || "", X: brandEditForm.x || "", Facebook: brandEditForm.facebook || "" }; onUpdateUser?.({ ...user, ...brandEditForm, industry: serializeIndustries(brandEditForm.industries), industries: brandEditForm.industries, location, socialLinks }); setShowBrandEdit(false); }} style={{ flex: 1, padding: "11px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".9rem", fontWeight: 600 }}>save</button>
             </div>
           </div>
         </div>

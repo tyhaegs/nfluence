@@ -17,6 +17,18 @@ const INDUSTRIES = [
   "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment",
   "travel", "pets", "automotive", "finance & investing", "education & coaching",
 ];
+// Brands can work across several industries. There is no `industries` array column
+// on profiles (and we avoid a migration), so multiple industries are persisted in the
+// existing `profiles.industry` text column as a comma-separated list. The UI keeps them
+// as an array via these helpers.
+function serializeIndustries(arr) {
+  return (Array.isArray(arr) ? arr : []).map(s => String(s).trim()).filter(Boolean).join(", ");
+}
+function parseIndustries(val) {
+  if (Array.isArray(val)) return val.map(s => String(s).trim()).filter(Boolean);
+  if (!val || typeof val !== "string") return [];
+  return val.split(",").map(s => s.trim()).filter(Boolean);
+}
 const COMP_OPTIONS = [
   { value: "product", label: "product only" },
   { value: "paid", label: "paid" },
