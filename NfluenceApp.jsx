@@ -9,6 +9,33 @@ function getSB() {
   return _sbClient;
 }
 
+// When email confirmation is enabled, signUp() returns no session, so the authenticated
+// profiles upsert can't run yet. Stash the onboarding fields locally and replay the upsert
+// on first successful sign-in (B1). The password is NEVER stashed.
+const PENDING_PROFILE_KEY = 'nf_pending_profile';
+function stashPendingProfile(payload) {
+  try {
+    localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    // Base64 logo/banner/avatar data URLs can exceed the localStorage quota — retry text-only.
+    try {
+      const d = payload.data || {};
+      const { logoPreview, bannerPreview, logoUrl, bannerUrl, avatarUrl, avatarPreview, ...textOnly } = d;
+      localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify({ ...payload, data: textOnly, imagesDropped: true }));
+      console.warn('[pending-profile] stashed without images (quota: ' + (e?.name || 'error') + ')');
+    } catch (e2) {
+      console.error('[pending-profile] failed to stash onboarding data:', e2?.name || e2);
+    }
+  }
+}
+function readPendingProfile() {
+  try { const raw = localStorage.getItem(PENDING_PROFILE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch (e) { return null; }
+}
+function clearPendingProfile() {
+  try { localStorage.removeItem(PENDING_PROFILE_KEY); } catch (e) {}
+}
+
 function NfluenceApp() {
   const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
@@ -19,6 +46,7 @@ function NfluenceApp() {
   const [user, setUser] = useState(null); // { email, name }
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [confirmEmailInfo, setConfirmEmailInfo] = useState(null); // { role, email } while awaiting email confirmation
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
@@ -535,6 +563,15 @@ function NfluenceApp() {
         });
         console.log('[auth] signUp() result:', { hasUser: !!signUpData?.user, hasSession: !!signUpData?.session, userId: signUpData?.user?.id, error: error?.message });
         if (error) throw error;
+        if (signUpData.user && !signUpData.session) {
+          // Email confirmation enabled — no session yet. Stash onboarding fields (minus the
+          // password) to replay after confirm, then show the pending screen. (B1)
+          const { password: _pw, ...safeData } = data;
+          stashPendingProfile({ role: 'brand', email: data.email, data: safeData });
+          setConfirmEmailInfo({ role: 'brand', email: data.email });
+          setView('confirmemail');
+          return;
+        }
         if (signUpData.user) {
           activeUser = {
             id: signUpData.user.id,
@@ -558,9 +595,6 @@ function NfluenceApp() {
           };
           setAuthSession(signUpData.session);
           setUser(activeUser);
-          if (!signUpData.session) {
-            await _sb.auth.signInWithPassword({ email: data.email, password: data.password });
-          }
           await _sb.from('profiles').upsert({
             id: signUpData.user.id,
             email: signUpData.user.email,
@@ -649,6 +683,27 @@ function NfluenceApp() {
           bannerUrl: p.banner_url || p.bannerUrl,
           socialLinks: p.social_links || p.socialLinks || prev?.socialLinks,
         }));
+        // Replay onboarding profile stashed before email confirmation (B1)
+        const pending = readPendingProfile();
+        if (pending && pending.role === 'brand' && (pending.email || '').toLowerCase() === (u.email || '').toLowerCase()) {
+          const d = pending.data || {};
+          try {
+            await _sb.from('profiles').upsert({
+              id: u.id, email: u.email,
+              name: d.name, tagline: d.tagline, bio: d.bio, phone: d.phone, website: d.website,
+              country: d.country, city: d.city, state: d.state, location: d.location,
+              industry: d.industry, logo_url: d.logoPreview, banner_url: d.bannerPreview,
+              social_links: d.socialLinks, role: 'brand',
+            });
+            clearPendingProfile();
+            setUser(prev => ({ ...prev,
+              name: d.name || prev?.name, tagline: d.tagline, bio: d.bio, phone: d.phone,
+              website: d.website, country: d.country, city: d.city, state: d.state, location: d.location,
+              industry: d.industry, industries: d.industries, socialLinks: d.socialLinks,
+              logoUrl: d.logoPreview || prev?.logoUrl, bannerUrl: d.bannerPreview || prev?.bannerUrl,
+            }));
+          } catch (e) { console.error('[pending-profile] brand replay failed:', e); }
+        }
       } catch (err) {
         console.error('Supabase sign in failed:', err);
         return err.message?.includes('Email not confirmed')
@@ -720,9 +775,10 @@ function NfluenceApp() {
           return signUpError.message || 'Sign up failed. Please try again.';
         }
         if (signUpData?.user && !signUpData.session) {
-          // Email confirmation required — don't navigate yet
-          setToastMessage('Check your email for a confirmation link, then sign in.');
-          setShowToast(true);
+          // Email confirmation enabled — stash onboarding profile, show pending screen. (B1)
+          stashPendingProfile({ role: 'creator', email, name, data: profileData || {} });
+          setConfirmEmailInfo({ role: 'creator', email });
+          setView('confirmemail');
           return;
         }
         if (signUpData?.user) {
@@ -755,6 +811,26 @@ function NfluenceApp() {
         setCreatorProfile({ ...profile, name: profile.profiles?.name || resolvedName, avatarUrl: profile.avatar_url || null, bannerUrl: profile.banner_url || null });
       } else if (profileData) {
         setCreatorProfile(profileData);
+      }
+      // Replay onboarding profile stashed before email confirmation (B1)
+      const pendingC = readPendingProfile();
+      if (pendingC && pendingC.role === 'creator' && (pendingC.email || '').toLowerCase() === (u.email || '').toLowerCase()) {
+        const d = pendingC.data || {};
+        try {
+          await _sb.from('profiles').upsert({ id: u.id, email: u.email, name: d.name || resolvedName, role: 'creator' });
+          await _sb.from('creator_profiles').upsert({
+            id: u.id, bio: d.bio, location: d.location, age: d.age, languages: d.languages, niches: d.niches,
+            instagram: d.instagram, instagram_followers: d.instagramFollowers,
+            tiktok: d.tiktok, tiktok_followers: d.tiktokFollowers,
+            youtube: d.youtube, youtube_followers: d.youtubeFollowers,
+            x: d.x, x_followers: d.xFollowers,
+            facebook: d.facebook, facebook_followers: d.facebookFollowers,
+            avatar_url: d.avatarUrl || null, banner_url: d.bannerUrl || null,
+          });
+          clearPendingProfile();
+          setCreatorProfile(prev => ({ ...prev, ...d, name: d.name || resolvedName,
+            platforms: { Instagram: d.instagram, TikTok: d.tiktok, YouTube: d.youtube, X: d.x, Facebook: d.facebook } }));
+        } catch (e) { console.error('[pending-profile] creator replay failed:', e); }
       }
     } else {
       // Demo mode — Supabase not configured
@@ -956,6 +1032,7 @@ function NfluenceApp() {
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} onSignIn={() => setView("signin")} />;
+  if (view === "confirmemail") return <ConfirmEmailNotice email={confirmEmailInfo?.email} role={confirmEmailInfo?.role} onSignIn={() => setView(confirmEmailInfo?.role === "creator" ? "creatorsignin" : "signin")} onHome={() => setView("landing")} />;
   if (view === "creatordashboard") return <>
     <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={async (form) => {
         setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }));

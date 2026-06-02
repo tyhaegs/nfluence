@@ -197,6 +197,28 @@ function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
 
 // ── BrandOnboarding ──
 
+// Shown after signup when email confirmation is enabled (signUp returns no session).
+function ConfirmEmailNotice({ email, role, onSignIn, onHome }) {
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`@font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; } * { box-sizing:border-box; margin:0; padding:0; }`}</style>
+      <PublicNav onSignIn={onSignIn} hideSignIn />
+      <div style={{ maxWidth: 460, margin: "0 auto", padding: "72px 24px", textAlign: "center" }}>
+        <div style={{ width: 64, height: 64, borderRadius: 16, margin: "0 auto 24px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+        </div>
+        <div style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 12 }}>check your email</div>
+        <div style={{ fontSize: ".95rem", opacity: .6, lineHeight: 1.65, marginBottom: 28 }}>
+          We sent a confirmation link{email ? <> to <span style={{ color: "#fff", opacity: 1 }}>{email}</span></> : ""}. Confirm your account, then sign in.
+        </div>
+        <button onClick={onSignIn} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".95rem", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", cursor: "pointer" }}>sign in</button>
+        <div onClick={onHome} style={{ marginTop: 18, fontSize: ".85rem", opacity: .45, cursor: "pointer", textDecoration: "underline" }}>back to home</div>
+        <div style={{ marginTop: 28, fontSize: ".8rem", opacity: .35, lineHeight: 1.6 }}>didn't get it? check spam, or try signing in to resend.</div>
+      </div>
+    </div>
+  );
+}
+
 // Multi-select industry picker shared by brand onboarding and the dashboard edit modal.
 // `value` is an array of industry strings; `onChange` receives the new array.
 function IndustryMultiSelect({ value = [], onChange }) {
