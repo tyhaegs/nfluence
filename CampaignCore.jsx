@@ -8,19 +8,23 @@ function getStripe() {
   return _stripe;
 }
 
-async function callStripePayment(amountCents, token, cardElement) {
-  const stripe = getStripe();
-  if (!stripe) throw new Error('Stripe.js not loaded — add <script src="https://js.stripe.com/v3/"><\/script>');
+// ── Server-authoritative payment (V2) ──
+// The Edge Function computes ALL prices and validates promos; the client never sends an amount.
+// Interface: { action:'quote'|'charge'|'cancel', type:'campaign_new'|'campaign_edit'|'gig', campaignId?, features?, promoCode? }
+async function callStripePaymentV2(payload, token) {
   const res = await fetch('https://xynujmscxjxbfivylfne.supabase.co/functions/v1/stripe-payment', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token || ''}` },
-    body: JSON.stringify({ amount: Math.round(amountCents), currency: 'usd' }),
+    body: JSON.stringify(payload),
   });
-  const payload = await res.json();
-  if (!res.ok) throw new Error(payload.error || 'Payment service error');
-  const { error } = await stripe.confirmCardPayment(payload.client_secret, {
-    payment_method: { card: cardElement },
-  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Payment service error');
+  return data;
+}
+async function confirmStripeCard(clientSecret, cardElement) {
+  const stripe = getStripe();
+  if (!stripe) throw new Error('Stripe.js not loaded — add <script src="https://js.stripe.com/v3/"><\/script>');
+  const { error } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement } });
   if (error) throw new Error(error.message);
 }
 
@@ -1194,29 +1198,32 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
   const [payError, setPayError] = useState("");
   const [customSpots, setCustomSpots] = useState(false);
   const hasAccepted = (c.creators?.approved?.length || 0) > 0;
-  const PRICES = { 1: 2.99, 7: 14.99, 30: 49.99 };
   const featuredWeeks = c.featuredWeeks || 7;
-  const featuredPrice = PRICES[featuredWeeks] || 2.99;
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const cardDivRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState("");
-
-  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
-  const applyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
-    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
-    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  // Server quote is the single source of truth — no client-side promo/discount math.
+  const [quote, setQuote] = useState(null);        // { amount_cents, subtotal_cents, discount_pct, breakdown }
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+  const isFree = !!quote && quote.amount_cents === 0;
+  const buildEditFeatures = () => ({ featured: c.featured, featuredWeeks: c.featuredWeeks || 7, compType: c.compType, comp: c.comp, spotsTotal: c.spotsTotal });
+  const fetchQuote = async (code = promoCode) => {
+    setQuoteLoading(true); setQuoteError("");
+    try {
+      const q = await callStripePaymentV2({ action: 'quote', type: 'campaign_edit', campaignId: c.id, features: buildEditFeatures(), promoCode: (code || '').trim() }, session?.access_token);
+      setQuote(q);
+    } catch (e) { setQuote(null); setQuoteError(e.message || 'could not load price'); }
+    finally { setQuoteLoading(false); }
   };
+  const needCard = showPayModal && !!quote && quote.amount_cents > 0;
   useEffect(() => {
-    if (!showPayModal) {
-      cardRef.current?.destroy();
-      cardRef.current = null;
-      setPayError("");
-      return;
-    }
+    if (!showPayModal) { setQuote(null); setQuoteError(""); setPayError(""); setPromoCode(""); return; }
+    fetchQuote(); // price when the modal opens
+  }, [showPayModal]);
+  useEffect(() => {
+    if (!needCard) { cardRef.current?.destroy(); cardRef.current = null; return; }
     const stripe = getStripe();
     if (!stripe) return;
     const t = setTimeout(() => {
@@ -1227,12 +1234,8 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
       card.mount(cardDivRef.current);
       cardRef.current = card;
     }, 0);
-    return () => {
-      clearTimeout(t);
-      cardRef.current?.destroy();
-      cardRef.current = null;
-    };
-  }, [showPayModal]);
+    return () => { clearTimeout(t); cardRef.current?.destroy(); cardRef.current = null; };
+  }, [needCard]);
   useLayoutEffect(() => { window.scrollTo?.({ top: 0, behavior: "smooth" }); }, []);
   const setField = (field, value) => setC(prev => ({ ...prev, [field]: value }));
   const updateProduct = (i, key, value) => setC(prev => { const products = [...(prev.products || [])]; products[i] = { ...products[i], [key]: value }; return { ...prev, products }; });
@@ -1266,8 +1269,6 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
     if (needsPayment) setShowPayModal(true);
     else onSave(c);
   };
-
-  const totalDue = (((c.featured && !initialCampaign.featured) ? featuredPrice : 0) + escrowDelta) * (1 - promoDiscount);
 
   return (
     <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
@@ -1564,7 +1565,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
                       <div style={{ fontSize: ".9rem", fontWeight: 600 }}>featured placement</div>
                       <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{featuredWeeks} {featuredWeeks === 1 ? "day" : "days"} · gold shimmer + priority</div>
                     </div>
-                    <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${featuredPrice.toFixed(2)}</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${((quote?.breakdown?.featured ?? 0) / 100).toFixed(2)}</div>
                   </div>
                   <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 6 }}>charged immediately · non-refundable</div>
                 </div>
@@ -1572,8 +1573,8 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
               <div style={{ padding: "14px 20px", background: "rgba(255,255,255,.03)", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: ".85rem", opacity: .5 }}>total due now</span>
                 <div style={{ textAlign: "right" }}>
-                  {promoDiscount > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${((c.featured ? featuredPrice : 0) + escrowDelta).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
-                  <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${(quote.subtotal_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
+                  <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>{quoteLoading || !quote ? "…" : `$${(quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
                 </div>
               </div>
             </div>
@@ -1583,35 +1584,35 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
               <div style={{ display: "flex", gap: 8 }}>
                 <input
                   value={promoCode}
-                  onChange={e => { setPromoCode(e.target.value); setPromoApplied(false); setPromoError(""); }}
+                  onChange={e => setPromoCode(e.target.value)}
                   placeholder="promo code"
-                  style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${promoApplied ? "rgba(100,255,150,.4)" : promoError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }}
+                  style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${quote && quote.discount_pct > 0 ? "rgba(100,255,150,.4)" : quoteError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }}
                 />
-                <button onClick={applyPromo} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
+                <button onClick={() => fetchQuote(promoCode)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
               </div>
-              {promoApplied && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(promoDiscount * 100)}% off</div>}
-              {promoError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{promoError}</div>}
+              {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(quote.discount_pct * 100)}% off fees</div>}
+              {quoteError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{quoteError}</div>}
             </div>
 
-            <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />
+            {!isFree && <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />}
             {payError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.9)", marginBottom: 10 }}>{payError}</div>}
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => { setShowPayModal(false); setPayError(""); }} disabled={payLoading} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".9rem", fontFamily: "system-ui, sans-serif" }}>cancel</button>
-              <button disabled={payLoading} onClick={async () => {
-                if (!cardRef.current) return;
-                setPayLoading(true);
-                setPayError("");
+              <button disabled={payLoading || quoteLoading || !quote} onClick={async () => {
+                if (!isFree && !cardRef.current) return;
+                setPayLoading(true); setPayError("");
+                let res;
                 try {
-                  await callStripePayment(Math.round(totalDue * 100), session?.access_token, cardRef.current);
+                  res = await callStripePaymentV2({ action: 'charge', type: 'campaign_edit', campaignId: c.id, features: buildEditFeatures(), promoCode: (promoCode || '').trim() }, session?.access_token);
+                  if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                   setShowPayModal(false);
                   onSave(c);
                 } catch (err) {
                   setPayError(err.message || "Payment failed");
-                } finally {
-                  setPayLoading(false);
-                }
+                  if (res && res.payment_intent_id) { try { await callStripePaymentV2({ action: 'cancel', paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
+                } finally { setPayLoading(false); }
               }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
-                {payLoading ? "processing..." : `pay $${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & save`}
+                {payLoading ? "processing..." : isFree ? "confirm & save" : `pay ${quote ? "$" + (quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""} & save`}
               </button>
             </div>
           </div>
@@ -1636,22 +1637,28 @@ function CampaignBuilder({ onBack, onPublish, session }) {
   const cardRef = useRef(null);
   const cardDivRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState("");
-
-  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
-  const applyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
-    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
-    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+  const isFree = !!quote && quote.amount_cents === 0;
+  const fetchQuote = async (code = promoCode) => {
+    if (!pendingCampaignData) return;
+    setQuoteLoading(true); setQuoteError("");
+    try {
+      const q = await callStripePaymentV2({ action: 'quote', type: 'campaign_new', features: pendingCampaignData, promoCode: (code || '').trim() }, session?.access_token);
+      setQuote(q);
+    } catch (e) { setQuote(null); setQuoteError(e.message || 'could not load price'); }
+    finally { setQuoteLoading(false); }
   };
+  const needCard = showPayModal && !!quote && quote.amount_cents > 0;
+  // Layer 1 orphan cleanup: sweep this user's stale draft campaigns (+ pending payments/promos) on mount.
+  useEffect(() => { if (session?.access_token) callStripePaymentV2({ action: 'cancel' }, session.access_token).catch(() => {}); }, []);
   useEffect(() => {
-    if (!showPayModal) {
-      cardRef.current?.destroy();
-      cardRef.current = null;
-      setPayError("");
-      return;
-    }
+    if (!showPayModal) { setQuote(null); setQuoteError(""); setPayError(""); setPromoCode(""); return; }
+    fetchQuote();
+  }, [showPayModal, pendingCampaignData]);
+  useEffect(() => {
+    if (!needCard) { cardRef.current?.destroy(); cardRef.current = null; return; }
     const stripe = getStripe();
     if (!stripe) return;
     const t = setTimeout(() => {
@@ -1662,12 +1669,8 @@ function CampaignBuilder({ onBack, onPublish, session }) {
       card.mount(cardDivRef.current);
       cardRef.current = card;
     }, 0);
-    return () => {
-      clearTimeout(t);
-      cardRef.current?.destroy();
-      cardRef.current = null;
-    };
-  }, [showPayModal]);
+    return () => { clearTimeout(t); cardRef.current?.destroy(); cardRef.current = null; };
+  }, [needCard]);
   const [brand, setBrand] = useState({
     name: "", tagline: "", bio: "", manager: "", phone: "", email: "", website: "", phoneCode: "+1",
     city: "", state: "", country: "",
@@ -2916,50 +2919,40 @@ function CampaignBuilder({ onBack, onPublish, session }) {
               featuredWeeks: terms.featured ? terms.featuredWeeks : 0,
               socialLinks: brand.socials,
             };
-            const isPaid = terms.compType === "paid" || terms.compType === "product+paid";
-            const perCreator = parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) || 0;
-            const capCount = campaign.spotsTotal || 0;
-            const escrow = isPaid && capCount > 0 ? perCreator * capCount : 0;
-            const PRICES = { 1: 2.99, 7: 14.99, 30: 49.99 };
-            const featuredPrice = PRICES[terms.featuredWeeks || 7] || 2.99;
-            const needsPayment = terms.featured || escrow > 0;
-            if (needsPayment) { setPendingCampaignData({ ...campaignData, _escrow: escrow, _featuredPrice: terms.featured ? featuredPrice : 0 }); setShowPayModal(true); }
-            else if (onPublish) onPublish(campaignData, account);
-            else alert("campaign published! (demo)");
+            setPendingCampaignData(campaignData);
+            setShowPayModal(true);
           }}>publish</button>
         )}
       </div>
       {showPayModal && pendingCampaignData && (() => {
-        const escrow = pendingCampaignData._escrow || 0;
-        const featuredPrice = pendingCampaignData._featuredPrice || 0;
-        const subtotal = escrow + featuredPrice;
-        const totalDue = subtotal * (1 - promoDiscount);
+        const escrowC = quote?.breakdown?.escrow ?? 0;
+        const featuredC = quote?.breakdown?.featured ?? 0;
         return (
           <div onClick={() => { if (!payLoading) setShowPayModal(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>review charges</div>
-              <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>the following will be charged when you confirm</div>
+              <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>{isFree ? "no charge — publish when ready" : "the following will be charged when you confirm"}</div>
               <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, overflow: "hidden", marginBottom: 20 }}>
-                {escrow > 0 && (
-                  <div style={{ padding: "14px 20px", borderBottom: featuredPrice > 0 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
+                {escrowC > 0 && (
+                  <div style={{ padding: "14px 20px", borderBottom: featuredC > 0 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                       <div>
                         <div style={{ fontSize: ".9rem", fontWeight: 600 }}>escrow deposit</div>
                         <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{pendingCampaignData.spotsTotal} creators × ${parseFloat((pendingCampaignData.comp || "").replace(/[^0-9.]/g, "")).toLocaleString()}</div>
                       </div>
-                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(180,255,80,.9)" }}>${escrow.toLocaleString()}</div>
+                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(180,255,80,.9)" }}>${(escrowC / 100).toLocaleString()}</div>
                     </div>
                     <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 6 }}>held securely · released to creators on completion</div>
                   </div>
                 )}
-                {featuredPrice > 0 && (
+                {featuredC > 0 && (
                   <div style={{ padding: "14px 20px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                       <div>
                         <div style={{ fontSize: ".9rem", fontWeight: 600 }}>featured placement</div>
                         <div style={{ fontSize: ".75rem", opacity: .4, marginTop: 2 }}>{pendingCampaignData.featuredWeeks || 7} {(pendingCampaignData.featuredWeeks || 7) === 1 ? "day" : "days"} · gold shimmer + priority</div>
                       </div>
-                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${featuredPrice.toFixed(2)}</div>
+                      <div style={{ fontSize: "1.3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "rgba(185,110,255,.9)" }}>${(featuredC / 100).toFixed(2)}</div>
                     </div>
                     <div style={{ fontSize: ".72rem", opacity: .3, marginTop: 6 }}>charged immediately · non-refundable</div>
                   </div>
@@ -2967,39 +2960,39 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                 <div style={{ padding: "14px 20px", background: "rgba(255,255,255,.03)", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: ".85rem", opacity: .5 }}>total due now</span>
                   <div style={{ textAlign: "right" }}>
-                    {promoDiscount > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
-                    <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".75rem", opacity: .4, textDecoration: "line-through", marginBottom: 2 }}>${(quote.subtotal_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
+                    <span style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff" }}>{quoteLoading || !quote ? "…" : `$${(quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
                   </div>
                 </div>
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input value={promoCode} onChange={e => { setPromoCode(e.target.value); setPromoApplied(false); setPromoError(""); }} placeholder="promo code"
-                    style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${promoApplied ? "rgba(100,255,150,.4)" : promoError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
-                  <button onClick={applyPromo} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
+                  <input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="promo code"
+                    style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${quote && quote.discount_pct > 0 ? "rgba(100,255,150,.4)" : quoteError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
+                  <button onClick={() => fetchQuote(promoCode)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
                 </div>
-                {promoApplied && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(promoDiscount * 100)}% off</div>}
-                {promoError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{promoError}</div>}
+                {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(quote.discount_pct * 100)}% off fees</div>}
+                {quoteError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{quoteError}</div>}
               </div>
-              <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />
+              {!isFree && <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />}
               {payError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.9)", marginBottom: 10 }}>{payError}</div>}
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => { setShowPayModal(false); setPayError(""); }} disabled={payLoading} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".9rem", fontFamily: "system-ui, sans-serif" }}>cancel</button>
-                <button disabled={payLoading} onClick={async () => {
-                  if (!cardRef.current) return;
-                  setPayLoading(true);
-                  setPayError("");
+                <button disabled={payLoading || quoteLoading || !quote} onClick={async () => {
+                  if (!isFree && !cardRef.current) return;
+                  setPayLoading(true); setPayError("");
+                  let res;
                   try {
-                    await callStripePayment(Math.round(totalDue * 100), session?.access_token, cardRef.current);
+                    res = await callStripePaymentV2({ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() }, session?.access_token);
+                    if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                     setShowPayModal(false);
-                    if (onPublish) onPublish(pendingCampaignData, account);
+                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId });
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
-                  } finally {
-                    setPayLoading(false);
-                  }
+                    if (res && (res.campaignId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', campaignId: res.campaignId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
+                  } finally { setPayLoading(false); }
                 }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
-                  {payLoading ? "processing..." : `pay $${totalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & publish`}
+                  {payLoading ? "processing..." : isFree ? "confirm & publish" : `pay ${quote ? "$" + (quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""} & publish`}
                 </button>
               </div>
             </div>
@@ -3148,15 +3141,19 @@ function GigListingBuilder({ onBack, onPublish, session }) {
   const cardRef = useRef(null);
   const cardDivRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState("");
-
-  const promoDiscount = promoApplied && VALID_PROMOS[promoCode.toUpperCase()] ? VALID_PROMOS[promoCode.toUpperCase()] : 0;
-  const applyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
-    if (VALID_PROMOS[code]) { setPromoApplied(true); setPromoError(""); }
-    else { setPromoError("invalid promo code"); setPromoApplied(false); }
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+  const isFree = !!quote && quote.amount_cents === 0;
+  const fetchQuote = async (code = promoCode) => {
+    setQuoteLoading(true); setQuoteError("");
+    try {
+      const q = await callStripePaymentV2({ action: 'quote', type: 'gig', promoCode: (code || '').trim() }, session?.access_token);
+      setQuote(q);
+    } catch (e) { setQuote(null); setQuoteError(e.message || 'could not load price'); }
+    finally { setQuoteLoading(false); }
   };
+  const needCard = showPayModal && !!quote && quote.amount_cents > 0;
 
   const [brand, setBrand] = useState({
     name: "", email: "", phone: "", phoneCode: "+1",
@@ -3194,12 +3191,11 @@ function GigListingBuilder({ onBack, onPublish, session }) {
   }, [step]);
 
   useEffect(() => {
-    if (!showPayModal) {
-      cardRef.current?.destroy();
-      cardRef.current = null;
-      setPayError("");
-      return;
-    }
+    if (!showPayModal) { setQuote(null); setQuoteError(""); setPayError(""); setPromoCode(""); return; }
+    fetchQuote();
+  }, [showPayModal]);
+  useEffect(() => {
+    if (!needCard) { cardRef.current?.destroy(); cardRef.current = null; return; }
     const stripe = getStripe();
     if (!stripe) return;
     const t = setTimeout(() => {
@@ -3211,7 +3207,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
       cardRef.current = card;
     }, 0);
     return () => { clearTimeout(t); cardRef.current?.destroy(); cardRef.current = null; };
-  }, [showPayModal]);
+  }, [needCard]);
 
   const handleAddMedia = (files, type) => {
     files.forEach(file => {
@@ -3258,8 +3254,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
     onPublish(gigData, account);
   };
 
-  const gigPrice = 49.99;
-  const discountedPrice = (gigPrice * (1 - promoDiscount)).toFixed(2);
+  // Gig price comes from the server quote (flat fee; fee fully discountable — no escrow).
 
   return (
     <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
@@ -3270,30 +3265,30 @@ function GigListingBuilder({ onBack, onPublish, session }) {
           <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400, textAlign: "center" }}>
             <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", fontWeight: 700, marginBottom: 6 }}>publish your gig</div>
             <div style={{ fontSize: ".85rem", opacity: .45, marginBottom: 24 }}>your listing goes live immediately</div>
-            <div style={{ fontSize: "3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff", marginBottom: 4 }}>${discountedPrice}</div>
+            <div style={{ fontSize: "3rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", color: "#fff", marginBottom: 4 }}>{quoteLoading || !quote ? "…" : `$${(quote.amount_cents / 100).toFixed(2)}`}</div>
             <div style={{ fontSize: ".85rem", opacity: .45, marginBottom: 20 }}>one-time · per listing</div>
             <div style={{ marginBottom: 20, display: "flex", gap: 8 }}>
               <input className="nf-input" value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="promo code" style={{ flex: 1 }} />
-              <button className="nf-btn" onClick={applyPromo} style={{ minWidth: 0, padding: "8px 14px", fontSize: ".8rem" }}>apply</button>
+              <button className="nf-btn" onClick={() => fetchQuote(promoCode)} style={{ minWidth: 0, padding: "8px 14px", fontSize: ".8rem" }}>apply</button>
             </div>
-            {promoApplied && <div style={{ fontSize: ".8rem", color: "rgba(100,255,150,.8)", marginBottom: 12 }}>{Math.round(promoDiscount * 100)}% off applied</div>}
-            {promoError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.7)", marginBottom: 12 }}>{promoError}</div>}
-            <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12, textAlign: "left" }} />
+            {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".8rem", color: "rgba(100,255,150,.8)", marginBottom: 12 }}>{Math.round(quote.discount_pct * 100)}% off applied</div>}
+            {quoteError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.7)", marginBottom: 12 }}>{quoteError}</div>}
+            {!isFree && <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12, textAlign: "left" }} />}
             {payError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.9)", marginBottom: 10, textAlign: "left" }}>{payError}</div>}
-            <button className="nf-btn" disabled={payLoading} style={{ width: "100%", marginBottom: 10, background: payLoading ? "rgba(255,255,255,.04)" : "rgba(255,255,255,.08)", opacity: payLoading ? .6 : 1 }} onClick={async () => {
-              if (!cardRef.current) return;
-              setPayLoading(true);
-              setPayError("");
+            <button className="nf-btn" disabled={payLoading || quoteLoading || !quote} style={{ width: "100%", marginBottom: 10, background: payLoading ? "rgba(255,255,255,.04)" : "rgba(255,255,255,.08)", opacity: payLoading ? .6 : 1 }} onClick={async () => {
+              if (!isFree && !cardRef.current) return;
+              setPayLoading(true); setPayError("");
+              let res;
               try {
-                await callStripePayment(Math.round(parseFloat(discountedPrice) * 100), session?.access_token, cardRef.current);
+                res = await callStripePaymentV2({ action: 'charge', type: 'gig', promoCode: (promoCode || '').trim() }, session?.access_token);
+                if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                 setShowPayModal(false);
                 buildAndPublish();
               } catch (err) {
                 setPayError(err.message || "Payment failed");
-              } finally {
-                setPayLoading(false);
-              }
-            }}>{payLoading ? "processing..." : `pay $${discountedPrice} & publish`}</button>
+                if (res && res.payment_intent_id) { try { await callStripePaymentV2({ action: 'cancel', paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
+              } finally { setPayLoading(false); }
+            }}>{payLoading ? "processing..." : isFree ? "confirm & publish" : `pay ${quote ? "$" + (quote.amount_cents / 100).toFixed(2) : ""} & publish`}</button>
             <button className="nf-btn-back" disabled={payLoading} style={{ width: "100%" }} onClick={() => { if (!payLoading) setShowPayModal(false); }}>cancel</button>
           </div>
         </div>

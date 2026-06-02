@@ -47,6 +47,7 @@ function NfluenceApp() {
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [confirmEmailInfo, setConfirmEmailInfo] = useState(null); // { role, email } while awaiting email confirmation
+  const [pendingBuilderView, setPendingBuilderView] = useState(null); // 'builder'|'gigbuilder' to resume after sign-in
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
@@ -342,97 +343,29 @@ function NfluenceApp() {
   const isRealUser = !!user?.id;
   const brandDemoCampaigns = isRealUser ? [] : mergedDemos;
 
-  const handlePublish = async (campaignData, account = {}) => {
-    const newCampaign = {
-      ...campaignData,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      stage: 'open',
-      spotsFilled: 0,
-      creators: { pending: [], approved: [] },
-    };
-
+  const handlePublish = async (campaignData, account = {}, result = {}) => {
     const sb = getSB();
-    let activeUser = user;
-
-    // Build the brand profile from data collected in the builder
-    const brandProfile = {
-      name: campaignData.brand,
-      tagline: campaignData.tagline,
-      email: account?.email,
-      phone: account?.phone,
-      location: [campaignData.city, campaignData.state, campaignData.country].filter(Boolean).join(", "),
-      city: campaignData.city,
-      state: campaignData.state,
-      country: campaignData.country,
-      website: campaignData.website,
-      logoUrl: campaignData.logoUrl,
-      bannerUrl: campaignData.bannerUrl,
-      industry: campaignData.industry,
-      bio: campaignData.bio,
-      socialLinks: campaignData.socialLinks,
-    };
-
-    // If not signed in, sign up with the credentials from the account step
-    if (!activeUser && account?.email) {
-      if (sb && account?.password) {
-        try {
-          console.log('[auth] signUp() — handlePublish:', { email: account.email, brand: campaignData.brand });
-          const { data, error } = await sb.auth.signUp({
-            email: account.email,
-            password: account.password,
-            options: { data: { name: campaignData.brand, role: 'brand' } },
-          });
-          console.log('[auth] signUp() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
-          if (error) throw error;
-          if (data.user) {
-            activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
-            setAuthSession(data.session);
-            setUser(activeUser);
-            await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: campaignData.brand, role: 'brand' });
-          }
-        } catch (err) {
-          console.error('Sign up failed during publish:', err);
-        }
-      }
-      // Demo-mode fallback: still populate the user state even without Supabase
-      if (!activeUser) {
-        console.log('[auth] handlePublish — demo-mode fallback (no supabase user created)');
-        activeUser = { ...brandProfile };
-        setUser(activeUser);
-      }
-    }
-
-    // Persist campaign to Supabase
-    if (activeUser?.id && sb) {
+    const campaignId = result.campaignId;
+    if (!campaignId) console.warn('[handlePublish] no campaignId from Edge Function — campaign will not persist');
+    // The Edge Function created the campaign as a draft (and charged if needed). Persist the
+    // brand profile collected in the builder, then flip the draft live.
+    if (sb && campaignId) {
       try {
-        const { data, error } = await sb.from('campaigns').insert({
-          brand_id: activeUser.id,
-          brand_name: campaignData.brand,
-          name: campaignData.campaign,
-          description: campaignData.description,
-          stage: 'open',
-          comp_type: campaignData.compType,
-          comp: campaignData.comp,
-          spots_total: campaignData.spotsTotal,
-          platforms: campaignData.platforms,
-          deliverables: campaignData.deliverables,
-          following: campaignData.following,
-          deadline: campaignData.deadline,
-          location: campaignData.location,
-          requirements: campaignData.requirements,
-          products: campaignData.products,
-          featured: campaignData.featured,
-          featured_weeks: campaignData.featuredWeeks,
-          featured_until: campaignData.featured
-            ? new Date(Date.now() + (campaignData.featuredWeeks || 7) * 24 * 60 * 60 * 1000).toISOString()
-            : null,
-        }).select().single();
-        if (!error && data) newCampaign.id = data.id;
-      } catch (err) {
-        console.error('Failed to save campaign to Supabase:', err);
-      }
+        const { data: { session } } = await sb.auth.getSession();
+        const uid = session?.user?.id;
+        if (uid) {
+          await sb.from('profiles').upsert({
+            id: uid, name: campaignData.brand, tagline: campaignData.tagline,
+            location: [campaignData.city, campaignData.state, campaignData.country].filter(Boolean).join(", "),
+            city: campaignData.city, state: campaignData.state, country: campaignData.country,
+            website: campaignData.website, logo_url: campaignData.logoUrl, banner_url: campaignData.bannerUrl,
+            industry: campaignData.industry, bio: campaignData.bio, social_links: campaignData.socialLinks, role: 'brand',
+          });
+        }
+        await sb.from('campaigns').update({ stage: 'open' }).eq('id', campaignId);
+      } catch (err) { console.error('Failed to finalize campaign:', err); }
     }
+    const newCampaign = { ...campaignData, id: campaignId || Date.now(), createdAt: new Date().toISOString(), stage: 'open', spotsFilled: 0, creators: { pending: [], approved: [] } };
 
     if (myCampaigns.length === 0) {
       setPendingCampaign(newCampaign);
@@ -624,6 +557,7 @@ function NfluenceApp() {
       activeUser = { ...data, logoUrl: data.logoPreview, bannerUrl: data.bannerPreview };
       setUser(activeUser);
     }
+    if (pendingBuilderView) { const v = pendingBuilderView; setPendingBuilderView(null); setView(v); return; }
     setView('dashboard');
   };
 
@@ -720,6 +654,8 @@ function NfluenceApp() {
       setSelectedCampaign(signInRedirect);
       setSignInRedirect(null);
       setView('detail');
+    } else if (pendingBuilderView) {
+      const v = pendingBuilderView; setPendingBuilderView(null); setView(v);
     } else {
       setView('dashboard');
     }
@@ -1025,8 +961,14 @@ function NfluenceApp() {
     }));
   };
 
+  // Require an authenticated brand before entering a builder; remember intent and resume post-auth.
+  const goToBuilder = (target) => {
+    if (user) setView(target);
+    else { setPendingBuilderView(target); setView('signupchoice'); }
+  };
+
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
-  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => setView("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
+  if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => goToBuilder("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("signupchoice")} />;
   if (view === "signupchoice") return <SignUpChoice onBack={() => setView("signin")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
@@ -1100,6 +1042,9 @@ function NfluenceApp() {
     }} onFaq={() => setView("faq")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
+  if ((view === "builder" || view === "gigbuilder") && !user) {
+    return <SignUpChoice onBack={() => setView("landing")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
+  }
   if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
   if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} session={authSession} />;
   if (view === "edit" && selectedCampaign) return <CampaignEditor campaign={selectedCampaign} onBack={() => setView("dashboard")} session={authSession} onSave={async (updated) => {
@@ -1123,6 +1068,9 @@ function NfluenceApp() {
         spots_total: updated.spots_total,
         location: updated.location,
         niches: updated.niches,
+        featured: updated.featured,
+        featured_weeks: updated.featured ? (updated.featuredWeeks || updated.featured_weeks || 0) : 0,
+        featured_until: updated.featured ? new Date(Date.now() + ((updated.featuredWeeks || 7) * 86400000)).toISOString() : null,
       }).eq('id', updated.id).catch(console.error);
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
@@ -1274,7 +1222,7 @@ function NfluenceApp() {
           <span style={{ color: "rgba(255,255,255,.4)" }}>launch creator campaigns<br />that </span><span style={{ color: "#fff" }}>run on autopilot</span>
         </h1>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
-          <button onClick={() => setView("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
+          <button onClick={() => goToBuilder("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
             start a campaign
           </button>
           <button onClick={() => setView(creatorUser ? "creatordashboard" : "creatorsignin")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>

@@ -248,7 +248,8 @@ const DEMO_MESSAGES = {
 // ── Messages ──
 
 
-const VALID_PROMOS = { "LAUNCH50": 0.5, "NFLUENCE20": 0.2, "FEATURED10": 0.1 };
+// Promo codes now live server-side only (Edge Function VALID_PROMOS). The client never
+// validates or applies discounts — it shows the server quote. (Phase 2+3 payment refactor.)
 
 function businessDaysSince(dateStr) {
   if (!dateStr) return 0;

@@ -7,7 +7,14 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:8080',
+  'http://localhost:8799',
 ];
+
+// ── Server-side pricing — the ONLY source of truth. Never trust client amounts. ──
+const FEATURED_PRICES_CENTS: Record<number, number> = { 1: 299, 7: 1499, 30: 4999 };
+const GIG_PRICE_CENTS = 4999;
+const VALID_PROMOS: Record<string, number> = { LAUNCH50: 0.50, NFLUENCE20: 0.20, FEATURED10: 0.10 };
+const CURRENCY = 'usd';
 
 function corsHeaders(origin: string | null): Record<string, string> {
   const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -17,84 +24,213 @@ function corsHeaders(origin: string | null): Record<string, string> {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
 }
-
 function json(body: unknown, status: number, cors: Record<string, string>): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
+  return new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+
+// "$500" | "500" | 500 → cents
+function parseAmountToCents(v: unknown): number {
+  if (typeof v === 'number' && isFinite(v)) return Math.round(v * 100);
+  if (typeof v !== 'string') return 0;
+  const n = parseFloat(v.replace(/[^0-9.]/g, ''));
+  return isFinite(n) ? Math.round(n * 100) : 0;
+}
+const isPaidComp = (t: unknown) => t === 'paid' || t === 'product+paid';
+
+// Price a campaign-like record (accepts both DB snake_case and client camelCase).
+function priceCampaign(rec: Record<string, unknown>): { escrowCents: number; featuredCents: number } {
+  const compType = (rec.comp_type ?? rec.compType) as unknown;
+  const spots = Number(rec.spots_total ?? rec.spotsTotal ?? 0) || 0;
+  const featured = !!rec.featured;
+  const weeks = Number(rec.featured_weeks ?? rec.featuredWeeks ?? 0) || 0;
+  const escrowCents = isPaidComp(compType) && spots > 0 ? parseAmountToCents(rec.comp) * spots : 0;
+  const featuredCents = featured ? (FEATURED_PRICES_CENTS[weeks] ?? 0) : 0;
+  return { escrowCents, featuredCents };
 }
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
   const cors = corsHeaders(origin);
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: cors });
-  }
-
-  // Require STRIPE_SECRET_KEY
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  if (!stripeKey) {
-    return json({ error: 'Payment service not configured' }, 500, cors);
-  }
-
-  // Supabase auth — require a valid Bearer token
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return json({ error: 'Unauthorized' }, 401, cors);
-  }
-  const token = authHeader.slice(7);
-
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return json({ error: 'Auth service not configured' }, 500, cors);
-  }
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!stripeKey) return json({ error: 'Payment service not configured' }, 500, cors);
+  if (!supabaseUrl || !supabaseAnonKey || !serviceKey) return json({ error: 'Auth service not configured' }, 500, cors);
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401, cors);
+  const token = authHeader.slice(7);
+
+  // User-scoped client (RLS) — used for auth + the user's own reads/writes (campaigns, payments insert_own).
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) {
-    return json({ error: 'Unauthorized' }, 401, cors);
+  if (authError || !user) return json({ error: 'Unauthorized' }, 401, cors);
+
+  // Service-role client — privileged writes (promo_redemptions has no INSERT/DELETE policy).
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+  let body: any;
+  try { body = await req.json(); } catch { return json({ error: 'Invalid JSON body' }, 400, cors); }
+  const action = body?.action;
+  if (action !== 'quote' && action !== 'charge' && action !== 'cancel') return json({ error: 'invalid action' }, 400, cors);
+
+  // ── CANCEL — roll back an abandoned/failed charge; sweep stale drafts (Layer 1/2 cleanup) ──
+  if (action === 'cancel') {
+    const piId: string | undefined = typeof body.paymentIntentId === 'string' ? body.paymentIntentId : undefined;
+    const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
+
+    if (piId) {
+      const { data: pays } = await admin.from('payments').select('id, brand_id').eq('stripe_payment_intent_id', piId);
+      const own = (pays ?? []).filter((p: any) => p.brand_id === user.id).map((p: any) => p.id);
+      if (own.length) {
+        await admin.from('promo_redemptions').delete().in('payment_id', own);
+        await admin.from('payments').delete().in('id', own);
+      }
+    }
+    if (cid) {
+      const { data: camp } = await admin.from('campaigns').select('id, brand_id, stage').eq('id', cid).maybeSingle();
+      if (camp && camp.brand_id === user.id && camp.stage === 'draft') {
+        const { data: pays } = await admin.from('payments').select('id').eq('campaign_id', cid);
+        const ids = (pays ?? []).map((p: any) => p.id);
+        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
+        await admin.from('campaigns').delete().eq('id', cid).eq('brand_id', user.id);
+      }
+    }
+    if (!piId && !cid) {
+      // Sweep ALL of the user's stale drafts (and their linked payments/redemptions).
+      const { data: drafts } = await admin.from('campaigns').select('id').eq('brand_id', user.id).eq('stage', 'draft');
+      const draftIds = (drafts ?? []).map((d: any) => d.id);
+      if (draftIds.length) {
+        const { data: pays } = await admin.from('payments').select('id').in('campaign_id', draftIds);
+        const ids = (pays ?? []).map((p: any) => p.id);
+        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
+        await admin.from('campaigns').delete().in('id', draftIds).eq('brand_id', user.id);
+      }
+    }
+    return json({ ok: true }, 200, cors);
   }
 
-  // Parse request body
-  let body: { amount?: unknown; currency?: unknown; metadata?: unknown };
+  // ── QUOTE / CHARGE ──
+  const type = body?.type;
+  if (type !== 'campaign_new' && type !== 'campaign_edit' && type !== 'gig') return json({ error: 'invalid type' }, 400, cors);
+  const features = body?.features ?? {};
+  const campaignId: string | undefined = typeof body?.campaignId === 'string' ? body.campaignId : undefined;
+
+  // Promo validation (server-side). One-use check only enforced on charge (so quote can preview).
+  const promo = typeof body?.promoCode === 'string' ? body.promoCode.trim().toUpperCase() : '';
+  let discountPct = 0;
+  if (promo) {
+    if (!(promo in VALID_PROMOS)) return json({ error: 'invalid promo code' }, 400, cors);
+    discountPct = VALID_PROMOS[promo];
+    if (action === 'charge') {
+      const { data: existing } = await admin.from('promo_redemptions').select('id').eq('user_id', user.id).eq('promo_code', promo).maybeSingle();
+      if (existing) return json({ error: 'promo code already used' }, 400, cors);
+    }
+  }
+
+  // Compute subtotal (server-side) per type.
+  let subtotalCents = 0;
+  let breakdown: Record<string, number> = {};
+  let draftId: string | null = null;
+
+  if (type === 'gig') {
+    subtotalCents = GIG_PRICE_CENTS;
+    breakdown = { gig: GIG_PRICE_CENTS };
+  } else if (type === 'campaign_edit') {
+    if (!campaignId) return json({ error: 'campaignId required' }, 400, cors);
+    const { data: existing, error } = await supabase.from('campaigns').select('*').eq('id', campaignId).maybeSingle();
+    if (error || !existing) return json({ error: 'campaign not found' }, 404, cors);
+    const wantFeatured = !!features.featured && !existing.featured;
+    const featuredCents = wantFeatured ? (FEATURED_PRICES_CENTS[Number(features.featuredWeeks) || 0] ?? 0) : 0;
+    const newEscrow = priceCampaign({ comp_type: features.compType ?? existing.comp_type, comp: features.comp ?? existing.comp, spots_total: features.spotsTotal ?? existing.spots_total }).escrowCents;
+    const oldEscrow = priceCampaign(existing).escrowCents;
+    const escrowDeltaCents = Math.max(0, newEscrow - oldEscrow);
+    breakdown = { escrow: escrowDeltaCents, featured: featuredCents };
+    subtotalCents = escrowDeltaCents + featuredCents;
+  } else { // campaign_new
+    const { escrowCents, featuredCents } = priceCampaign(features);
+    breakdown = { escrow: escrowCents, featured: featuredCents };
+    subtotalCents = escrowCents + featuredCents;
+    if (action === 'charge') {
+      const featuredUntil = features.featured ? new Date(Date.now() + ((Number(features.featuredWeeks) || 7) * 86400000)).toISOString() : null;
+      const { data: created, error } = await supabase.from('campaigns').insert({
+        brand_id: user.id,
+        brand_name: features.brand ?? features.brandName ?? '',
+        name: features.campaign ?? features.name ?? '',
+        description: features.description ?? null,
+        stage: 'draft',
+        comp_type: features.compType ?? null,
+        comp: features.comp ?? null,
+        spots_total: features.spotsTotal ?? null,
+        platforms: features.platforms ?? [],
+        deliverables: features.deliverables ?? {},
+        following: features.following ?? null,
+        deadline: features.deadline ?? null,
+        location: features.location ?? null,
+        requirements: features.requirements ?? null,
+        products: features.products ?? [],
+        featured: !!features.featured,
+        featured_weeks: features.featured ? (Number(features.featuredWeeks) || 7) : 0,
+        featured_until: featuredUntil,
+      }).select('id').single();
+      if (error || !created) return json({ error: 'could not create draft campaign' }, 500, cors);
+      draftId = created.id;
+    }
+  }
+
+  // Promos discount the FEE portion only (featured/gig) — never escrow, which is creator payment.
+  const escrowCents = breakdown.escrow ?? 0;
+  const discountedCents = escrowCents + Math.max(0, Math.round((subtotalCents - escrowCents) * (1 - discountPct)));
+
+  if (action === 'quote') {
+    return json({ amount_cents: discountedCents, subtotal_cents: subtotalCents, discount_pct: discountPct, breakdown }, 200, cors);
+  }
+
+  // ── CHARGE ──
+  const effectiveCampaignId = type === 'campaign_new' ? draftId : (campaignId ?? null);
+  const paymentType = type === 'gig' ? 'campaign_fee' : ((breakdown.escrow ?? 0) > 0 ? 'escrow' : 'featured');
+
   try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'Invalid JSON body' }, 400, cors);
-  }
+    // Zero-cost path — skip Stripe entirely.
+    if (discountedCents === 0) {
+      if (promo) await admin.from('promo_redemptions').insert({ user_id: user.id, promo_code: promo, payment_id: null });
+      return json({ free: true, client_secret: null, amount_cents: 0, campaignId: effectiveCampaignId, breakdown }, 200, cors);
+    }
 
-  const { amount, currency, metadata } = body;
-
-  // Validate amount — must be a positive integer (cents)
-  if (typeof amount !== 'number' || !Number.isInteger(amount) || amount <= 0) {
-    return json({ error: 'amount must be a positive integer representing cents' }, 400, cors);
-  }
-
-  // Validate currency
-  if (!currency || typeof currency !== 'string' || currency.trim().length === 0) {
-    return json({ error: 'currency is required' }, 400, cors);
-  }
-
-  // Create PaymentIntent
-  try {
     const stripe = new Stripe(stripeKey);
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: currency.toLowerCase(),
-      metadata: metadata && typeof metadata === 'object' ? metadata as Record<string, string> : {},
+      amount: discountedCents,
+      currency: CURRENCY,
+      metadata: { user_id: user.id, type, campaign_id: effectiveCampaignId ?? '', promo_code: promo },
       automatic_payment_methods: { enabled: true },
     });
 
-    return json({ client_secret: paymentIntent.client_secret }, 200, cors);
+    const { data: pay } = await admin.from('payments').insert({
+      brand_id: user.id,
+      campaign_id: effectiveCampaignId,
+      stripe_payment_intent_id: paymentIntent.id,
+      amount_cents: discountedCents,
+      type: paymentType,
+      status: 'pending',
+      promo_code: promo || null,
+      discount_pct: discountPct * 100,
+    }).select('id').single();
+
+    if (promo) await admin.from('promo_redemptions').insert({ user_id: user.id, promo_code: promo, payment_id: pay?.id ?? null });
+
+    return json({
+      client_secret: paymentIntent.client_secret,
+      payment_intent_id: paymentIntent.id,
+      amount_cents: discountedCents,
+      campaignId: effectiveCampaignId,
+      breakdown,
+    }, 200, cors);
   } catch (err) {
-    if (err instanceof Stripe.errors.StripeError) {
-      return json({ error: err.message, code: err.code }, err.statusCode ?? 500, cors);
-    }
+    if (draftId) await admin.from('campaigns').delete().eq('id', draftId).eq('brand_id', user.id); // don't orphan a draft on charge failure
+    if (err instanceof Stripe.errors.StripeError) return json({ error: err.message, code: err.code }, err.statusCode ?? 500, cors);
     return json({ error: 'Internal server error' }, 500, cors);
   }
 });
