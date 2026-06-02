@@ -306,6 +306,14 @@ function NfluenceApp() {
     return [...featured, ...regular];
   }, [demoCampaignOverrides, demoCampaignReviewOverrides]);
 
+  // Item 3 — systemic demo-data gate.
+  // A real authenticated brand (one with a Supabase user id) must only ever see their OWN
+  // campaigns/reviews in the dashboard & reviews views — never the demo seed data, which is
+  // reserved for the public landing/browse experience. This is the single source of truth for
+  // "should this signed-in account see demo content" so we don't have to whack-a-mole each view.
+  const isRealUser = !!user?.id;
+  const brandDemoCampaigns = isRealUser ? [] : mergedDemos;
+
   const handlePublish = async (campaignData, account = {}) => {
     const newCampaign = {
       ...campaignData,
@@ -985,9 +993,9 @@ function NfluenceApp() {
   }
   if (view === "creatorprofile" && selectedCreatorProfile) return <CreatorPublicProfile creator={selectedCreatorProfile} onBack={() => setView(creatorProfileReturnView)} onMessage={selectedCampaign ? () => handleOpenMessage(selectedCampaign, selectedCreatorProfile.name, "creatorprofile") : null} />;
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
-  if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
+  if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={mergedDemos} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
       setUser(prev => ({ ...prev, ...updatedUser }));
       const sb = getSB();
       if (updatedUser?.id && sb) {

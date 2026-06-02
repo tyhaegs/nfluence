@@ -867,6 +867,23 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
               {user?.location && <div style={{ fontSize: ".9rem", opacity: .35, marginTop: 3 }}>{user.location.split(",").map(s => s.trim()).filter(Boolean).join(", ")}</div>}
               {user?.website && <a href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: ".88rem", opacity: .65, color: "rgba(255,255,255,.4)", textDecoration: "underline", display: "inline-block", marginTop: 3 }}>{user.website}</a>}
               {user?.bio && <div style={{ fontSize: ".9rem", opacity: .55, marginTop: 6, lineHeight: 1.6, maxWidth: "min(520px, 100%)" }}>{user.bio}</div>}
+              {/* Social links */}
+              {(() => {
+                const entries = Object.entries(user?.socialLinks || {}).filter(([, url]) => url && String(url).trim());
+                if (!entries.length) return null;
+                return (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+                    {entries.map(([key, url]) => (
+                      <a key={key} href={String(url).startsWith("http") ? url : `https://${url}`} target="_blank" rel="noopener noreferrer"
+                        style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "border-color .15s, background .15s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.3)"; e.currentTarget.style.background = "rgba(255,255,255,.1)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.background = "rgba(255,255,255,.06)"; }}>
+                        {PLAT_SVGS_SMALL[key] || <span style={{ fontSize: ".7rem", opacity: .6 }}>{key.charAt(0)}</span>}
+                      </a>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
@@ -899,7 +916,8 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
         {/* Scheduled Calls */}
         {(() => {
-          const merged = { ...DEMO_SCHEDULED_CALLS, ...scheduledCalls };
+          // Real signed-in brands only see their own scheduled calls — demo calls are public-only (Item 3).
+          const merged = user?.id ? scheduledCalls : { ...DEMO_SCHEDULED_CALLS, ...scheduledCalls };
           const allCalls = Object.entries(merged).flatMap(([key, calls]) => {
             const parts = key.split("::");
             const brand = parts[0], campaign = parts[1], creator = parts[2];
