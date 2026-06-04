@@ -3386,7 +3386,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                     res = await callStripePaymentV2({ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() }, session?.access_token);
                     if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                     setShowPayModal(false);
-                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId });
+                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId, free: !!res.free });
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
                     if (res && (res.campaignId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', campaignId: res.campaignId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
@@ -3535,6 +3535,7 @@ function Preview({ brand, campaign, platforms, terms }) {
 function GigListingBuilder({ onBack, onPublish, session }) {
   const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [gigComingSoon, setGigComingSoon] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
   const [pendingGigData, setPendingGigData] = useState(null);
@@ -4021,9 +4022,16 @@ function GigListingBuilder({ onBack, onPublish, session }) {
         {step < 4 ? (
           <button className="nf-btn" disabled={!canProceed} onClick={next}>next</button>
         ) : (
-          <button className="nf-btn" disabled={!canProceed} onClick={() => setShowPayModal(true)}>publish gig — $49.99</button>
+          <button className="nf-btn" disabled={!canProceed} onClick={() => setGigComingSoon(true)}>publish gig</button>
         )}
       </div>
+      {gigComingSoon && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+          <div style={{ maxWidth: 520, textAlign: "center", padding: "14px 18px", borderRadius: 12, border: "1px solid rgba(255,200,60,.25)", background: "rgba(255,200,60,.06)", color: "rgba(255,220,140,.9)", fontSize: ".88rem" }}>
+            Gig listings are coming soon — we're putting the finishing touches on this. Your details aren't lost; check back shortly.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -5354,6 +5362,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     )}
                     {isUserCampaign && (
                       <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
+                    )}
+                    {c._publishing && (
+                      <div style={{ position: "absolute", top: 10, left: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,200,60,.3)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,220,140,.9)", zIndex: 3 }}>publishing…</div>
                     )}
                   </div>
                   <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -8436,8 +8447,9 @@ function NfluenceApp() {
     const sb = getSB();
     const campaignId = result.campaignId;
     if (!campaignId) console.warn('[handlePublish] no campaignId from Edge Function — campaign will not persist');
-    // The Edge Function created the campaign as a draft (and charged if needed). Persist the
-    // brand profile collected in the builder, then flip the draft live.
+    // The Edge Function created the campaign (charging if needed). Persist the brand profile
+    // collected in the builder. We do NOT flip stage here — free campaigns are published by
+    // the EF; paid ones flip draft→open via the Stripe webhook once payment succeeds.
     if (sb && campaignId) {
       try {
         const { data: { session } } = await sb.auth.getSession();
@@ -8451,10 +8463,12 @@ function NfluenceApp() {
             industry: campaignData.industry, bio: campaignData.bio, social_links: campaignData.socialLinks, role: 'brand',
           });
         }
-        await sb.from('campaigns').update({ stage: 'open' }).eq('id', campaignId);
       } catch (err) { console.error('Failed to finalize campaign:', err); }
     }
-    const newCampaign = { ...campaignData, id: campaignId || Date.now(), createdAt: new Date().toISOString(), stage: 'open', spotsFilled: 0, creators: { pending: [], approved: [] } };
+    // Paid campaigns publish asynchronously via the webhook; show optimistically with a
+    // "publishing…" badge and reconcile against the authoritative DB stage shortly after.
+    const publishing = !result.free;
+    const newCampaign = { ...campaignData, id: campaignId || Date.now(), createdAt: new Date().toISOString(), stage: 'open', spotsFilled: 0, creators: { pending: [], approved: [] }, _publishing: publishing };
 
     if (myCampaigns.length === 0) {
       setPendingCampaign(newCampaign);
@@ -8462,6 +8476,17 @@ function NfluenceApp() {
     } else {
       setMyCampaigns(prev => [newCampaign, ...prev]);
       setView('dashboard');
+    }
+
+    if (sb && campaignId && publishing) {
+      setTimeout(async () => {
+        try {
+          const { data } = await sb.from('campaigns').select('stage').eq('id', campaignId).maybeSingle();
+          const live = data?.stage === 'open';
+          setMyCampaigns(prev => prev.map(c => c.id === campaignId ? { ...c, _publishing: !live, stage: live ? 'open' : c.stage } : c));
+          setPendingCampaign(prev => (prev && prev.id === campaignId) ? { ...prev, _publishing: !live } : prev);
+        } catch (_) {}
+      }, 3000);
     }
   };
 
@@ -8776,6 +8801,8 @@ function NfluenceApp() {
     setCreatorProfile({});
     setCreatorApplied([]);
     setCreatorActive([]);
+    setConfirmEmailInfo(null);
+    setPendingBuilderView(null);
     setView('landing');
   };
 
@@ -8875,6 +8902,8 @@ function NfluenceApp() {
     setCreatorActive([]);
     setScheduledCalls({});
     setAllMessages(DEMO_MESSAGES);
+    setConfirmEmailInfo(null);
+    setPendingBuilderView(null);
     setView('landing');
   };
 
@@ -9157,9 +9186,6 @@ function NfluenceApp() {
         spots_total: updated.spots_total,
         location: updated.location,
         niches: updated.niches,
-        featured: updated.featured,
-        featured_weeks: updated.featured ? (updated.featuredWeeks || updated.featured_weeks || 0) : 0,
-        featured_until: updated.featured ? new Date(Date.now() + ((updated.featuredWeeks || 7) * 86400000)).toISOString() : null,
       }).eq('id', updated.id).catch(console.error);
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;

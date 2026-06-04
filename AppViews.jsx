@@ -1006,6 +1006,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     {isUserCampaign && (
                       <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
                     )}
+                    {c._publishing && (
+                      <div style={{ position: "absolute", top: 10, left: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,200,60,.3)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,220,140,.9)", zIndex: 3 }}>publishing…</div>
+                    )}
                   </div>
                   <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ paddingTop: 34 }}>

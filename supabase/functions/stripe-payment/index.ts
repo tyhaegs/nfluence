@@ -83,8 +83,8 @@ Deno.serve(async (req) => {
     const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
 
     if (piId) {
-      const { data: pays } = await admin.from('payments').select('id, brand_id').eq('stripe_payment_intent_id', piId);
-      const own = (pays ?? []).filter((p: any) => p.brand_id === user.id).map((p: any) => p.id);
+      const { data: pays } = await admin.from('payments').select('id, brand_id, status').eq('stripe_payment_intent_id', piId);
+      const own = (pays ?? []).filter((p: any) => p.brand_id === user.id && p.status === 'pending').map((p: any) => p.id);
       if (own.length) {
         await admin.from('promo_redemptions').delete().in('payment_id', own);
         await admin.from('payments').delete().in('id', own);
@@ -93,10 +93,10 @@ Deno.serve(async (req) => {
     if (cid) {
       const { data: camp } = await admin.from('campaigns').select('id, brand_id, stage').eq('id', cid).maybeSingle();
       if (camp && camp.brand_id === user.id && camp.stage === 'draft') {
-        const { data: pays } = await admin.from('payments').select('id').eq('campaign_id', cid);
-        const ids = (pays ?? []).map((p: any) => p.id);
+        const { data: pays } = await admin.from('payments').select('id, status').eq('campaign_id', cid);
+        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
         if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
-        await admin.from('campaigns').delete().eq('id', cid).eq('brand_id', user.id);
+        await admin.from('campaigns').delete().eq('id', cid).eq('brand_id', user.id).eq('stage', 'draft');
       }
     }
     if (!piId && !cid) {
@@ -104,10 +104,10 @@ Deno.serve(async (req) => {
       const { data: drafts } = await admin.from('campaigns').select('id').eq('brand_id', user.id).eq('stage', 'draft');
       const draftIds = (drafts ?? []).map((d: any) => d.id);
       if (draftIds.length) {
-        const { data: pays } = await admin.from('payments').select('id').in('campaign_id', draftIds);
-        const ids = (pays ?? []).map((p: any) => p.id);
+        const { data: pays } = await admin.from('payments').select('id, status').in('campaign_id', draftIds);
+        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
         if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
-        await admin.from('campaigns').delete().in('id', draftIds).eq('brand_id', user.id);
+        await admin.from('campaigns').delete().in('id', draftIds).eq('brand_id', user.id).eq('stage', 'draft');
       }
     }
     return json({ ok: true }, 200, cors);
@@ -119,16 +119,13 @@ Deno.serve(async (req) => {
   const features = body?.features ?? {};
   const campaignId: string | undefined = typeof body?.campaignId === 'string' ? body.campaignId : undefined;
 
-  // Promo validation (server-side). One-use check only enforced on charge (so quote can preview).
+  // Promo validity is checked here for both quote & charge; one-use enforcement happens
+  // atomically at charge time via an insert-first claim (relies on UNIQUE(user_id, promo_code)).
   const promo = typeof body?.promoCode === 'string' ? body.promoCode.trim().toUpperCase() : '';
   let discountPct = 0;
   if (promo) {
     if (!(promo in VALID_PROMOS)) return json({ error: 'invalid promo code' }, 400, cors);
     discountPct = VALID_PROMOS[promo];
-    if (action === 'charge') {
-      const { data: existing } = await admin.from('promo_redemptions').select('id').eq('user_id', user.id).eq('promo_code', promo).maybeSingle();
-      if (existing) return json({ error: 'promo code already used' }, 400, cors);
-    }
   }
 
   // Compute subtotal (server-side) per type.
@@ -156,7 +153,7 @@ Deno.serve(async (req) => {
     subtotalCents = escrowCents + featuredCents;
     if (action === 'charge') {
       const featuredUntil = features.featured ? new Date(Date.now() + ((Number(features.featuredWeeks) || 7) * 86400000)).toISOString() : null;
-      const { data: created, error } = await supabase.from('campaigns').insert({
+      const { data: created, error } = await admin.from('campaigns').insert({
         brand_id: user.id,
         brand_name: features.brand ?? features.brandName ?? '',
         name: features.campaign ?? features.name ?? '',
@@ -193,18 +190,41 @@ Deno.serve(async (req) => {
   const effectiveCampaignId = type === 'campaign_new' ? draftId : (campaignId ?? null);
   const paymentType = type === 'gig' ? 'campaign_fee' : ((breakdown.escrow ?? 0) > 0 ? 'escrow' : 'featured');
 
+  let promoClaimed = false;
   try {
-    // Zero-cost path — skip Stripe entirely.
+    // Zero-cost path — skip Stripe entirely. Per policy we do NOT claim a promo
+    // redemption when the charge is free (discountedCents === 0).
     if (discountedCents === 0) {
-      if (promo) await admin.from('promo_redemptions').insert({ user_id: user.id, promo_code: promo, payment_id: null });
+      if (type === 'campaign_new' && draftId) {
+        await admin.from('campaigns').update({ stage: 'open' }).eq('id', draftId).eq('brand_id', user.id);
+      }
       return json({ free: true, client_secret: null, amount_cents: 0, campaignId: effectiveCampaignId, breakdown }, 200, cors);
+    }
+
+    // Atomic one-use promo claim — insert FIRST so the UNIQUE(user_id, promo_code)
+    // constraint (not a read-then-write check) enforces single use. Abort before any PI.
+    if (promo) {
+      const { error: claimErr } = await admin.from('promo_redemptions')
+        .insert({ user_id: user.id, promo_code: promo, payment_id: null });
+      if (claimErr) {
+        if ((claimErr as any).code === '23505') return json({ error: 'promo code already used' }, 400, cors);
+        return json({ error: 'could not apply promo code' }, 500, cors);
+      }
+      promoClaimed = true;
     }
 
     const stripe = new Stripe(stripeKey);
     const paymentIntent = await stripe.paymentIntents.create({
       amount: discountedCents,
       currency: CURRENCY,
-      metadata: { user_id: user.id, type, campaign_id: effectiveCampaignId ?? '', promo_code: promo },
+      metadata: {
+        user_id: user.id,
+        type,
+        campaign_id: effectiveCampaignId ?? '',
+        promo_code: promo,
+        featured: features.featured ? '1' : '0',
+        featured_weeks: String(Number(features.featuredWeeks) || 7),
+      },
       automatic_payment_methods: { enabled: true },
     });
 
@@ -219,7 +239,11 @@ Deno.serve(async (req) => {
       discount_pct: discountPct * 100,
     }).select('id').single();
 
-    if (promo) await admin.from('promo_redemptions').insert({ user_id: user.id, promo_code: promo, payment_id: pay?.id ?? null });
+    // Link the claimed redemption to its payment now that the row exists.
+    if (promo && pay?.id) {
+      await admin.from('promo_redemptions').update({ payment_id: pay.id })
+        .eq('user_id', user.id).eq('promo_code', promo);
+    }
 
     return json({
       client_secret: paymentIntent.client_secret,
@@ -229,6 +253,8 @@ Deno.serve(async (req) => {
       breakdown,
     }, 200, cors);
   } catch (err) {
+    // Roll back anything created before the failure so nothing is orphaned/locked.
+    if (promoClaimed) await admin.from('promo_redemptions').delete().eq('user_id', user.id).eq('promo_code', promo);
     if (draftId) await admin.from('campaigns').delete().eq('id', draftId).eq('brand_id', user.id); // don't orphan a draft on charge failure
     if (err instanceof Stripe.errors.StripeError) return json({ error: err.message, code: err.code }, err.statusCode ?? 500, cors);
     return json({ error: 'Internal server error' }, 500, cors);

@@ -2986,7 +2986,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                     res = await callStripePaymentV2({ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() }, session?.access_token);
                     if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                     setShowPayModal(false);
-                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId });
+                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId, free: !!res.free });
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
                     if (res && (res.campaignId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', campaignId: res.campaignId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
@@ -3135,6 +3135,7 @@ function Preview({ brand, campaign, platforms, terms }) {
 function GigListingBuilder({ onBack, onPublish, session }) {
   const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [gigComingSoon, setGigComingSoon] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
   const [pendingGigData, setPendingGigData] = useState(null);
@@ -3621,9 +3622,16 @@ function GigListingBuilder({ onBack, onPublish, session }) {
         {step < 4 ? (
           <button className="nf-btn" disabled={!canProceed} onClick={next}>next</button>
         ) : (
-          <button className="nf-btn" disabled={!canProceed} onClick={() => setShowPayModal(true)}>publish gig — $49.99</button>
+          <button className="nf-btn" disabled={!canProceed} onClick={() => setGigComingSoon(true)}>publish gig</button>
         )}
       </div>
+      {gigComingSoon && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+          <div style={{ maxWidth: 520, textAlign: "center", padding: "14px 18px", borderRadius: 12, border: "1px solid rgba(255,200,60,.25)", background: "rgba(255,200,60,.06)", color: "rgba(255,220,140,.9)", fontSize: ".88rem" }}>
+            Gig listings are coming soon — we're putting the finishing touches on this. Your details aren't lost; check back shortly.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -288,9 +288,14 @@ alter table payments enable row level security;
 alter table subscriptions enable row level security;
 alter table promo_redemptions enable row level security;
 
--- profiles: users can read all, only update their own
-create policy "profiles_read_all" on profiles for select using (true);
+-- profiles: users can read ONLY their own row (H-1 fix — emails are no longer world-readable).
+-- Public-safe fields are exposed via the profiles_public view below.
+create policy "profiles_read_own" on profiles for select using (auth.uid() = id);
 create policy "profiles_update_own" on profiles for update using (auth.uid() = id);
+
+-- public-safe projection of profiles (no email / PII) for anonymous + cross-user reads
+create or replace view profiles_public as
+  select id, name, role, logo_url, banner_url, tagline from profiles;
 
 -- brand_profiles: public read, own write
 create policy "brand_profiles_read_all" on brand_profiles for select using (true);
@@ -302,7 +307,10 @@ create policy "creator_profiles_write_own" on creator_profiles for all using (au
 
 -- campaigns: public read, brand owns write
 create policy "campaigns_read_all" on campaigns for select using (true);
-create policy "campaigns_insert_own" on campaigns for insert with check (auth.uid() = brand_id);
+-- INSERT restricted to draft + non-featured (Phase 4 P3-1 fix); publishing (stage->open),
+-- turning featured on, and featured_until are gated by enforce_campaign_payment_gate below.
+create policy "campaigns_insert_own_draft" on campaigns for insert to authenticated
+  with check (auth.uid() = brand_id and stage = 'draft' and coalesce(featured, false) = false);
 create policy "campaigns_update_own" on campaigns for update using (auth.uid() = brand_id);
 create policy "campaigns_delete_own" on campaigns for delete using (auth.uid() = brand_id);
 
@@ -342,9 +350,9 @@ create policy "uploads_brand_update" on content_uploads for update using (
   auth.uid() in (select brand_id from campaigns where id = campaign_id)
 );
 
--- payments: own only
+-- payments: own read only. INSERTS ARE SERVICE_ROLE ONLY (Edge Function) — there is no
+-- owner INSERT policy, so RLS denies authenticated writes. Closes N1 (forged 'succeeded').
 create policy "payments_read_own" on payments for select using (auth.uid() = brand_id);
-create policy "payments_insert_own" on payments for insert with check (auth.uid() = brand_id);
 
 -- subscriptions: own read only — writes via service_role (Edge Function) only
 create policy "subscriptions_select_own" on subscriptions for select to authenticated using (auth.uid() = brand_id);
@@ -391,6 +399,86 @@ create trigger brand_profiles_updated_at before update on brand_profiles
   for each row execute procedure update_updated_at();
 create trigger creator_profiles_updated_at before update on creator_profiles
   for each row execute procedure update_updated_at();
+
+-- ── Payment gate (Phase 4) ──────────────────────────────────
+-- Owners may edit their campaigns, but publishing (draft->open), turning featured on, and
+-- setting featured_until are reserved for the payment system. service_role bypasses RLS but
+-- NOT triggers, so the explicit role check lets the Edge Function + Stripe webhook through.
+create or replace function enforce_campaign_payment_gate()
+returns trigger as $$
+begin
+  if auth.role() = 'service_role' then
+    return new;
+  end if;
+  if old.stage = 'draft' and new.stage <> 'draft' then
+    raise exception 'publishing requires payment' using errcode = 'P0001';
+  end if;
+  if new.featured and not coalesce(old.featured, false) then
+    raise exception 'featured placement requires payment' using errcode = 'P0001';
+  end if;
+  if new.featured_until is distinct from old.featured_until then
+    raise exception 'featured term is set by the payment system' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists campaign_payment_gate on campaigns;
+create trigger campaign_payment_gate before update on campaigns
+  for each row execute function enforce_campaign_payment_gate();
+
+-- ── applications.brand_id is derived server-side from the campaign (G-2) ──
+-- Prevents a creator from forging brand_id on insert; sourced from campaigns.
+create or replace function set_application_brand_id()
+returns trigger as $$
+begin
+  select brand_id into new.brand_id from campaigns where id = new.campaign_id;
+  if not found then
+    raise exception 'set_application_brand_id: campaign % not found — insert rejected', new.campaign_id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists trg_applications_set_brand_id on applications;
+create trigger trg_applications_set_brand_id before insert on applications
+  for each row execute function set_application_brand_id();
+
+-- ── application stage-machine enforcement (G-3) ──
+-- Rejects illegal stage jumps; legacy/unknown states pass.
+create or replace function validate_application_stage_transition()
+returns trigger as $$
+declare
+  valid_next text[];
+begin
+  if old.stage is not distinct from new.stage then
+    return new;
+  end if;
+  if old.stage is null then
+    return new;  -- legacy row, no prior stage
+  end if;
+  case old.stage::text
+    when 'applied'           then valid_next := array['accepted'];
+    when 'accepted'          then valid_next := array['product_shipped'];
+    when 'product_shipped'   then valid_next := array['content_submitted', 'product_delivered'];
+    when 'product_delivered' then valid_next := array['content_submitted'];
+    when 'content_submitted' then valid_next := array['approved'];
+    when 'approved'          then valid_next := array['paid'];
+    when 'paid'              then valid_next := array[]::text[];
+    else
+      return new;  -- unrecognised state, skip validation
+  end case;
+  if not (new.stage::text = any(valid_next)) then
+    raise exception 'invalid stage transition on application %: "%" -> "%" not allowed (valid: [%])',
+      old.id, old.stage, new.stage, array_to_string(valid_next, ', ') using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists trg_applications_validate_stage on applications;
+create trigger trg_applications_validate_stage before update of stage on applications
+  for each row execute function validate_application_stage_transition();
 
 -- ============================================================
 -- INDEXES

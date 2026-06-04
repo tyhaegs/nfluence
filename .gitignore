@@ -3,6 +3,7 @@ admin/
 SECURITY_AUDIT.md
 AUDIT_PASS1.md
 AUDIT_PASS2.md
+AUDIT_PASS3.md
 node_modules/
 package.json
 package-lock.json
