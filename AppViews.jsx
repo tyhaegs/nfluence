@@ -28,7 +28,7 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
         </div>
       )}
       {isMobile && (
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowMenu(v => !v)}>
+        <div style={{ width: 44, height: 44, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowMenu(v => !v)}>
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -112,7 +112,7 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
           <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
           <div style={{ position: "relative" }}>
             <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
-            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
@@ -346,7 +346,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .bo-input::placeholder, .bo-textarea::placeholder { color: rgba(255,255,255,.35); }
         .bo-input:focus, .bo-textarea:focus, .bo-select:focus { border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(255,255,255,.15); background: rgba(0,0,0,.5); }
-        .bo-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; user-select: none; }
+        .bo-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; user-select: none; }
         .bo-chip.selected { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; }
         .bo-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
         .bo-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
@@ -391,7 +391,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={fieldWrap}>
               <div style={{ position: "relative" }}>
                 <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} aria-label="password (8+ chars) *" placeholder="password (8+ chars) *" />
-                <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+                <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
                   {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </div>
               </div>
@@ -399,7 +399,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={fieldWrap}>
               <div style={{ position: "relative" }}>
                 <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showConfirmPass ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} aria-label="confirm password *" placeholder="confirm password *" />
-                <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex" }}>
+                <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
                   {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </div>
               </div>
@@ -623,7 +623,7 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
     <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
       <style>{`
         .nf-review-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 20px; }
-        .nf-reply-btn { padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: .78rem; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
+        .nf-reply-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: .78rem; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
         .nf-reply-btn:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.09); color: #fff; }
         .nf-reply-submit { padding: 9px 20px; border-radius: 10px; border: 1px solid rgba(251,191,36,.3); background: rgba(251,191,36,.1); color: #fbbf24; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .12s; font-family: system-ui, sans-serif; }
         .nf-reply-submit:hover { background: rgba(251,191,36,.18); }
@@ -827,7 +827,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
           <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onFaq?.()}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowSettingsMenu(v => !v)}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowSettingsMenu(v => !v)}>
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -1252,7 +1252,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 520, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>needs attention</div>
-                <div onClick={() => setShowAttentionModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", opacity: .7 }}>✕</div>
+                <div onClick={() => setShowAttentionModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", opacity: .7 }}>✕</div>
               </div>
               {allItems.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>nothing needs attention right now</div>
@@ -2080,7 +2080,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         * { box-sizing:border-box; margin:0; padding:0; }
         .bp-back { opacity:.5; transition:opacity .15s; cursor:pointer; }
         .bp-back:hover { opacity:1; }
-        .bp-tab { padding:10px 20px; border-radius:20px; font-size:.88rem; cursor:pointer; transition:all .15s; border:1px solid transparent; }
+        .bp-tab { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding:10px 20px; border-radius:20px; font-size:.88rem; cursor:pointer; transition:all .15s; border:1px solid transparent; }
         .bp-tab.active { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:#fff; }
         .bp-tab:not(.active) { color:rgba(255,255,255,.4); }
         .bp-tab:not(.active):hover { color:rgba(255,255,255,.7); }
@@ -2354,7 +2354,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
         .nf-apply-btn2:hover { border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 14px rgba(255,255,255,.15) !important; background: rgba(255,255,255,.08) !important; transform: translateY(-1px); }
         .nf-search-input::placeholder { color: rgba(255,255,255,.3); }
         .nf-search-input:focus { outline: none; border-color: rgba(255,255,255,.35) !important; box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
-        .nf-filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; flex: 1; min-width: 0; }
+        .nf-filter-scroll { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; flex: 1; min-width: 0; }
         .nf-filter-scroll::-webkit-scrollbar { display: none; }
         @keyframes nf-gold-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .nf-featured-name { background: linear-gradient(90deg, #fbbf24 0%, #fde68a 40%, #f59e0b 60%, #fbbf24 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: nf-gold-shimmer 3s ease-in-out infinite; }
@@ -2539,7 +2539,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
           <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
           <div style={{ position: "relative" }}>
             <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
-            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
@@ -2650,9 +2650,9 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
         .co-btn:disabled { opacity: .3; cursor: not-allowed; }
         .co-btn-back { background: transparent; border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.5); }
         .co-btn-back:hover { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.25) !important; color: rgba(255,255,255,.8) !important; transform: none !important; }
-        .co-niche-pill { padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; }
+        .co-niche-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; }
         .co-niche-pill.selected { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #fff; }
-        .co-plat-btn { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); cursor: pointer; transition: all .15s; }
+        .co-plat-btn { min-height: 44px; box-sizing: border-box;display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); cursor: pointer; transition: all .15s; }
         .co-plat-btn.selected { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.3); }
         .co-upload-zone { display: block; padding: 20px; border-radius: 14px; border: 2px dashed rgba(255,255,255,.12); background: rgba(255,255,255,.02); cursor: pointer; text-align: center; transition: all .15s; }
         .co-upload-zone:hover { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.04); }
@@ -2703,7 +2703,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
                 <div style={{ position: "relative" }}>
                   <input className="co-input" type={showPass ? "text" : "password"} aria-label="min 8 characters" placeholder="min 8 characters" value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} style={{ paddingRight: 44 }} />
-                  <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
+                  <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
                     {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                   </div>
                 </div>
@@ -2712,7 +2712,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>confirm password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
                 <div style={{ position: "relative" }}>
                   <input className="co-input" type={showConfirmPass ? "text" : "password"} aria-label="repeat password" placeholder="repeat password" value={account.confirmPassword} onChange={e => setAccount(a => ({ ...a, confirmPassword: e.target.value }))} style={{ paddingRight: 44 }} />
-                  <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex" }}>
+                  <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
                     {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                   </div>
                 </div>
@@ -2983,7 +2983,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ position: "relative" }}>
-            <div onClick={() => setShowMenu(v => !v)} style={{ cursor: "pointer", width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexDirection: "column" }}>
+            <div onClick={() => setShowMenu(v => !v)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexDirection: "column" }}>
               <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
               <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
               <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -3214,7 +3214,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>active campaigns</div>
-              <div onClick={() => setShowActiveModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowActiveModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             {activeCampaigns.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no active campaigns</div>
@@ -3262,7 +3262,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>completed campaigns</div>
-              <div onClick={() => setShowCompletedModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowCompletedModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             {appliedCampaigns.filter(c => c.status === "accepted").length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no completed campaigns yet</div>
@@ -3292,7 +3292,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>my applications</div>
-              <div onClick={() => setShowPendingModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowPendingModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             {appliedCampaigns.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no applications yet</div>
@@ -3327,7 +3327,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>upload content</div>
-              <div onClick={() => setShowUploadModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowUploadModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -3430,7 +3430,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>edit profile</div>
-              <div onClick={() => setShowEditModal(false)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowEditModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Avatar */}

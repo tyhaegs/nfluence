@@ -206,7 +206,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>schedule a call</div>
               <div style={{ fontSize: ".78rem", opacity: .4, marginTop: 3 }}>{scheduleTarget}</div>
             </div>
-            <div onClick={() => setScheduleTarget(null)} style={{ cursor: "pointer", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+            <div onClick={() => setScheduleTarget(null)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
           </div>
 
           {/* Date + Time row */}
@@ -813,7 +813,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         waiting for approval · {c.creators.pending.length}
                       </div>
                       <div onClick={() => setShowPendingModal(false)} style={{
-                        cursor: "pointer", width: 32, height: 32, borderRadius: "50%",
+                        cursor: "pointer", width: 44, height: 44, borderRadius: "50%",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: "rgba(255,255,255,.06)", fontSize: "1rem", opacity: .7,
                       }}>✕</div>
@@ -931,7 +931,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                 </div>
                 {applyStep < 3 && (
                   <div onClick={() => setShowApplyModal(false)} style={{
-                    cursor: "pointer", width: 32, height: 32, borderRadius: "50%",
+                    cursor: "pointer", width: 44, height: 44, borderRadius: "50%",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: "rgba(255,255,255,.06)", fontSize: "1rem", opacity: .7,
                   }}>✕</div>
@@ -1287,11 +1287,11 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
         .ce-section { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; }
         .ce-locked-section { background: rgba(255,140,30,.04); border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; animation: ce-lock-pulse 2.5s ease-in-out infinite; }
         @keyframes ce-lock-pulse { 0%,100% { border: 1px solid rgba(255,140,30,.25); box-shadow: 0 0 8px rgba(255,140,30,.08); } 50% { border: 1px solid rgba(255,165,50,.85); box-shadow: 0 0 18px rgba(255,140,30,.3); } }
-        .ce-comp-pill { padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); color: rgba(255,255,255,.55); font-size: .85rem; cursor: pointer; transition: all .12s; }
+        .ce-comp-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); color: rgba(255,255,255,.55); font-size: .85rem; cursor: pointer; transition: all .12s; }
         .ce-comp-pill.selected { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.35); color: #fff; }
         .ce-comp-pill.locked-opt { opacity: .22; cursor: not-allowed; pointer-events: none; }
         .ce-comp-pill.selected.in-locked { background: rgba(255,140,30,.15); border-color: rgba(255,165,50,.6); color: rgba(255,165,50,.95); }
-        .ce-spots-pill { padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); color: rgba(255,255,255,.5); font-size: .82rem; cursor: pointer; transition: all .12s; }
+        .ce-spots-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); color: rgba(255,255,255,.5); font-size: .82rem; cursor: pointer; transition: all .12s; }
         .ce-spots-pill.selected { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3); color: #fff; }
         .ce-spots-pill.locked-opt { opacity: .22; cursor: not-allowed; pointer-events: none; }
         .ce-save-btn { padding: 14px 48px; border-radius: 14px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; display: block; margin: 0 auto; }
@@ -1304,7 +1304,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
         .ce-featured-section { border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; background: rgba(160,80,255,.04); animation: ce-feat-pulse 2.5s ease-in-out infinite; }
         .ce-featured-section-off { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; }
         @keyframes ce-feat-pulse { 0%,100% { border: 1px solid rgba(160,80,255,.25); box-shadow: 0 0 8px rgba(140,60,255,.08); } 50% { border: 1px solid rgba(185,110,255,.85); box-shadow: 0 0 18px rgba(160,80,255,.3); } }
-        .ce-feat-pill { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; font-size: .9rem; border-radius: 10px; border: 1px solid rgba(160,80,255,.2); background: rgba(160,80,255,.06); color: rgba(185,110,255,.7); cursor: pointer; transition: all .12s; }
+        .ce-feat-pill { min-height: 44px; box-sizing: border-box;flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; font-size: .9rem; border-radius: 10px; border: 1px solid rgba(160,80,255,.2); background: rgba(160,80,255,.06); color: rgba(185,110,255,.7); cursor: pointer; transition: all .12s; }
         .ce-feat-pill:hover { border-color: rgba(185,110,255,.6) !important; box-shadow: 0 0 14px rgba(160,80,255,.2) !important; background: rgba(160,80,255,.12) !important; transform: translateY(-1px); }
         .ce-feat-pill.selected { background: rgba(160,80,255,.18); border-color: rgba(185,110,255,.7); color: rgba(210,160,255,.95); }
         @keyframes nf-gold-shimmer2 { 0%,100%{background-position:200% center}50%{background-position:0% center} }

@@ -41,7 +41,7 @@ cat > "$OUT" <<HTMLEOF
   <link rel="stylesheet" href="https://unpkg.com/cropperjs@1/dist/cropper.css">
   <style>
     html, body { margin: 0; padding: 0; background: #040b15; }
-    .nf-nl { opacity: .85; transition: opacity .15s; cursor: pointer; text-decoration: none; }
+    .nf-nl { display: inline-flex; align-items: center; min-height: 44px;opacity: .85; transition: opacity .15s; cursor: pointer; text-decoration: none; }
     .nf-nl:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
     .crop-rounded .cropper-view-box,
     .crop-rounded .cropper-face { border-radius: 14px; }
