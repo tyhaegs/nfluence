@@ -2036,6 +2036,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
   const [pendingCampaignData, setPendingCampaignData] = useState(null);
   const cardRef = useRef(null);
   const cardDivRef = useRef(null);
+  const spotsInputRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -2079,7 +2080,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     socials: { Instagram: "", TikTok: "", YouTube: "", X: "", Facebook: "", Website: "" },
   });
   const [campaign, setCampaign] = useState({
-    name: "", summary: "", spotsTotal: null, spotsTotalCustom: "",
+    name: "", summary: "", spotsTotal: null, spotsTotalCustom: "", customMode: false,
     products: [{ name: "", variant: "" }],
     industries: [], industryOther: "",
     productPhotos: [], styleGuide: null, bannerPreview: null, bannerTransform: null, bannerEditing: false,
@@ -2685,16 +2686,19 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                 const isPaidComp = terms.compType === "paid" || terms.compType === "product+paid";
                 const isDisabled = isAny && isPaidComp;
                 const isActive = isAny
-                  ? campaign.spotsTotal === 0
+                  ? (!campaign.customMode && campaign.spotsTotal === 0)
                   : isCustom
-                  ? campaign.spotsTotal !== null && campaign.spotsTotal !== 0 && ![5,10,15,20,25,50].includes(campaign.spotsTotal)
-                  : campaign.spotsTotal === opt;
+                  ? campaign.customMode
+                  : (!campaign.customMode && campaign.spotsTotal === opt);
                 return (
                   <button key={opt} onClick={() => {
                     if (isDisabled) return;
-                    if (isAny) setCampaign(p => ({...p, spotsTotal: 0, spotsTotalCustom: ""}));
-                    else if (isCustom) setCampaign(p => ({...p, spotsTotal: p.spotsTotalCustom ? parseInt(p.spotsTotalCustom) || null : null}));
-                    else setCampaign(p => ({...p, spotsTotal: opt, spotsTotalCustom: ""}));
+                    if (isAny) setCampaign(p => ({...p, customMode: false, spotsTotal: 0, spotsTotalCustom: ""}));
+                    else if (isCustom) {
+                      setCampaign(p => ({...p, customMode: true, spotsTotal: p.spotsTotalCustom ? (parseInt(p.spotsTotalCustom) || null) : null}));
+                      setTimeout(() => spotsInputRef.current?.focus(), 0);
+                    }
+                    else setCampaign(p => ({...p, customMode: false, spotsTotal: opt, spotsTotalCustom: ""}));
                   }} style={{
                     padding: "8px 16px", borderRadius: 20, cursor: isDisabled ? "not-allowed" : "pointer",
                     border: `1px solid ${isActive ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`,
@@ -2712,10 +2716,10 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                 <span style={{ fontSize: ".8rem", color: "rgba(255,165,50,.8)", lineHeight: 1.5 }}>paid campaigns require a creator cap — escrow is calculated from this number</span>
               </div>
             )}
-            {/* Custom number input — shown when custom is active */}
-            {campaign.spotsTotal !== null && campaign.spotsTotal !== 0 && ![5,10,15,20,25,50].includes(campaign.spotsTotal) && (
+            {/* Custom number input — shown when custom mode is active */}
+            {campaign.customMode && (
               <div className="nf-field-full" style={{ marginBottom: 4 }}>
-                <input className="nf-input" type="number" min="1" value={campaign.spotsTotalCustom}
+                <input ref={spotsInputRef} className="nf-input" type="number" min="1" value={campaign.spotsTotalCustom}
                   onChange={e => {
                     const val = e.target.value;
                     setCampaign(p => ({...p, spotsTotalCustom: val, spotsTotal: parseInt(val) || null}));
