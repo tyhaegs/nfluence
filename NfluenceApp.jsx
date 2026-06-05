@@ -1190,22 +1190,22 @@ function NfluenceApp() {
       `}</style>
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", textShadow: "0 1px 3px rgba(0,0,0,.35)", fontFamily: "system-ui, sans-serif", position: "relative", zIndex: 1 }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={() => setView("landing")}>nfluence</div>
+        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView("landing")}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff", fontFamily: "system-ui, sans-serif" }}>home</a>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => setView(user || creatorUser ? "browse" : "landing")}>campaigns</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView(user || creatorUser ? "browse" : "landing")}>campaigns</span>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff" }}>services</a>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff" }}>contact us</a>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => setView("faq")}>faq</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView("faq")}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           {user ? (
-            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("dashboard")}>dashboard</span>
+            <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView("dashboard")}>dashboard</span>
           ) : creatorUser ? (
-            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("creatordashboard")}>dashboard</span>
+            <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView("creatordashboard")}>dashboard</span>
           ) : (
-            <span className="nf-nl" style={{ color: "#fff" }} onClick={() => setView("signin")}>sign in</span>
+            <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setView("signin")}>sign in</span>
           )}
-          <div className="nf-mobile-hamburger" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", marginLeft: 8 }} onClick={(e) => { e.stopPropagation(); setShowLandingMenu(v => !v); }}>
+          <div className="nf-mobile-hamburger" style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", marginLeft: 8 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => { e.stopPropagation(); setShowLandingMenu(v => !v); }}>
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
             <div style={{ width: 16, height: 1.5, background: "rgba(255,255,255,.85)", borderRadius: 2 }} />
@@ -1221,7 +1221,7 @@ function NfluenceApp() {
               { label: "faq", action: () => { setShowLandingMenu(false); setView("faq"); } },
               { label: user ? "dashboard" : creatorUser ? "dashboard" : "sign in", action: () => { setShowLandingMenu(false); setView(user ? "dashboard" : creatorUser ? "creatordashboard" : "signin"); } },
             ].map(item => (
-              <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".9rem", color: "rgba(255,255,255,.85)", cursor: "pointer", transition: "background .12s" }}
+              <div key={item.label} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".9rem", color: "rgba(255,255,255,.85)", cursor: "pointer", transition: "background .12s" }}
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.08)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                 {item.label}

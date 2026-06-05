@@ -22,13 +22,13 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
           {!hideSignIn && (
             <>
               <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-              <span className="nf-nl" style={{ color: "#fff" }} onClick={onSignIn}>sign in</span>
+              <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onSignIn}>sign in</span>
             </>
           )}
         </div>
       )}
       {isMobile && (
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowMenu(v => !v)}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowMenu(v => !v)}>
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
           <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -50,7 +50,7 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
               {!hideSignIn && (
                 <>
                   <div style={{ height: 1, background: "rgba(255,255,255,.08)", margin: "4px 8px" }} />
-                  <div onClick={() => { setShowMenu(false); onSignIn?.(); }} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "#fff", cursor: "pointer", transition: "background .12s" }}
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => { setShowMenu(false); onSignIn?.(); }} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "#fff", cursor: "pointer", transition: "background .12s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.06)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     sign in
@@ -107,11 +107,11 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {isSignUp && (
-            <input className="nf-signin-input" value={name} onChange={e => setName(e.target.value)} placeholder="brand or company name" />
+            <input className="nf-signin-input" value={name} onChange={e => setName(e.target.value)} aria-label="brand or company name" placeholder="brand or company name" />
           )}
-          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
+          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
           <div style={{ position: "relative" }}>
-            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="password" style={{ paddingRight: 44 }} />
+            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
             <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
@@ -382,15 +382,15 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>create your account</div>
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>start launching campaigns in minutes</div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="contact name *" />
+              <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} aria-label="contact name *" placeholder="contact name *" />
             </div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email *" />
+              <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} aria-label="email *" placeholder="email *" />
               {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
             </div>
             <div style={fieldWrap}>
               <div style={{ position: "relative" }}>
-                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="password (8+ chars) *" />
+                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} aria-label="password (8+ chars) *" placeholder="password (8+ chars) *" />
                 <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
                   {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </div>
@@ -398,7 +398,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             </div>
             <div style={fieldWrap}>
               <div style={{ position: "relative" }}>
-                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showConfirmPass ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} placeholder="confirm password *" />
+                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showConfirmPass ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} aria-label="confirm password *" placeholder="confirm password *" />
                 <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex" }}>
                   {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </div>
@@ -427,13 +427,13 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>about your brand</div>
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>tell creators who you are</div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name *" maxLength={60} />
+              <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-label="brand name *" placeholder="brand name *" maxLength={60} />
             </div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
+              <input className="bo-input" style={inputStyle} value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} aria-label="tagline" placeholder="tagline" maxLength={120} />
             </div>
             <div style={fieldWrap}>
-              <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
+              <textarea className="bo-textarea" style={{ ...inputStyle, minHeight: 100, resize: "vertical", fontFamily: "system-ui, sans-serif" }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} aria-label="describe your brand — vision, what you do, and why people should get behind it *" placeholder="describe your brand — vision, what you do, and why people should get behind it *" />
             </div>
             <div style={sectionWrap}>
               <div style={labelStyle}>logo</div>
@@ -496,15 +496,15 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>optional — helps creators find you</div>
 
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="phone number" />
+              <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} aria-label="phone number" placeholder="phone number" />
             </div>
             <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="website" />
+              <input className="bo-input" style={inputStyle} value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} aria-label="website" placeholder="website" />
             </div>
             <div style={fieldWrap}>
               <div style={labelStyle}>country</div>
               <div style={{ position: "relative" }}>
-                <select className="bo-select" style={selectStyle} value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: "" }))}>
+                <select aria-label="country" className="bo-select" style={selectStyle} value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value, state: "" }))}>
                   <option value="">select country</option>
                   {REGION_CODES.map(c => <option key={c} value={c}>{REGION_NAMES[c] || c}</option>)}
                 </select>
@@ -513,9 +513,9 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             </div>
             {form.country === "US" && (
               <div style={{ ...fieldWrap, display: "flex", gap: 8 }}>
-                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} aria-label="city" placeholder="city" />
                 <div style={{ position: "relative", flex: 1 }}>
-                  <select className="bo-select" style={selectStyle} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
+                  <select aria-label="state" className="bo-select" style={selectStyle} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
                     <option value="">state</option>
                     {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -525,8 +525,8 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             )}
             {form.country && form.country !== "US" && (
               <div style={{ ...fieldWrap, display: "flex", gap: 8 }}>
-                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
-                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="region / province" />
+                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} aria-label="city" placeholder="city" />
+                <input className="bo-input" style={{ ...inputStyle, flex: 1 }} value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} aria-label="region / province" placeholder="region / province" />
               </div>
             )}
           </div>
@@ -546,7 +546,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
               { key: "facebook", placeholder: "facebook url" },
             ].map(s => (
               <div key={s.key} style={fieldWrap}>
-                <input className="bo-input" style={inputStyle} value={form[s.key]} onChange={e => setForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
+                <input className="bo-input" style={inputStyle} value={form[s.key]} onChange={e => setForm(f => ({ ...f, [s.key]: e.target.value }))} aria-label={s.placeholder} placeholder={s.placeholder} />
               </div>
             ))}
 
@@ -818,16 +818,16 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Nav */}
       <div style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
+        <div style={{ fontWeight: 600, fontSize: "1rem", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, alignItems: "center", fontFamily: "system-ui, sans-serif", fontSize: ".9rem" }}>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/" style={{ color: "#fff" }}>home</a>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => onBrowse?.()}>campaigns</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff" }}>services</a>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff" }}>contact us</a>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => onFaq?.()}>faq</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onFaq?.()}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "brand")} onOpen={() => setShowTray(v => !v)} />
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} onClick={() => setShowSettingsMenu(v => !v)}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, cursor: "pointer", position: "relative" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setShowSettingsMenu(v => !v)}>
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
             <div style={{ width: 14, height: 1.5, background: "rgba(255,255,255,.7)", borderRadius: 2 }} />
@@ -838,7 +838,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                   { label: "edit profile", action: () => { setShowSettingsMenu(false); const parts = (user?.location || "").split(",").map(s => s.trim()); const sl = user?.socialLinks || {}; setBrandEditForm({ name: (user?.name && user.name !== user?.email) ? user.name : (user?.email ? user.email.split("@")[0] : ""), tagline: user?.tagline || "", city: user?.city || parts[0] || "", state: user?.state || parts[1] || "", country: user?.country || parts[2] || "", website: user?.website || "", industries: parseIndustries(user?.industry), bio: user?.bio || "", logoPreview: user?.logoPreview || user?.logoUrl || null, bannerPreview: user?.bannerPreview || user?.bannerUrl || null, logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null, instagram: sl.Instagram || "", tiktok: sl.TikTok || "", youtube: sl.YouTube || "", x: sl.X || "", facebook: sl.Facebook || "" }); setShowBrandEdit(true); } },
                   { label: "sign out", action: () => { setShowSettingsMenu(false); onSignOut?.(); } },
                 ].map(item => (
-                  <div key={item.label} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
+                  <div key={item.label} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={item.action} style={{ padding: "10px 14px", borderRadius: 10, fontSize: ".85rem", color: "rgba(255,255,255,.75)", cursor: "pointer", transition: "background .12s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.06)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     {item.label}
@@ -1085,7 +1085,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
       {/* Brand edit modal */}
       {showBrandEdit && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowBrandEdit(false); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 460, maxHeight: "88vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.1rem", fontWeight: 700, marginBottom: 24 }}>edit profile</div>
 
@@ -1147,28 +1147,28 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={editSection}>
               <div style={editLabel}>brand name</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} placeholder="brand name" />
+                value={brandEditForm.name || ""} onChange={e => setBrandEditForm(f => ({ ...f, name: e.target.value }))} aria-label="brand name" placeholder="brand name" />
             </div>
 
             {/* Tagline */}
             <div style={{ marginBottom: 16 }}>
               <div style={editLabel}>tagline</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                value={brandEditForm.tagline || ""} onChange={e => setBrandEditForm(f => ({ ...f, tagline: e.target.value }))} placeholder="tagline" maxLength={120} />
+                value={brandEditForm.tagline || ""} onChange={e => setBrandEditForm(f => ({ ...f, tagline: e.target.value }))} aria-label="tagline" placeholder="tagline" maxLength={120} />
             </div>
 
             {/* Website */}
             <div style={{ marginBottom: 16 }}>
               <div style={editLabel}>website</div>
               <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                value={brandEditForm.website || ""} onChange={e => setBrandEditForm(f => ({ ...f, website: e.target.value }))} placeholder="yoursite.com" />
+                value={brandEditForm.website || ""} onChange={e => setBrandEditForm(f => ({ ...f, website: e.target.value }))} aria-label="yoursite.com" placeholder="yoursite.com" />
             </div>
 
             {/* Country first */}
             <div style={editSection}>
               <div style={editLabel}>location</div>
               <div style={{ position: "relative" }}>
-                <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
+                <select aria-label="country" style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
                   value={brandEditForm.country || ""} onChange={e => setBrandEditForm(f => ({ ...f, country: e.target.value, state: "" }))}>
                   <option value="">select country</option>
                   {REGION_CODES.map(c => <option key={c} value={c}>{REGION_NAMES[c] || c}</option>)}
@@ -1183,9 +1183,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                 <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 5 }}>city & state</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                    value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+                    value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} aria-label="city" placeholder="city" />
                   <div style={{ position: "relative", flex: 1 }}>
-                    <select style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
+                    <select aria-label="state" style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 32px 9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", appearance: "none", boxSizing: "border-box" }}
                       value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))}>
                       <option value="">state</option>
                       {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -1199,9 +1199,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             {brandEditForm.country && brandEditForm.country !== "US" && (
               <div style={{ marginBottom: 14, display: "flex", gap: 8 }}>
                 <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                  value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} placeholder="city" />
+                  value={brandEditForm.city || ""} onChange={e => setBrandEditForm(f => ({ ...f, city: e.target.value }))} aria-label="city" placeholder="city" />
                 <input style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", flex: 1, outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }}
-                  value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))} placeholder="region / province" />
+                  value={brandEditForm.state || ""} onChange={e => setBrandEditForm(f => ({ ...f, state: e.target.value }))} aria-label="region / province" placeholder="region / province" />
               </div>
             )}
 
@@ -1216,7 +1216,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div style={editSection}>
               <div style={editLabel}>bio</div>
               <textarea style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", minHeight: 80, resize: "vertical", boxSizing: "border-box" }}
-                value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} placeholder="short brand description" />
+                value={brandEditForm.bio || ""} onChange={e => setBrandEditForm(f => ({ ...f, bio: e.target.value }))} aria-label="short brand description" placeholder="short brand description" />
             </div>
 
             {/* Social links */}
@@ -1230,7 +1230,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                 { key: "facebook", placeholder: "facebook url" },
               ].map(s => (
                 <input key={s.key} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "9px 12px", fontSize: ".85rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box", marginBottom: 8 }}
-                  value={brandEditForm[s.key] || ""} onChange={e => setBrandEditForm(f => ({ ...f, [s.key]: e.target.value }))} placeholder={s.placeholder} />
+                  value={brandEditForm[s.key] || ""} onChange={e => setBrandEditForm(f => ({ ...f, [s.key]: e.target.value }))} aria-label={s.placeholder} placeholder={s.placeholder} />
               ))}
             </div>
 
@@ -1248,7 +1248,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         const overdueItems = allCampaigns.flatMap(c => (c.creators?.approved || []).filter(cr => cr.stage === "accepted" && businessDaysSince(cr.acceptedAt) > 3).map(cr => ({ type: "overdue", campaign: c.campaign, brand: c.brand, creator: cr.name, days: businessDaysSince(cr.acceptedAt) })));
         const allItems = [...overdueItems, ...pendingItems];
         return (
-          <div onClick={() => setShowAttentionModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+          <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowAttentionModal(false); } }} onClick={() => setShowAttentionModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 520, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>needs attention</div>
@@ -1281,7 +1281,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
       {editWarnCampaign && (() => {
         const hasAccepted = (editWarnCampaign.creators?.approved?.length || 0) > 0;
         return (
-          <div onClick={() => setEditWarnCampaign(null)} style={{
+          <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setEditWarnCampaign(null); } }} onClick={() => setEditWarnCampaign(null)} style={{
             position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)",
             display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px",
           }}>
@@ -2367,8 +2367,8 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
 
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", position: "relative", zIndex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
-        <div className="nf-browse-back-mobile" style={{ alignItems: "center", gap: 6, fontSize: ".88rem", opacity: .65, color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif" }} onClick={onBack}>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+        <div className="nf-browse-back-mobile" style={{ alignItems: "center", gap: 6, fontSize: ".88rem", opacity: .65, color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>
           <span style={{ fontSize: "1.05rem" }}>←</span> back
         </div>
         <div className="nf-browse-back" style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", fontFamily: "system-ui, sans-serif" }}>
@@ -2376,9 +2376,9 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }}>campaigns</span>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/#popular" style={{ color: "#fff" }}>services</a>
           <a className="nf-nl nf-nav-secondary" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff" }}>contact us</a>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => onFaq?.()}>faq</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onFaq?.()}>faq</span>
           <span className="nf-nav-secondary" style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} onClick={() => onSignIn?.()}>{user || creatorUser ? "dashboard" : "sign in"}</span>
+          <span className="nf-nl nf-nav-secondary" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onSignIn?.()}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 
@@ -2536,9 +2536,9 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
           <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>sign in</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
+          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
           <div style={{ position: "relative" }}>
-            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="password" style={{ paddingRight: 44 }} />
+            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
             <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
@@ -2688,21 +2688,21 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>first name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                  <input className="co-input" placeholder="first" value={account.firstName} onChange={e => setAccount(a => ({ ...a, firstName: e.target.value }))} />
+                  <input className="co-input" aria-label="first" placeholder="first" value={account.firstName} onChange={e => setAccount(a => ({ ...a, firstName: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>last name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                  <input className="co-input" placeholder="last" value={account.lastName} onChange={e => setAccount(a => ({ ...a, lastName: e.target.value }))} />
+                  <input className="co-input" aria-label="last" placeholder="last" value={account.lastName} onChange={e => setAccount(a => ({ ...a, lastName: e.target.value }))} />
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>email <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                <input className="co-input" type="email" placeholder="you@email.com" value={account.email} onChange={e => setAccount(a => ({ ...a, email: e.target.value }))} />
+                <input className="co-input" type="email" aria-label="you@email.com" placeholder="you@email.com" value={account.email} onChange={e => setAccount(a => ({ ...a, email: e.target.value }))} />
               </div>
               <div>
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
                 <div style={{ position: "relative" }}>
-                  <input className="co-input" type={showPass ? "text" : "password"} placeholder="min 8 characters" value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} style={{ paddingRight: 44 }} />
+                  <input className="co-input" type={showPass ? "text" : "password"} aria-label="min 8 characters" placeholder="min 8 characters" value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} style={{ paddingRight: 44 }} />
                   <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex" }}>
                     {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                   </div>
@@ -2711,7 +2711,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               <div>
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>confirm password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
                 <div style={{ position: "relative" }}>
-                  <input className="co-input" type={showConfirmPass ? "text" : "password"} placeholder="repeat password" value={account.confirmPassword} onChange={e => setAccount(a => ({ ...a, confirmPassword: e.target.value }))} style={{ paddingRight: 44 }} />
+                  <input className="co-input" type={showConfirmPass ? "text" : "password"} aria-label="repeat password" placeholder="repeat password" value={account.confirmPassword} onChange={e => setAccount(a => ({ ...a, confirmPassword: e.target.value }))} style={{ paddingRight: 44 }} />
                   <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex" }}>
                     {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                   </div>
@@ -2801,26 +2801,26 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>city</div>
-                  <input className="co-input" placeholder="city" value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} />
+                  <input className="co-input" aria-label="city" placeholder="city" value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>state</div>
-                  <input className="co-input" placeholder="state" value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} />
+                  <input className="co-input" aria-label="state" placeholder="state" value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>country</div>
-                  <input className="co-input" placeholder="country" value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} />
+                  <input className="co-input" aria-label="country" placeholder="country" value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} />
                 </div>
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>age</div>
-                  <input className="co-input" placeholder="age" value={profile.age} onChange={e => setProfile(p => ({ ...p, age: e.target.value }))} />
+                  <input className="co-input" aria-label="age" placeholder="age" value={profile.age} onChange={e => setProfile(p => ({ ...p, age: e.target.value }))} />
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>languages</div>
-                <input className="co-input" placeholder="e.g. English, Spanish" value={profile.languages} onChange={e => setProfile(p => ({ ...p, languages: e.target.value }))} />
+                <input className="co-input" aria-label="e.g. English, Spanish" placeholder="e.g. English, Spanish" value={profile.languages} onChange={e => setProfile(p => ({ ...p, languages: e.target.value }))} />
               </div>
             </div>
           </div>
@@ -2978,9 +2978,9 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", flexShrink: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} onClick={onBack}>nfluence</div>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
-          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} onClick={() => onBrowse?.()}>campaigns</span>
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ position: "relative" }}>
             <div onClick={() => setShowMenu(v => !v)} style={{ cursor: "pointer", width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexDirection: "column" }}>
@@ -3210,7 +3210,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Active campaigns modal */}
       {showActiveModal && (
-        <div onClick={() => setShowActiveModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowActiveModal(false); } }} onClick={() => setShowActiveModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>active campaigns</div>
@@ -3258,7 +3258,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Completed campaigns modal */}
       {showCompletedModal && (
-        <div onClick={() => setShowCompletedModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowCompletedModal(false); } }} onClick={() => setShowCompletedModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>completed campaigns</div>
@@ -3288,7 +3288,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Pending applications modal */}
       {showPendingModal && (
-        <div onClick={() => setShowPendingModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowPendingModal(false); } }} onClick={() => setShowPendingModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>my applications</div>
@@ -3323,7 +3323,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Upload modal */}
       {showUploadModal && (
-        <div onClick={() => setShowUploadModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowUploadModal(false); } }} onClick={() => setShowUploadModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>upload content</div>
@@ -3375,7 +3375,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
         const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
         const counts = [5,4,3,2,1].map(s => ({ star: s, count: reviews.filter(r => r.rating === s).length }));
         return (
-          <div onClick={() => { setShowCreatorReviews(false); setReviewStarFilter(null); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+          <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowCreatorReviews(false); setReviewStarFilter(null); } }} onClick={() => { setShowCreatorReviews(false); setReviewStarFilter(null); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, padding: "24px 28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>reviews</div>
@@ -3426,7 +3426,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
 
       {/* Edit profile modal */}
       {showEditModal && (
-        <div onClick={() => setShowEditModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowEditModal(false); } }} onClick={() => setShowEditModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>edit profile</div>
@@ -3610,15 +3610,15 @@ function FAQPage({ onBack, onStart, onSignIn, user, creatorUser }) {
       `}</style>
 
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "system-ui, sans-serif", position: "relative", zIndex: 1 }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} onClick={onBack}>nfluence</div>
+        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", fontFamily: "system-ui, sans-serif", alignItems: "center" }}>
           <a className="nf-nl" href="https://nfluenceagency.com/" style={{ color: "#fff" }}>home</a>
-          <span className="nf-nl" style={{ color: "#fff" }} onClick={onBack}>campaigns</span>
+          <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>campaigns</span>
           <a className="nf-nl" href="https://nfluenceagency.com/#popular" style={{ color: "#fff" }}>services</a>
           <a className="nf-nl" href="https://nfluenceagency.com/contact.html" style={{ color: "#fff" }}>contact us</a>
           <span className="nf-nl" style={{ color: "#fff" }}>faq</span>
           <span style={{ color: "rgba(255,255,255,.35)", userSelect: "none" }}>|</span>
-          <span className="nf-nl" style={{ color: "#fff" }} onClick={onSignIn}>{user || creatorUser ? "dashboard" : "sign in"}</span>
+          <span className="nf-nl" style={{ color: "#fff" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onSignIn}>{user || creatorUser ? "dashboard" : "sign in"}</span>
         </div>
       </div>
 

@@ -199,7 +199,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
     if (!scheduleTarget) return null;
     const isValid = scheduleForm.date && scheduleForm.time;
     return (
-      <div onClick={() => setScheduleTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }}>
+      <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setScheduleTarget(null); } }} onClick={() => setScheduleTarget(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }}>
         <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, padding: "28px", maxWidth: 500, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
             <div>
@@ -213,12 +213,12 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>date</div>
-              <input type="date" value={scheduleForm.date} onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
+              <input aria-label="date" type="date" value={scheduleForm.date} onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
                 style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
             </div>
             <div>
               <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>time</div>
-              <input type="time" value={scheduleForm.time} onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
+              <input aria-label="time" type="time" value={scheduleForm.time} onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
                 style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
             </div>
           </div>
@@ -226,7 +226,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           {/* Timezone */}
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>timezone</div>
-            <select value={scheduleForm.timezone} onChange={e => setScheduleForm(f => ({ ...f, timezone: e.target.value }))}
+            <select aria-label="timezone" value={scheduleForm.timezone} onChange={e => setScheduleForm(f => ({ ...f, timezone: e.target.value }))}
               style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "#0a1322", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif" }}>
               {commonTimezones.map(tz => (
                 <option key={tz} value={tz}>{tzLabel(tz)}</option>
@@ -238,7 +238,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>zoom / meet link (optional)</div>
             <input type="url" value={scheduleForm.meetLink} onChange={e => setScheduleForm(f => ({ ...f, meetLink: e.target.value }))}
-              placeholder="https://zoom.us/j/... or meet.google.com/..."
+              aria-label="https://zoom.us/j/... or meet.google.com/..." placeholder="https://zoom.us/j/... or meet.google.com/..."
               style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" }} />
           </div>
 
@@ -246,7 +246,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: ".72rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>notes for creator (optional)</div>
             <textarea value={scheduleForm.notes} onChange={e => setScheduleForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="e.g. we'll discuss content requirements and brand guidelines"
+              aria-label="e.g. we'll discuss content requirements and brand guidelines" placeholder="e.g. we'll discuss content requirements and brand guidelines"
               rows={3}
               style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif", resize: "vertical", lineHeight: 1.5, boxSizing: "border-box" }} />
           </div>
@@ -287,7 +287,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       `}</style>
 
       {/* Back button */}
-      <div className="nf-back-link" style={{ padding: "16px 24px", cursor: "pointer", opacity: .6, fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
+      <div className="nf-back-link" style={{ padding: "16px 24px", cursor: "pointer", opacity: .6, fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>
         <span style={{ fontSize: "1.1rem" }}>←</span> back to campaigns
       </div>
 
@@ -702,7 +702,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                       value={trackingInput}
                       onChange={e => setTrackingInput(e.target.value)}
                       onClick={e => e.stopPropagation()}
-                      placeholder="tracking # (optional)"
+                      aria-label="tracking # (optional)" placeholder="tracking # (optional)"
                       style={{
                         flex: 1, minWidth: 120, padding: "5px 10px", borderRadius: 8,
                         background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)",
@@ -796,7 +796,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
 
               {/* Pending modal */}
               {showPendingModal && c.creators.pending?.length > 0 && (
-                <div onClick={() => setShowPendingModal(false)} style={{
+                <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowPendingModal(false); } }} onClick={() => setShowPendingModal(false)} style={{
                   position: "fixed", inset: 0, background: "rgba(0,0,0,.7)",
                   backdropFilter: "blur(8px)",
                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -906,7 +906,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
 
         {/* Apply Modal */}
         {showApplyModal && (
-          <div onClick={() => { if (applyStep === 3) setShowApplyModal(false); }} style={{
+          <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowApplyModal(false); } }} onClick={() => { if (applyStep === 3) setShowApplyModal(false); }} style={{
             position: "fixed", inset: 0, background: "rgba(0,0,0,.75)",
             backdropFilter: "blur(10px)",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -958,7 +958,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     <input
                       value={applyForm.name}
                       onChange={e => setApplyForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="your name"
+                      aria-label="your name" placeholder="your name"
                       style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".95rem", outline: "none", fontFamily: "system-ui, sans-serif", transition: "border-color .12s" }}
                     />
                   </div>
@@ -967,7 +967,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     <input
                       value={applyForm.email}
                       onChange={e => setApplyForm(f => ({ ...f, email: e.target.value }))}
-                      placeholder="you@email.com"
+                      aria-label="you@email.com" placeholder="you@email.com"
                       type="email"
                       style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".95rem", outline: "none", fontFamily: "system-ui, sans-serif", transition: "border-color .12s" }}
                     />
@@ -977,7 +977,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     <input
                       value={applyForm.portfolio}
                       onChange={e => setApplyForm(f => ({ ...f, portfolio: e.target.value }))}
-                      placeholder="https://your-site.com"
+                      aria-label="https://your-site.com" placeholder="https://your-site.com"
                       style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".95rem", outline: "none", fontFamily: "system-ui, sans-serif", transition: "border-color .12s" }}
                     />
                   </div>
@@ -1034,7 +1034,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                           <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             {PLAT_SVGS_SMALL[p]}
                           </div>
-                          <input
+                          <input aria-label="social handle"
                             value={applyForm.handles[p]}
                             onChange={e => setApplyForm(f => ({ ...f, handles: { ...f.handles, [p]: e.target.value } }))}
                             placeholder={`@${p.toLowerCase()} handle`}
@@ -1043,7 +1043,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                           <input
                             value={applyForm.followers[p]}
                             onChange={e => setApplyForm(f => ({ ...f, followers: { ...f.followers, [p]: e.target.value } }))}
-                            placeholder="followers"
+                            aria-label="followers" placeholder="followers"
                             style={{ width: 100, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.12)", background: "rgba(0,0,0,.25)", color: "#fff", fontSize: ".85rem", outline: "none", fontFamily: "system-ui, sans-serif" }}
                           />
                         </div>
@@ -1076,7 +1076,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
                     <div style={{ fontSize: ".75rem", opacity: .4, marginBottom: 6, textTransform: "lowercase" }}>why are you a great fit for this campaign?</div>
-                    <textarea
+                    <textarea aria-label="pitch"
                       value={applyForm.pitch}
                       onChange={e => setApplyForm(f => ({ ...f, pitch: e.target.value }))}
                       placeholder={`Tell ${c.brand} why you'd be a great fit. Share your content style, past brand work, what excites you about this campaign...`}
@@ -1317,8 +1317,8 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
         }
       `}</style>
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <div className="ce-action-btn" style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem", padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.1)" }} onClick={onBack}>← back</div>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+        <div className="ce-action-btn" style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem", padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.1)" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>← back</div>
       </div>
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 16px 100px" }}>
         <div style={{ marginBottom: 28 }}>
@@ -1540,7 +1540,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
 
       {/* Payment modal */}
       {showPayModal && (
-        <div onClick={() => { if (!payLoading) setShowPayModal(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { if (!payLoading) setShowPayModal(false); } }} onClick={() => { if (!payLoading) setShowPayModal(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)", animation: "ce-feat-pulse 2.5s ease-in-out infinite" }}>
             <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>review charges</div>
             <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>the following will be charged when you confirm</div>
@@ -2112,7 +2112,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
       `}</style>
 
       <div className="nf-header">
-        <div className="nf-nav-brand" style={{ cursor: "pointer" }} onClick={onBack}>nfluence</div>
+        <div className="nf-nav-brand" style={{ cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div className="nf-nav-links">
           <a href="#" onClick={e => { e.preventDefault(); onBack(); }}>campaigns</a>
         </div>
@@ -2932,7 +2932,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
         const escrowC = quote?.breakdown?.escrow ?? 0;
         const featuredC = quote?.breakdown?.featured ?? 0;
         return (
-          <div onClick={() => { if (!payLoading) setShowPayModal(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
+          <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { if (!payLoading) setShowPayModal(false); } }} onClick={() => { if (!payLoading) setShowPayModal(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "12px" }}>
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(160,80,255,.25)", borderRadius: 24, padding: 24, maxWidth: 440, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>review charges</div>
               <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24, lineHeight: 1.6 }}>{isFree ? "no charge — publish when ready" : "the following will be charged when you confirm"}</div>
@@ -2971,7 +2971,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="promo code"
+                  <input value={promoCode} onChange={e => setPromoCode(e.target.value)} aria-label="promo code" placeholder="promo code"
                     style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${quote && quote.discount_pct > 0 ? "rgba(100,255,150,.4)" : quoteError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
                   <button onClick={() => fetchQuote(promoCode)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
                 </div>
@@ -3301,7 +3301,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
 
       {/* Lightbox */}
       {lightboxItem && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setLightboxItem(null)}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setLightboxItem(null); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.92)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setLightboxItem(null)}>
           {lightboxItem.type === "video" ? (
             <video src={lightboxItem.src} controls autoPlay style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12 }} onClick={e => e.stopPropagation()} />
           ) : (
@@ -3372,7 +3372,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
       `}</style>
 
       <div className="nf-header">
-        <div className="nf-nav-brand" onClick={onBack}>nfluence</div>
+        <div className="nf-nav-brand" role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div className="nf-nav-links"><a href="#" onClick={e => { e.preventDefault(); onBack(); }}>campaigns</a></div>
       </div>
 
@@ -3668,8 +3668,8 @@ function BrowseGigListings({ demoGigs = [], myGigs = [], onBack, onSelectGig, ap
 
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} onClick={onBack}>back</span>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>back</span>
       </div>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
@@ -3810,7 +3810,7 @@ function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSi
 
       {/* Apply Modal */}
       {showApplyModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === 'Escape') { setShowApplyModal(false); } }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#0a1020", border: "1px solid rgba(255,255,255,.15)", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 400 }}>
             {applyStep === 0 ? (
               <>
@@ -3843,8 +3843,8 @@ function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSi
 
       {/* Header */}
       <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
-        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} onClick={onBack}>back</span>
+        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+        <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>back</span>
       </div>
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px 80px" }}>
