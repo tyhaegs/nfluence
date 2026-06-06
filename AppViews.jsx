@@ -94,7 +94,7 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
         .nf-signin-btn {
           width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28);
           background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff;
-          font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase;
+          font-size: 1rem; font-family: system-ui, sans-serif; text-transform: lowercase;
           cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25);
         }
         .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
@@ -182,10 +182,10 @@ function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
           </div>
 
           <div className="suc-row" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onBrand} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
+            <button onClick={onBrand} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
               i'm a brand
             </button>
-            <button onClick={onCreator} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
+            <button onClick={onCreator} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
               i'm a creator
             </button>
           </div>
@@ -211,7 +211,7 @@ function ConfirmEmailNotice({ email, role, onSignIn, onHome }) {
         <div style={{ fontSize: ".95rem", opacity: .6, lineHeight: 1.65, marginBottom: 28 }}>
           We sent a confirmation link{email ? <> to <span style={{ color: "#fff", opacity: 1 }}>{email}</span></> : ""}. Confirm your account, then sign in.
         </div>
-        <button onClick={onSignIn} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".95rem", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", cursor: "pointer" }}>sign in</button>
+        <button onClick={onSignIn} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".95rem", fontFamily: "system-ui, sans-serif", textTransform: "lowercase", cursor: "pointer" }}>sign in</button>
         <div onClick={onHome} style={{ marginTop: 18, fontSize: ".85rem", opacity: .45, cursor: "pointer", textDecoration: "underline" }}>back to home</div>
         <div style={{ marginTop: 28, fontSize: ".8rem", opacity: .35, lineHeight: 1.6 }}>didn't get it? check spam, or try signing in to resend.</div>
       </div>
@@ -240,7 +240,7 @@ function IndustryMultiSelect({ value = [], onChange }) {
           {selected.map(ind => (
             <div key={ind} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 8px 6px 13px", borderRadius: 20, border: "1px solid rgba(255,255,255,.5)", background: "rgba(255,255,255,.12)", fontSize: ".78rem", color: "#fff", userSelect: "none" }}>
               {ind}
-              <span onClick={() => remove(ind)} title="remove" style={{ cursor: "pointer", width: 17, height: 17, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,.18)", fontSize: ".95rem", lineHeight: 1 }}>×</span>
+              <span onClick={() => remove(ind)} title="remove" style={{ cursor: "pointer", width: 17, height: 17, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,.18)", fontSize: ".95rem", lineHeight: 1 }}><XIcon size={12} /></span>
             </div>
           ))}
         </div>
@@ -348,7 +348,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         .bo-input:focus, .bo-textarea:focus, .bo-select:focus { border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(255,255,255,.15); background: rgba(0,0,0,.5); }
         .bo-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.6); font-size: .8rem; cursor: pointer; transition: all .12s; user-select: none; }
         .bo-chip.selected { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; }
-        .bo-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
+        .bo-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
         .bo-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
         .bo-btn:disabled { opacity: .3; cursor: not-allowed; }
         .bo-btn-back { background: transparent; border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.5); }
@@ -635,8 +635,8 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, letterSpacing: "-.01em", fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".85rem", alignItems: "center" }}>
           <span style={{ opacity: .5, cursor: "pointer" }} onClick={onBack}>← back to dashboard</span>
         </div>
@@ -799,7 +799,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         .nf-new-campaign-btn {
           padding: 12px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28);
           background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff;
-          font-size: .9rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase;
+          font-size: .9rem; font-family: system-ui, sans-serif; text-transform: lowercase;
           cursor: pointer; transition: all .12s; display: inline-flex; align-items: center; gap: 8;
         }
         .nf-new-campaign-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
@@ -1252,7 +1252,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 520, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>needs attention</div>
-                <div onClick={() => setShowAttentionModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", opacity: .7 }}>✕</div>
+                <div onClick={() => setShowAttentionModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", opacity: .7 }}><XIcon size={16} /></div>
               </div>
               {allItems.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>nothing needs attention right now</div>
@@ -1913,7 +1913,7 @@ function NotificationTray({ notifications, onClose, onMarkAllRead, onViewAll, fo
           <div style={{ fontWeight: 700, fontSize: ".95rem", fontFamily: "'Monda', system-ui, sans-serif" }}>notifications</div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {unread.length > 0 && <div onClick={onMarkAllRead} style={{ fontSize: ".72rem", color: "rgba(100,180,255,.8)", cursor: "pointer" }}>mark all read</div>}
-            <div onClick={onClose} style={{ cursor: "pointer", opacity: .4, fontSize: "1rem", lineHeight: 1 }}>✕</div>
+            <div onClick={onClose} style={{ cursor: "pointer", opacity: .4, fontSize: "1rem", lineHeight: 1 }}><XIcon size={14} /></div>
           </div>
         </div>
         <div style={{ maxHeight: 420, overflowY: "auto" }}>
@@ -2395,7 +2395,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
             placeholder="search by brand, campaign, or keyword..."
             style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 14, padding: "12px 16px 12px 42px", color: "#fff", fontSize: ".95rem", fontFamily: "system-ui, sans-serif", transition: "border-color .2s, box-shadow .2s" }}
           />
-          {search && <div onClick={() => setSearch("")} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: .4, fontSize: "1.1rem", lineHeight: 1 }}>×</div>}
+          {search && <div onClick={() => setSearch("")} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: .4, fontSize: "1.1rem", lineHeight: 1 }}><XIcon size={14} /></div>}
         </div>
 
         {/* Filter rows */}
@@ -2525,7 +2525,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
         .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
         .nf-signin-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
-        .nf-signin-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
+        .nf-signin-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
         .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
         .nf-signin-btn:disabled { opacity: .3; cursor: not-allowed; }
       `}</style>
@@ -2645,7 +2645,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
         .co-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 12px 14px; font-size: .92rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s; }
         .co-input::placeholder { color: rgba(255,255,255,.35); }
         .co-input:focus { border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 1px rgba(255,255,255,.15); background: rgba(0,0,0,.5); }
-        .co-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
+        .co-btn { padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; font-size: .95rem; font-family: system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; }
         .co-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
         .co-btn:disabled { opacity: .3; cursor: not-allowed; }
         .co-btn-back { background: transparent; border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.5); }
@@ -2977,8 +2977,8 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "'Monda', system-ui, sans-serif", flexShrink: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
+        <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
@@ -3214,7 +3214,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>active campaigns</div>
-              <div onClick={() => setShowActiveModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowActiveModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
             {activeCampaigns.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no active campaigns</div>
@@ -3262,7 +3262,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>completed campaigns</div>
-              <div onClick={() => setShowCompletedModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowCompletedModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
             {appliedCampaigns.filter(c => c.status === "accepted").length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no completed campaigns yet</div>
@@ -3292,7 +3292,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 540, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>my applications</div>
-              <div onClick={() => setShowPendingModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowPendingModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
             {appliedCampaigns.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no applications yet</div>
@@ -3327,7 +3327,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>upload content</div>
-              <div onClick={() => setShowUploadModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowUploadModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -3356,7 +3356,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                 <button className="nf-creator-btn" style={{ flex: 1 }} onClick={() => setShowUploadModal(false)}>cancel</button>
-                <button disabled={!uploadFile || !selectedUploadCampaign} onClick={handleUploadSubmit} style={{ flex: 2, padding: "11px", borderRadius: 11, border: uploadFile && selectedUploadCampaign ? "1px solid rgba(100,180,255,.35)" : "1px solid rgba(255,255,255,.1)", background: uploadFile && selectedUploadCampaign ? "rgba(100,180,255,.12)" : "transparent", color: uploadFile && selectedUploadCampaign ? "rgba(100,180,255,.9)" : "rgba(255,255,255,.25)", fontSize: ".88rem", fontWeight: 600, cursor: uploadFile && selectedUploadCampaign ? "pointer" : "not-allowed", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", transition: "all .12s" }}>upload</button>
+                <button disabled={!uploadFile || !selectedUploadCampaign} onClick={handleUploadSubmit} style={{ flex: 2, padding: "11px", borderRadius: 11, border: uploadFile && selectedUploadCampaign ? "1px solid rgba(100,180,255,.35)" : "1px solid rgba(255,255,255,.1)", background: uploadFile && selectedUploadCampaign ? "rgba(100,180,255,.12)" : "transparent", color: uploadFile && selectedUploadCampaign ? "rgba(100,180,255,.9)" : "rgba(255,255,255,.25)", fontSize: ".88rem", fontWeight: 600, cursor: uploadFile && selectedUploadCampaign ? "pointer" : "not-allowed", fontFamily: "system-ui, sans-serif", textTransform: "lowercase", transition: "all .12s" }}>upload</button>
               </div>
             </div>
           </div>
@@ -3379,7 +3379,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
             <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 20, padding: "24px 28px", maxWidth: 560, width: "100%", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                 <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>reviews</div>
-                <div onClick={() => { setShowCreatorReviews(false); setReviewStarFilter(null); }} style={{ cursor: "pointer", opacity: .4, fontSize: "1.1rem" }}>✕</div>
+                <div onClick={() => { setShowCreatorReviews(false); setReviewStarFilter(null); }} style={{ cursor: "pointer", opacity: .4, fontSize: "1.1rem" }}><XIcon size={16} /></div>
               </div>
               <div style={{ display: "flex", gap: 24, alignItems: "flex-start", marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid rgba(255,255,255,.07)" }}>
                 <div style={{ textAlign: "center", flexShrink: 0 }}>
@@ -3430,7 +3430,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 24, padding: "28px 28px", maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 40px 80px rgba(0,0,0,.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>edit profile</div>
-              <div onClick={() => setShowEditModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+              <div onClick={() => setShowEditModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Avatar */}
@@ -3526,7 +3526,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               ))}
               <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
                 <button className="nf-creator-btn" style={{ flex: 1 }} onClick={() => setShowEditModal(false)}>cancel</button>
-                <button onClick={() => { onEditProfile(editForm); setShowEditModal(false); }} style={{ flex: 2, padding: "11px", borderRadius: 11, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".88rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", transition: "all .12s" }}>save profile</button>
+                <button onClick={() => { onEditProfile(editForm); setShowEditModal(false); }} style={{ flex: 2, padding: "11px", borderRadius: 11, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".88rem", fontWeight: 600, cursor: "pointer", fontFamily: "system-ui, sans-serif", textTransform: "lowercase", transition: "all .12s" }}>save profile</button>
               </div>
             </div>
           </div>
@@ -3652,7 +3652,7 @@ function FAQPage({ onBack, onStart, onSignIn, user, creatorUser }) {
         <div style={{ marginTop: 16, padding: "32px", borderRadius: 20, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", textAlign: "center" }}>
           <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.2rem", fontWeight: 700, marginBottom: 8 }}>ready to launch?</div>
           <div style={{ fontSize: ".9rem", opacity: .45, marginBottom: 24 }}>join the brands already growing with nfluence</div>
-          <button onClick={onStart} className="nf-faq-cta" style={{ padding: "14px 32px", borderRadius: 14, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", fontSize: ".95rem", fontWeight: 600, textTransform: "lowercase" }}>start a campaign — $299</button>
+          <button onClick={onStart} className="nf-faq-cta" style={{ padding: "14px 32px", borderRadius: 14, border: "1px solid rgba(255,255,255,.25)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "system-ui, sans-serif", fontSize: ".95rem", fontWeight: 600, textTransform: "lowercase" }}>start a campaign — $299</button>
         </div>
         <div style={{ textAlign: "center", marginTop: 32, fontSize: ".78rem", opacity: .3, fontFamily: "system-ui, sans-serif", lineHeight: 1.7 }}>
           still have questions? email us at <a href="mailto:support@nfluenceagency.com" style={{ color: "inherit", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,.25)" }}>support@nfluenceagency.com</a>
@@ -3736,7 +3736,7 @@ function OnboardingPage({ onDone }) {
           <span style={{ fontSize: ".88rem", opacity: .7, lineHeight: 1.4 }}>i've read and understood the guidelines above</span>
         </div>
 
-        <button onClick={onDone} disabled={!agreed} style={{ width: "100%", padding: "16px", borderRadius: 16, fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1rem", fontWeight: 600, textTransform: "lowercase", background: agreed ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)", border: `1px solid ${agreed ? "rgba(255,255,255,.3)" : "rgba(255,255,255,.08)"}`, color: agreed ? "#fff" : "rgba(255,255,255,.25)", cursor: agreed ? "pointer" : "not-allowed", transition: "all .2s" }}>go to my dashboard →</button>
+        <button onClick={onDone} disabled={!agreed} style={{ width: "100%", padding: "16px", borderRadius: 16, fontFamily: "system-ui, sans-serif", fontSize: "1rem", fontWeight: 600, textTransform: "lowercase", background: agreed ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)", border: `1px solid ${agreed ? "rgba(255,255,255,.3)" : "rgba(255,255,255,.08)"}`, color: agreed ? "#fff" : "rgba(255,255,255,.25)", cursor: agreed ? "pointer" : "not-allowed", transition: "all .2s" }}>go to my dashboard →</button>
       </div>
     </div>
   );

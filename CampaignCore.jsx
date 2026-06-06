@@ -8,6 +8,8 @@ function getStripe() {
   return _stripe;
 }
 
+const XIcon = ({ size = 16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ display: "inline-block", verticalAlign: "middle" }}><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>;
+
 // ── Server-authoritative payment (V2) ──
 // The Edge Function computes ALL prices and validates promos; the client never sends an amount.
 // Interface: { action:'quote'|'charge'|'cancel', type:'campaign_new'|'campaign_edit'|'gig', campaignId?, features?, promoCode? }
@@ -206,7 +208,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>schedule a call</div>
               <div style={{ fontSize: ".78rem", opacity: .4, marginTop: 3 }}>{scheduleTarget}</div>
             </div>
-            <div onClick={() => setScheduleTarget(null)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}>✕</div>
+            <div onClick={() => setScheduleTarget(null)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
           </div>
 
           {/* Date + Time row */}
@@ -252,8 +254,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <div onClick={() => setScheduleTarget(null)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.03)", color: "rgba(255,255,255,.5)", fontSize: ".85rem", fontWeight: 600, cursor: "pointer", textAlign: "center", fontFamily: "'Monda', system-ui, sans-serif" }}>cancel</div>
-            <div onClick={isValid ? submitSchedule : undefined} style={{ flex: 2, padding: "12px", borderRadius: 12, border: `1px solid ${isValid ? "rgba(100,200,255,.4)" : "rgba(255,255,255,.08)"}`, background: isValid ? "rgba(100,200,255,.1)" : "rgba(255,255,255,.02)", color: isValid ? "rgba(100,200,255,.9)" : "rgba(255,255,255,.2)", fontSize: ".85rem", fontWeight: 600, cursor: isValid ? "pointer" : "not-allowed", textAlign: "center", fontFamily: "'Monda', system-ui, sans-serif", transition: "all .12s" }}>
+            <div onClick={() => setScheduleTarget(null)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.1)", background: "rgba(255,255,255,.03)", color: "rgba(255,255,255,.5)", fontSize: ".85rem", fontWeight: 600, cursor: "pointer", textAlign: "center", fontFamily: "system-ui, sans-serif" }}>cancel</div>
+            <div onClick={isValid ? submitSchedule : undefined} style={{ flex: 2, padding: "12px", borderRadius: 12, border: `1px solid ${isValid ? "rgba(100,200,255,.4)" : "rgba(255,255,255,.08)"}`, background: isValid ? "rgba(100,200,255,.1)" : "rgba(255,255,255,.02)", color: isValid ? "rgba(100,200,255,.9)" : "rgba(255,255,255,.2)", fontSize: ".85rem", fontWeight: 600, cursor: isValid ? "pointer" : "not-allowed", textAlign: "center", fontFamily: "system-ui, sans-serif", transition: "all .12s" }}>
               send invite
             </div>
           </div>
@@ -816,7 +818,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         cursor: "pointer", width: 44, height: 44, borderRadius: "50%",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: "rgba(255,255,255,.06)", fontSize: "1rem", opacity: .7,
-                      }}>✕</div>
+                      }}><XIcon size={16} /></div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
                       {c.creators.pending.map((cr, i) => <CreatorCard key={cr.userId || cr.name || i} creator={cr} showActions={isOwner} />)}
@@ -862,7 +864,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
             <button onClick={() => onEditCampaign?.(c)} className="nf-cta-btn" style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
               width: "100%", maxWidth: 400, padding: "18px 32px", borderRadius: 16,
-              fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
+              fontFamily: "system-ui, sans-serif", textTransform: "lowercase",
               fontSize: "1.1rem", fontWeight: 600,
               background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.2)",
               color: "rgba(255,255,255,.7)", cursor: "pointer",
@@ -892,7 +894,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
               <button onClick={handleApplyClick} className="nf-cta-btn" style={{
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
                 width: "100%", maxWidth: 400, padding: "18px 32px", borderRadius: 16,
-                fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase",
+                fontFamily: "system-ui, sans-serif", textTransform: "lowercase",
                 fontSize: "1.1rem", fontWeight: 600,
                 background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)",
                 backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer",
@@ -934,7 +936,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     cursor: "pointer", width: 44, height: 44, borderRadius: "50%",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     background: "rgba(255,255,255,.06)", fontSize: "1rem", opacity: .7,
-                  }}>✕</div>
+                  }}><XIcon size={16} /></div>
                 )}
               </div>
 
@@ -987,7 +989,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                     style={{
                       width: "100%", padding: "14px", borderRadius: 14, border: "1px solid rgba(255,255,255,.25)",
                       background: applyForm.name.trim() && applyForm.email.includes("@") ? "rgba(255,255,255,.08)" : "transparent",
-                      color: "#fff", fontSize: ".95rem", fontFamily: "'Monda', system-ui, sans-serif",
+                      color: "#fff", fontSize: ".95rem", fontFamily: "system-ui, sans-serif",
                       textTransform: "lowercase", cursor: applyForm.name.trim() && applyForm.email.includes("@") ? "pointer" : "not-allowed",
                       opacity: applyForm.name.trim() && applyForm.email.includes("@") ? 1 : .3,
                       transition: "all .12s", marginTop: 6,
@@ -1062,7 +1064,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                       style={{
                         flex: 2, padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,.25)",
                         background: applyHandlesComplete ? "rgba(255,255,255,.08)" : "transparent",
-                        color: "#fff", fontSize: ".85rem", fontFamily: "'Monda', system-ui, sans-serif",
+                        color: "#fff", fontSize: ".85rem", fontFamily: "system-ui, sans-serif",
                         textTransform: "lowercase", cursor: applyHandlesComplete ? "pointer" : "not-allowed",
                         opacity: applyHandlesComplete ? 1 : .3, transition: "all .12s",
                       }}
@@ -1125,7 +1127,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
                         border: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "1px solid rgba(100,255,150,.35)" : "1px solid rgba(255,255,255,.15)",
                         background: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "rgba(100,255,150,.1)" : "transparent",
                         color: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "rgba(100,255,150,.9)" : "rgba(255,255,255,.3)",
-                        fontSize: ".95rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif",
+                        fontSize: ".95rem", fontWeight: 600, fontFamily: "system-ui, sans-serif",
                         textTransform: "lowercase",
                         cursor: (applyForm.pitch.trim() && applyForm.agreeTerms) ? "pointer" : "not-allowed",
                         transition: "all .15s",
@@ -1294,7 +1296,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
         .ce-spots-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); color: rgba(255,255,255,.5); font-size: .82rem; cursor: pointer; transition: all .12s; }
         .ce-spots-pill.selected { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3); color: #fff; }
         .ce-spots-pill.locked-opt { opacity: .22; cursor: not-allowed; pointer-events: none; }
-        .ce-save-btn { padding: 14px 48px; border-radius: 14px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 1rem; font-family: 'Monda', system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; display: block; margin: 0 auto; }
+        .ce-save-btn { padding: 14px 48px; border-radius: 14px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 1rem; font-family: system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; display: block; margin: 0 auto; }
         .ce-save-btn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.55); box-shadow: 0 0 18px rgba(255,255,255,.12); transform: translateY(-2px); }
         .ce-comp-pill:not(.locked-opt):hover { border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 14px rgba(255,255,255,.15) !important; background: rgba(255,255,255,.08) !important; transform: translateY(-1px); }
         .ce-spots-pill:hover { border-color: rgba(255,255,255,.55) !important; box-shadow: 0 0 14px rgba(255,255,255,.15) !important; background: rgba(255,255,255,.08) !important; transform: translateY(-1px); }
@@ -1316,8 +1318,8 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
           .ce-input { font-size: 16px; }
         }
       `}</style>
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div className="ce-action-btn" style={{ cursor: "pointer", opacity: .5, fontSize: ".85rem", padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.1)" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>← back</div>
       </div>
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 16px 100px" }}>
@@ -1493,7 +1495,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <input className="ce-input" placeholder="product name" value={p.name} onChange={e => updateProduct(i, "name", e.target.value)} style={{ flex: 2 }} />
                 <input className="ce-input" placeholder="variant / size" value={p.variant} onChange={e => updateProduct(i, "variant", e.target.value)} style={{ flex: 1 }} />
-                <div onClick={() => removeProduct(i)} style={{ cursor: "pointer", opacity: .3, fontSize: "1.1rem", padding: "0 6px", flexShrink: 0 }}>✕</div>
+                <div onClick={() => removeProduct(i)} style={{ cursor: "pointer", opacity: .3, fontSize: "1.1rem", padding: "0 6px", flexShrink: 0 }}><XIcon size={14} /></div>
               </div>
             ))}
           </div>
@@ -1611,7 +1613,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
                   setPayError(err.message || "Payment failed");
                   if (res && res.payment_intent_id) { try { await callStripePaymentV2({ action: 'cancel', paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
                 } finally { setPayLoading(false); }
-              }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
+              }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
                 {payLoading ? "processing..." : isFree ? "confirm & save" : `pay ${quote ? "$" + (quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""} & save`}
               </button>
             </div>
@@ -1762,7 +1764,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
           text-shadow: 0 1px 3px rgba(0,0,0,.35);
           font-family: 'Monda', system-ui, sans-serif;
         }
-        .nf-nav-brand { font-weight: 600; letter-spacing: -.01em; font-size: 1.1rem; color: #fff; }
+        .nf-nav-brand { font-family: 'Monda', system-ui, sans-serif; font-weight: 600; letter-spacing: -.01em; font-size: 1.1rem; color: #fff; }
         .nf-nav-links { display: flex; gap: 18px; font-size: .9rem; opacity: .85; }
         .nf-nav-links a { color: #fff; text-decoration: none; }
 
@@ -2995,7 +2997,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                     setPayError(err.message || "Payment failed");
                     if (res && (res.campaignId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', campaignId: res.campaignId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
                   } finally { setPayLoading(false); }
-                }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
+                }} style={{ flex: 2, padding: "13px", borderRadius: 12, border: "1px solid rgba(185,110,255,.4)", background: payLoading ? "rgba(160,80,255,.08)" : "rgba(160,80,255,.15)", color: "rgba(210,160,255,.95)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".95rem", fontWeight: 700, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", opacity: payLoading ? .6 : 1, transition: "opacity .15s" }}>
                   {payLoading ? "processing..." : isFree ? "confirm & publish" : `pay ${quote ? "$" + (quote.amount_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""} & publish`}
                 </button>
               </div>
@@ -3307,15 +3309,15 @@ function GigListingBuilder({ onBack, onPublish, session }) {
           ) : (
             <img src={lightboxItem.src} alt="" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, objectFit: "contain" }} />
           )}
-          <div style={{ position: "absolute", top: 20, right: 20, cursor: "pointer", opacity: .7, fontSize: "1.5rem" }}>✕</div>
+          <div style={{ position: "absolute", top: 20, right: 20, cursor: "pointer", opacity: .7, fontSize: "1.5rem" }}><XIcon size={18} /></div>
         </div>
       )}
 
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .nf-header { width: 100%; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-family: 'Monda', system-ui, sans-serif; }
-        .nf-nav-brand { font-weight: 600; font-size: 1.1rem; color: #fff; cursor: pointer; }
+        .nf-header { width: 100%; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; font-family: system-ui, sans-serif; }
+        .nf-nav-brand { font-family: 'Monda', system-ui, sans-serif; font-weight: 600; font-size: 1.1rem; color: #fff; cursor: pointer; }
         .nf-nav-links { display: flex; gap: 18px; font-size: .9rem; opacity: .85; }
         .nf-nav-links a { color: #fff; text-decoration: none; }
         .nf-wrap { max-width: 470px; width: 100%; margin: 0 auto; padding: 0 16px; }
@@ -3512,7 +3514,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
                         <img src={item.src} alt="" />
                       )}
                       <div className="nf-mosaic-type-badge">{item.type}</div>
-                      <div className="nf-mosaic-remove" onClick={e => { e.stopPropagation(); handleRemoveMedia(item.id); }}>✕</div>
+                      <div className="nf-mosaic-remove" onClick={e => { e.stopPropagation(); handleRemoveMedia(item.id); }}><XIcon size={14} /></div>
                     </div>
                   );
                 })}
@@ -3667,8 +3669,8 @@ function BrowseGigListings({ demoGigs = [], myGigs = [], onBack, onSelectGig, ap
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>back</span>
       </div>
 
@@ -3804,7 +3806,7 @@ function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSi
           ) : (
             <img src={lightboxItem.src} alt="" style={{ maxWidth: "92vw", maxHeight: "92vh", borderRadius: 12, objectFit: "contain" }} />
           )}
-          <div style={{ position: "absolute", top: 20, right: 24, cursor: "pointer", fontSize: "1.4rem", opacity: .7 }} onClick={() => setLightboxItem(null)}>✕</div>
+          <div style={{ position: "absolute", top: 20, right: 24, cursor: "pointer", fontSize: "1.4rem", opacity: .7 }} onClick={() => setLightboxItem(null)}><XIcon size={18} /></div>
         </div>
       )}
 
@@ -3842,8 +3844,8 @@ function GigDetail({ gig, onBack, isOwner, user, appliedGigs = [], onApply, onSi
       )}
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "'Monda', system-ui, sans-serif" }}>
-        <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px, 4vw, 32px)", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", color: "#fff", cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <span style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>back</span>
       </div>
 
