@@ -225,10 +225,48 @@ create table content_uploads (
 -- PAYMENTS (Stripe charges)
 -- ============================================================
 
+-- ============================================================
+-- GIG LISTINGS (photographer / videographer jobs — $49.99/listing)
+-- Defined before payments so payments.gig_id can reference it.
+-- ============================================================
+create table gig_listings (
+  id              uuid        primary key default gen_random_uuid(),
+  brand_id        uuid        not null references profiles(id) on delete cascade,
+  title           text        not null,
+  description     text,
+  stage           text        not null default 'draft' check (stage in ('draft','open','closed')),
+  comp            text,
+  pay_type        text,
+  deadline        text,
+  location        text,
+  platforms       text[]      not null default '{}',
+  deliverables    text,
+  skills_required text[]      not null default '{}',
+  requirements    text,
+  equipment       text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+create index idx_gig_listings_brand_id on gig_listings(brand_id);
+create index idx_gig_listings_stage    on gig_listings(stage);
+
+create table gig_applications (
+  id          uuid        primary key default gen_random_uuid(),
+  gig_id      uuid        not null references gig_listings(id) on delete cascade,
+  creator_id  uuid        not null references profiles(id) on delete cascade,
+  stage       text        not null default 'applied' check (stage in ('applied','accepted','rejected','paid')),
+  message     text,
+  created_at  timestamptz not null default now(),
+  unique (gig_id, creator_id)
+);
+create index idx_gig_applications_gig_id     on gig_applications(gig_id);
+create index idx_gig_applications_creator_id on gig_applications(creator_id);
+
 create table payments (
   id uuid default uuid_generate_v4() primary key,
   brand_id uuid references profiles(id) on delete cascade not null,
   campaign_id uuid references campaigns(id) on delete cascade,
+  gig_id uuid references gig_listings(id) on delete set null,
   stripe_payment_intent_id text unique,
   amount_cents int not null,
   type text not null, -- 'campaign_fee' | 'escrow' | 'featured'
@@ -287,6 +325,8 @@ alter table content_uploads enable row level security;
 alter table payments enable row level security;
 alter table subscriptions enable row level security;
 alter table promo_redemptions enable row level security;
+alter table gig_listings enable row level security;
+alter table gig_applications enable row level security;
 
 -- profiles: users can read ONLY their own row (H-1 fix — emails are no longer world-readable).
 -- Public-safe fields are exposed via the profiles_public view below.
@@ -360,6 +400,24 @@ create policy "subscriptions_select_own" on subscriptions for select to authenti
 -- promo_redemptions: own read only — writes via service_role (Edge Function) only
 create policy "promo_redemptions_select_own" on promo_redemptions for select to authenticated using (auth.uid() = user_id);
 
+-- gig_listings: owner inserts draft only; public read (drafts hidden from non-owners);
+-- publish (draft->open) gated by enforce_gig_payment_gate (service_role only).
+create policy "gig_listings_insert_own_draft" on gig_listings for insert to authenticated
+  with check (auth.uid() = brand_id and stage = 'draft');
+create policy "gig_listings_read_public" on gig_listings for select
+  using (stage <> 'draft' or auth.uid() = brand_id);
+create policy "gig_listings_update_own" on gig_listings for update using (auth.uid() = brand_id);
+create policy "gig_listings_delete_own" on gig_listings for delete using (auth.uid() = brand_id);
+
+-- gig_applications: creator inserts/reads own; brand reads/updates apps to gigs they own.
+create policy "gig_applications_creator_insert" on gig_applications for insert to authenticated
+  with check (auth.uid() = creator_id and stage = 'applied');
+create policy "gig_applications_creator_read" on gig_applications for select using (auth.uid() = creator_id);
+create policy "gig_applications_brand_read" on gig_applications for select
+  using (auth.uid() in (select brand_id from gig_listings where id = gig_id));
+create policy "gig_applications_brand_update" on gig_applications for update
+  using (auth.uid() in (select brand_id from gig_listings where id = gig_id));
+
 -- ============================================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================================
@@ -426,6 +484,29 @@ $$ language plpgsql;
 drop trigger if exists campaign_payment_gate on campaigns;
 create trigger campaign_payment_gate before update on campaigns
   for each row execute function enforce_campaign_payment_gate();
+
+-- ── Gig payment gate ────────────────────────────────────────
+-- Only the payment system (service_role) may publish a gig (draft -> non-draft).
+create or replace function enforce_gig_payment_gate()
+returns trigger as $$
+begin
+  if auth.role() = 'service_role' then
+    return new;
+  end if;
+  if old.stage = 'draft' and new.stage <> 'draft' then
+    raise exception 'publishing requires payment' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists gig_payment_gate on gig_listings;
+create trigger gig_payment_gate before update on gig_listings
+  for each row execute function enforce_gig_payment_gate();
+
+drop trigger if exists gig_listings_updated_at on gig_listings;
+create trigger gig_listings_updated_at before update on gig_listings
+  for each row execute function update_updated_at();
 
 -- ── applications.brand_id is derived server-side from the campaign (G-2) ──
 -- Prevents a creator from forging brand_id on insert; sourced from campaigns.

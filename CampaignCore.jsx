@@ -3141,7 +3141,6 @@ function Preview({ brand, campaign, platforms, terms }) {
 function GigListingBuilder({ onBack, onPublish, session }) {
   const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [gigComingSoon, setGigComingSoon] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [payError, setPayError] = useState("");
   const [pendingGigData, setPendingGigData] = useState(null);
@@ -3161,6 +3160,8 @@ function GigListingBuilder({ onBack, onPublish, session }) {
     finally { setQuoteLoading(false); }
   };
   const needCard = showPayModal && !!quote && quote.amount_cents > 0;
+  // Sweep any stale gig draft from an abandoned prior attempt on mount.
+  useEffect(() => { if (session?.access_token) callStripePaymentV2({ action: 'cancel' }, session.access_token).catch(() => {}); }, []);
 
   const [brand, setBrand] = useState({
     name: "", email: "", phone: "", phoneCode: "+1",
@@ -3247,19 +3248,25 @@ function GigListingBuilder({ onBack, onPublish, session }) {
     return patterns[index % patterns.length];
   };
 
-  const buildAndPublish = () => {
-    const gigData = {
-      brand: brand.name, logoPreview: brand.logoPreview,
-      title: details.title, description: details.description,
-      industry: details.industry, location: details.location,
-      shootDate: details.shootDate, contentTypes: details.contentTypes,
-      equipment: details.equipment, deliverables: details.deliverables,
-      requirements: details.requirements, spotsTotal: details.spotsTotal,
-      payType: pay.payType, payRate: parseFloat(pay.payRate),
-      inspoBoard, skills: [],
-    };
-    onPublish(gigData, account);
-  };
+  const buildGigData = () => ({
+    brand: brand.name, logoPreview: brand.logoPreview,
+    title: details.title, description: details.description,
+    industry: details.industry, location: details.location,
+    shootDate: details.shootDate, contentTypes: details.contentTypes,
+    equipment: details.equipment, deliverables: details.deliverables,
+    requirements: details.requirements, spotsTotal: details.spotsTotal,
+    payType: pay.payType, payRate: parseFloat(pay.payRate),
+    inspoBoard, skills: [],
+  });
+  // Fields the Edge Function persists on the gig_listings draft.
+  const buildGigFeatures = () => ({
+    title: details.title, description: details.description,
+    comp: pay.payRate ? String(pay.payRate) : null, pay_type: pay.payType,
+    deadline: details.shootDate, location: details.location,
+    platforms: details.contentTypes ?? [], deliverables: details.deliverables ?? null,
+    requirements: details.requirements ?? null, equipment: details.equipment ?? null,
+    skills_required: [],
+  });
 
   // Gig price comes from the server quote (flat fee; fee fully discountable — no escrow).
 
@@ -3287,13 +3294,13 @@ function GigListingBuilder({ onBack, onPublish, session }) {
               setPayLoading(true); setPayError("");
               let res;
               try {
-                res = await callStripePaymentV2({ action: 'charge', type: 'gig', promoCode: (promoCode || '').trim() }, session?.access_token);
+                res = await callStripePaymentV2({ action: 'charge', type: 'gig', features: buildGigFeatures(), promoCode: (promoCode || '').trim() }, session?.access_token);
                 if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                 setShowPayModal(false);
-                buildAndPublish();
+                if (onPublish) onPublish(buildGigData(), account, { gigId: res.gigId, free: !!res.free });
               } catch (err) {
                 setPayError(err.message || "Payment failed");
-                if (res && res.payment_intent_id) { try { await callStripePaymentV2({ action: 'cancel', paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
+                if (res && (res.gigId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', gigId: res.gigId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
               } finally { setPayLoading(false); }
             }}>{payLoading ? "processing..." : isFree ? "confirm & publish" : `pay ${quote ? "$" + (quote.amount_cents / 100).toFixed(2) : ""} & publish`}</button>
             <button className="nf-btn-back" disabled={payLoading} style={{ width: "100%" }} onClick={() => { if (!payLoading) setShowPayModal(false); }}>cancel</button>
@@ -3628,16 +3635,9 @@ function GigListingBuilder({ onBack, onPublish, session }) {
         {step < 4 ? (
           <button className="nf-btn" disabled={!canProceed} onClick={next}>next</button>
         ) : (
-          <button className="nf-btn" disabled={!canProceed} onClick={() => setGigComingSoon(true)}>publish gig</button>
+          <button className="nf-btn" disabled={!canProceed} onClick={() => setShowPayModal(true)}>publish gig — $49.99</button>
         )}
       </div>
-      {gigComingSoon && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-          <div style={{ maxWidth: 520, textAlign: "center", padding: "14px 18px", borderRadius: 12, border: "1px solid rgba(255,200,60,.25)", background: "rgba(255,200,60,.06)", color: "rgba(255,220,140,.9)", fontSize: ".88rem" }}>
-            Gig listings are coming soon — we're putting the finishing touches on this. Your details aren't lost; check back shortly.
-          </div>
-        </div>
-      )}
     </div>
   );
 }

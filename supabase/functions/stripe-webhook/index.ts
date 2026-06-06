@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
           }).eq('id', m.campaign_id).eq('brand_id', m.user_id);
         }
       }
+      if (m.type === 'gig' && m.gig_id && m.user_id) {
+        // Publish the gig once payment succeeds (service_role bypasses the gig payment gate).
+        await admin.from('gig_listings').update({ stage: 'open' })
+          .eq('id', m.gig_id).eq('brand_id', m.user_id);
+      }
     } else if (event.type === 'payment_intent.payment_failed' || event.type === 'payment_intent.canceled') {
       const pi = event.data.object as Stripe.PaymentIntent;
       const m = pi.metadata ?? {};
@@ -68,6 +73,10 @@ Deno.serve(async (req) => {
       if (m.type === 'campaign_new' && m.campaign_id && m.user_id) {
         await admin.from('campaigns').delete()
           .eq('id', m.campaign_id).eq('brand_id', m.user_id).eq('stage', 'draft');
+      }
+      if (m.type === 'gig' && m.gig_id && m.user_id) {
+        await admin.from('gig_listings').delete()
+          .eq('id', m.gig_id).eq('brand_id', m.user_id).eq('stage', 'draft');
       }
     }
     // other event types: ignore

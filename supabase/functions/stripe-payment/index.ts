@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
   if (action === 'cancel') {
     const piId: string | undefined = typeof body.paymentIntentId === 'string' ? body.paymentIntentId : undefined;
     const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
+    const gid: string | undefined = typeof body.gigId === 'string' ? body.gigId : undefined;
 
     if (piId) {
       const { data: pays } = await admin.from('payments').select('id, brand_id, status').eq('stripe_payment_intent_id', piId);
@@ -99,7 +100,16 @@ Deno.serve(async (req) => {
         await admin.from('campaigns').delete().eq('id', cid).eq('brand_id', user.id).eq('stage', 'draft');
       }
     }
-    if (!piId && !cid) {
+    if (gid) {
+      const { data: gig } = await admin.from('gig_listings').select('id, brand_id, stage').eq('id', gid).maybeSingle();
+      if (gig && gig.brand_id === user.id && gig.stage === 'draft') {
+        const { data: pays } = await admin.from('payments').select('id, status').eq('gig_id', gid);
+        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
+        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
+        await admin.from('gig_listings').delete().eq('id', gid).eq('brand_id', user.id).eq('stage', 'draft');
+      }
+    }
+    if (!piId && !cid && !gid) {
       // Sweep ALL of the user's stale drafts (and their linked payments/redemptions).
       const { data: drafts } = await admin.from('campaigns').select('id').eq('brand_id', user.id).eq('stage', 'draft');
       const draftIds = (drafts ?? []).map((d: any) => d.id);
@@ -108,6 +118,14 @@ Deno.serve(async (req) => {
         const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
         if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
         await admin.from('campaigns').delete().in('id', draftIds).eq('brand_id', user.id).eq('stage', 'draft');
+      }
+      const { data: gdrafts } = await admin.from('gig_listings').select('id').eq('brand_id', user.id).eq('stage', 'draft');
+      const gigIds = (gdrafts ?? []).map((d: any) => d.id);
+      if (gigIds.length) {
+        const { data: gpays } = await admin.from('payments').select('id, status').in('gig_id', gigIds);
+        const gp = (gpays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
+        if (gp.length) { await admin.from('promo_redemptions').delete().in('payment_id', gp); await admin.from('payments').delete().in('id', gp); }
+        await admin.from('gig_listings').delete().in('id', gigIds).eq('brand_id', user.id).eq('stage', 'draft');
       }
     }
     return json({ ok: true }, 200, cors);
@@ -132,10 +150,30 @@ Deno.serve(async (req) => {
   let subtotalCents = 0;
   let breakdown: Record<string, number> = {};
   let draftId: string | null = null;
+  let gigDraftId: string | null = null;
 
   if (type === 'gig') {
     subtotalCents = GIG_PRICE_CENTS;
     breakdown = { gig: GIG_PRICE_CENTS };
+    if (action === 'charge') {
+      const { data: created, error } = await admin.from('gig_listings').insert({
+        brand_id: user.id,
+        title: features.title ?? '',
+        description: features.description ?? null,
+        stage: 'draft',
+        comp: features.comp != null ? String(features.comp) : null,
+        pay_type: features.pay_type ?? features.payType ?? null,
+        deadline: features.deadline ?? null,
+        location: features.location ?? null,
+        platforms: features.platforms ?? [],
+        deliverables: features.deliverables ?? null,
+        skills_required: features.skills_required ?? features.skills ?? [],
+        requirements: features.requirements ?? null,
+        equipment: features.equipment ?? null,
+      }).select('id').single();
+      if (error || !created) return json({ error: 'could not create draft gig' }, 500, cors);
+      gigDraftId = created.id;
+    }
   } else if (type === 'campaign_edit') {
     if (!campaignId) return json({ error: 'campaignId required' }, 400, cors);
     const { data: existing, error } = await supabase.from('campaigns').select('*').eq('id', campaignId).maybeSingle();
@@ -188,6 +226,7 @@ Deno.serve(async (req) => {
 
   // ── CHARGE ──
   const effectiveCampaignId = type === 'campaign_new' ? draftId : (campaignId ?? null);
+  const effectiveGigId = type === 'gig' ? gigDraftId : null;
   const paymentType = type === 'gig' ? 'campaign_fee' : ((breakdown.escrow ?? 0) > 0 ? 'escrow' : 'featured');
 
   let promoClaimed = false;
@@ -198,7 +237,10 @@ Deno.serve(async (req) => {
       if (type === 'campaign_new' && draftId) {
         await admin.from('campaigns').update({ stage: 'open' }).eq('id', draftId).eq('brand_id', user.id);
       }
-      return json({ free: true, client_secret: null, amount_cents: 0, campaignId: effectiveCampaignId, breakdown }, 200, cors);
+      if (type === 'gig' && gigDraftId) {
+        await admin.from('gig_listings').update({ stage: 'open' }).eq('id', gigDraftId).eq('brand_id', user.id);
+      }
+      return json({ free: true, client_secret: null, amount_cents: 0, campaignId: effectiveCampaignId, gigId: effectiveGigId, breakdown }, 200, cors);
     }
 
     // Atomic one-use promo claim — insert FIRST so the UNIQUE(user_id, promo_code)
@@ -221,6 +263,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         type,
         campaign_id: effectiveCampaignId ?? '',
+        gig_id: effectiveGigId ?? '',
         promo_code: promo,
         featured: features.featured ? '1' : '0',
         featured_weeks: String(Number(features.featuredWeeks) || 7),
@@ -231,6 +274,7 @@ Deno.serve(async (req) => {
     const { data: pay } = await admin.from('payments').insert({
       brand_id: user.id,
       campaign_id: effectiveCampaignId,
+      gig_id: effectiveGigId,
       stripe_payment_intent_id: paymentIntent.id,
       amount_cents: discountedCents,
       type: paymentType,
@@ -250,12 +294,14 @@ Deno.serve(async (req) => {
       payment_intent_id: paymentIntent.id,
       amount_cents: discountedCents,
       campaignId: effectiveCampaignId,
+      gigId: effectiveGigId,
       breakdown,
     }, 200, cors);
   } catch (err) {
     // Roll back anything created before the failure so nothing is orphaned/locked.
     if (promoClaimed) await admin.from('promo_redemptions').delete().eq('user_id', user.id).eq('promo_code', promo);
     if (draftId) await admin.from('campaigns').delete().eq('id', draftId).eq('brand_id', user.id); // don't orphan a draft on charge failure
+    if (gigDraftId) await admin.from('gig_listings').delete().eq('id', gigDraftId).eq('brand_id', user.id);
     if (err instanceof Stripe.errors.StripeError) return json({ error: err.message, code: err.code }, err.statusCode ?? 500, cors);
     return json({ error: 'Internal server error' }, 500, cors);
   }

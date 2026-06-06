@@ -390,77 +390,23 @@ function NfluenceApp() {
     }
   };
 
-  const handleGigPublish = async (gigData, account = {}) => {
+  const handleGigPublish = async (gigData, account = {}, result = {}) => {
     const sb = getSB();
-    let activeUser = user;
-
-    // Build the brand profile from data collected in the builder
-    const brandProfile = {
-      name: gigData.brand,
-      tagline: gigData.tagline,
-      email: account?.email,
-      phone: account?.phone,
-      location: [gigData.city, gigData.state, gigData.country].filter(Boolean).join(", "),
-      city: gigData.city,
-      state: gigData.state,
-      country: gigData.country,
-      website: gigData.website,
-      logoUrl: gigData.logoUrl,
-      bannerUrl: gigData.bannerUrl,
-      industry: gigData.industry,
-      bio: gigData.bio,
-    };
-
-    // If not signed in, sign up with the credentials from the account step
-    if (!activeUser && account?.email) {
-      if (sb && account?.password) {
-        try {
-          console.log('[auth] signUp() — handleGigPublish:', { email: account.email, brand: gigData.brand });
-          const { data, error } = await sb.auth.signUp({
-            email: account.email,
-            password: account.password,
-            options: { data: { name: gigData.brand, role: 'brand' } },
-          });
-          console.log('[auth] signUp() result:', { hasUser: !!data?.user, hasSession: !!data?.session, userId: data?.user?.id, error: error?.message });
-          if (error) throw error;
-          if (data.user) {
-            activeUser = { id: data.user.id, ...brandProfile, email: data.user.email };
-            setAuthSession(data.session);
-            setUser(activeUser);
-            await sb.from('profiles').upsert({ id: data.user.id, email: data.user.email, name: gigData.brand, role: 'brand' });
-          }
-        } catch (err) {
-          console.error('Sign up failed during gig publish:', err);
-        }
-      }
-      // Demo-mode fallback: still populate the user state even without Supabase
-      if (!activeUser) {
-        activeUser = { ...brandProfile };
-        setUser(activeUser);
-      }
-    }
-
-    if (activeUser?.id && sb) {
+    const gigId = result.gigId;
+    if (!gigId) console.warn('[handleGigPublish] no gigId from Edge Function — gig will not persist');
+    // The Edge Function created the gig draft (and charged if needed). Persist the brand
+    // profile collected in the builder. We do NOT flip stage here — free gigs are published
+    // by the EF; paid ones flip draft→open via the Stripe webhook on payment success.
+    if (sb && gigId) {
       try {
-        await sb.from('gig_listings').insert({
-          brand_id: activeUser.id,
-          brand_name: gigData.brand,
-          title: gigData.title,
-          description: gigData.description,
-          industry: gigData.industry,
-          location: gigData.location,
-          shoot_date: gigData.shootDate,
-          content_types: gigData.contentTypes,
-          equipment: gigData.equipment,
-          deliverables: gigData.deliverables,
-          requirements: gigData.requirements,
-          spots_total: gigData.spotsTotal,
-          pay_type: gigData.payType,
-          pay_rate: gigData.payRate,
-        });
-      } catch (err) {
-        console.error('Failed to save gig to Supabase:', err);
-      }
+        const { data: { session } } = await sb.auth.getSession();
+        const uid = session?.user?.id;
+        if (uid) {
+          await sb.from('profiles').upsert({
+            id: uid, name: gigData.brand, logo_url: gigData.logoPreview ?? gigData.logoUrl ?? null, role: 'brand',
+          });
+        }
+      } catch (err) { console.error('Failed to finalize gig:', err); }
     }
 
     addNotification({ for: 'brand', type: 'gig_published', title: 'gig listing published', body: `Your ${gigData.title || 'gig'} listing is now live.` });
