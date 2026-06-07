@@ -1699,10 +1699,6 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     niches: "", publicRequired: false, approvalRequired: false, perApplicantApproval: false,
     featured: false, featuredWeeks: 7,
   });
-  const [account, setAccount] = useState({
-    email: "", password: "", confirmPassword: "", agreeTerms: false, plan: "campaign", // "campaign" | "annual"
-  });
-
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const selectedSocials = SOCIAL_OPTIONS.filter(k => brand.socialPills[k]);
   const socialsComplete = selectedSocials.every(k => brand.socials[k]?.trim());
@@ -1720,21 +1716,16 @@ function CampaignBuilder({ onBack, onPublish, session }) {
       const hasAmount = !isPaid || (parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) > 0);
       return terms.compType && terms.country && !needsCap && hasDeadline && hasAmount;
     }
-    if (step === 4) return isValidEmail(account.email) && account.password.length >= 8 && account.password === account.confirmPassword && account.agreeTerms;
     return true;
-  }, [step, brand, campaign, platforms, terms, account, socialsComplete, selectedPlatformKeys, hasDeliverable]);
+  }, [step, brand, campaign, platforms, terms, socialsComplete, selectedPlatformKeys, hasDeliverable]);
 
-  const next = () => { if (step < 5) setStep(step + 1); };
+  const next = () => { if (step < 4) setStep(step + 1); };
   const back = () => { if (step > 0) setStep(step - 1); };
 
   const containerRef = useRef(null);
   useEffect(() => {
     containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
     window.scrollTo?.({ top: 0, behavior: "smooth" });
-    // Auto-prefill account email from brand email
-    if (step === 4 && !account.email && brand.email) {
-      setAccount(p => ({ ...p, email: brand.email }));
-    }
   }, [step]);
 
 
@@ -2807,92 +2798,6 @@ function CampaignBuilder({ onBack, onPublish, session }) {
       {step === 4 && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
           <div className="nf-wrap">
-            <div className="nf-section-title">create your account</div>
-
-            <div style={{ marginBottom: 24 }}>
-              <style>{`
-                @keyframes nf-ann-shimmer { 0%,100% { border-color: rgba(180,255,80,.25); box-shadow: 0 0 8px rgba(180,255,80,.08); } 50% { border-color: rgba(180,255,80,.85); box-shadow: 0 0 18px rgba(180,255,80,.3); } }
-                @keyframes nf-val-shimmer { 0%,100% { border-color: rgba(255,140,30,.25); box-shadow: 0 0 6px rgba(255,140,30,.08); } 50% { border-color: rgba(255,140,30,.9); box-shadow: 0 0 14px rgba(255,140,30,.35); } }
-                .nf-plan-ann-selected { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
-                .nf-plan-val-badge { animation: nf-val-shimmer 2.5s ease-in-out infinite; }
-                .nf-plan-best-badge { animation: nf-ann-shimmer 2.5s ease-in-out infinite; }
-                .nf-plan-unsel:hover { border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.04) !important; transform: translateY(-2px); }
-              `}</style>
-              {/* Per-campaign */}
-              <div className={account.plan !== "campaign" ? "nf-plan-unsel" : ""} onClick={() => setAccount(p => ({ ...p, plan: "campaign" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "campaign" ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.1)"}`, background: account.plan === "campaign" ? "rgba(255,255,255,.06)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>per campaign</div>
-                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem" }}>$299</div>
-                </div>
-                <div style={{ fontSize: ".78rem", opacity: .45, lineHeight: 1.5 }}>one-time fee per campaign. no commitment.</div>
-              </div>
-              {/* Annual */}
-              <div className={account.plan === "annual" ? "nf-plan-ann-selected" : "nf-plan-unsel"} onClick={() => setAccount(p => ({ ...p, plan: "annual" }))} style={{ padding: "18px 20px", borderRadius: 16, border: `1.5px solid ${account.plan === "annual" ? "rgba(180,255,80,.5)" : "rgba(255,255,255,.1)"}`, background: account.plan === "annual" ? "rgba(180,255,80,.05)" : "rgba(255,255,255,.02)", cursor: "pointer", transition: "all .15s" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1rem" }}>annual plan</div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: "1.4rem", color: "rgba(180,255,80,.9)" }}>$1,999</div>
-                    <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 700, fontSize: ".8rem", color: "rgba(180,255,80,.7)", letterSpacing: 1 }}>/ yr</div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
-                  {["unlimited campaigns for 12 months", "up to 3 active simultaneously", "all platform features included"].map((item, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      {item}
-                    </div>
-                  ))}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: ".78rem", opacity: .65, flexWrap: "wrap" }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(180,255,80,.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>1 free 30-day featured campaign per month</span>
-                    <span className="nf-plan-val-badge" style={{ padding: "1px 7px", borderRadius: 20, background: "rgba(255,140,30,.1)", border: "1px solid rgba(255,140,30,.3)", fontSize: ".68rem", fontWeight: 700, color: "rgba(255,140,30,.95)", marginLeft: 2 }}>$600 value!</span>
-                  </div>
-                </div>
-                <div className="nf-plan-best-badge" style={{ display: "inline-block", padding: "3px 12px", borderRadius: 20, background: "rgba(180,255,80,.1)", border: "1px solid rgba(180,255,80,.3)", fontSize: ".72rem", fontWeight: 700, color: "rgba(180,255,80,.9)" }}>best value</div>
-              </div>
-            </div>
-
-            <div className="nf-line" />
-            <div className="nf-section-title">account details</div>
-
-            <div className="nf-field-full">
-              <input className="nf-input" type="email" value={account.email}
-                onChange={e => setAccount(p => ({...p, email: e.target.value}))}
-                placeholder="email *"
-                style={account.email && !isValidEmail(account.email) ? { borderColor: "rgba(255,100,100,.3)" } : {}} />
-            </div>
-            <div className="nf-field-full">
-              <input className="nf-input" type="password" value={account.password}
-                onChange={e => setAccount(p => ({...p, password: e.target.value}))}
-                placeholder="password * (min 8 characters)" />
-              {account.password && account.password.length < 8 && (
-                <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>password must be at least 8 characters</div>
-              )}
-            </div>
-            <div className="nf-field-full">
-              <input className="nf-input" type="password" value={account.confirmPassword}
-                onChange={e => setAccount(p => ({...p, confirmPassword: e.target.value}))}
-                placeholder="confirm password *" />
-              {account.confirmPassword && account.password !== account.confirmPassword && (
-                <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>passwords do not match</div>
-              )}
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <div className="nf-toggle" onClick={() => setAccount(p => ({...p, agreeTerms: !p.agreeTerms}))}>
-                <div className={`nf-toggle-track ${account.agreeTerms ? "on" : ""}`}>
-                  <div className="nf-toggle-knob" />
-                </div>
-                <span>i agree to the <span style={{ textDecoration: "underline", opacity: .8 }}>terms of service</span> and <span style={{ textDecoration: "underline", opacity: .8 }}>privacy policy</span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
-          <div className="nf-wrap">
             <div className="nf-section-title">preview</div>
             <div className="nf-hint">this is how creators will see your listing</div>
             <Preview brand={brand} campaign={campaign} platforms={platforms} terms={terms} />
@@ -2904,7 +2809,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
         {step > 0 ? (
           <button className="nf-btn-back" onClick={back}>back</button>
         ) : <div />}
-        {step < 5 ? (
+        {step < 4 ? (
           <button className="nf-btn" disabled={!canProceed} onClick={next}>next</button>
         ) : (
           <button className="nf-btn" onClick={() => {
@@ -2992,7 +2897,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                     res = await callStripePaymentV2({ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() }, session?.access_token);
                     if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                     setShowPayModal(false);
-                    if (onPublish) onPublish(pendingCampaignData, account, { campaignId: res.campaignId, free: !!res.free });
+                    if (onPublish) onPublish(pendingCampaignData, {}, { campaignId: res.campaignId, free: !!res.free });
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
                     if (res && (res.campaignId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', campaignId: res.campaignId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
@@ -3174,7 +3079,6 @@ function GigListingBuilder({ onBack, onPublish, session }) {
   });
   const [inspoBoard, setInspoBoard] = useState([]); // [{ type: "photo"|"video", src, id }]
   const [pay, setPay] = useState({ payType: "flat", payRate: "" });
-  const [account, setAccount] = useState({ email: "", password: "", confirmPassword: "", agreeTerms: false, plan: "gig" });
   const [lightboxItem, setLightboxItem] = useState(null);
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -3184,9 +3088,8 @@ function GigListingBuilder({ onBack, onPublish, session }) {
     if (step === 1) return details.title.trim() && details.description.trim() && details.industry && details.location.trim() && details.shootDate && details.contentTypes.length > 0 && details.equipment && details.deliverables.trim();
     if (step === 2) return true; // inspo board optional
     if (step === 3) return pay.payRate && !isNaN(parseFloat(pay.payRate)) && parseFloat(pay.payRate) > 0;
-    if (step === 4) return isValidEmail(account.email) && account.password.length >= 8 && account.password === account.confirmPassword && account.agreeTerms;
     return true;
-  }, [step, brand, details, pay, account]);
+  }, [step, brand, details, pay]);
 
   const next = () => { if (step < 4) setStep(step + 1); };
   const back = () => { if (step > 0) setStep(step - 1); };
@@ -3195,7 +3098,6 @@ function GigListingBuilder({ onBack, onPublish, session }) {
   useEffect(() => {
     containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
     window.scrollTo?.({ top: 0, behavior: "smooth" });
-    if (step === 4 && !account.email && brand.email) setAccount(p => ({ ...p, email: brand.email }));
   }, [step]);
 
   useEffect(() => {
@@ -3297,7 +3199,7 @@ function GigListingBuilder({ onBack, onPublish, session }) {
                 res = await callStripePaymentV2({ action: 'charge', type: 'gig', features: buildGigFeatures(), promoCode: (promoCode || '').trim() }, session?.access_token);
                 if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                 setShowPayModal(false);
-                if (onPublish) onPublish(buildGigData(), account, { gigId: res.gigId, free: !!res.free });
+                if (onPublish) onPublish(buildGigData(), {}, { gigId: res.gigId, free: !!res.free });
               } catch (err) {
                 setPayError(err.message || "Payment failed");
                 if (res && (res.gigId || res.payment_intent_id)) { try { await callStripePaymentV2({ action: 'cancel', gigId: res.gigId, paymentIntentId: res.payment_intent_id }, session?.access_token); } catch (_) {} }
@@ -3600,30 +3502,6 @@ function GigListingBuilder({ onBack, onPublish, session }) {
                   </div>
                   <div style={{ fontSize: ".82rem", opacity: .5 }}>{details.location || "—"}</div>
                 </div>
-              </div>
-            </div>
-
-            <div className="nf-line" />
-            <div className="nf-section-title">account details</div>
-            <div className="nf-field-full">
-              <input className="nf-input" type="email" value={account.email} onChange={e => setAccount(p => ({ ...p, email: e.target.value }))} placeholder="email *"
-                style={account.email && !isValidEmail(account.email) ? { borderColor: "rgba(255,100,100,.3)" } : {}} />
-            </div>
-            <div className="nf-field-full">
-              <input className="nf-input" type="password" value={account.password} onChange={e => setAccount(p => ({ ...p, password: e.target.value }))} placeholder="password * (min 8 characters)" />
-              {account.password && account.password.length < 8 && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>password must be at least 8 characters</div>}
-            </div>
-            <div className="nf-field-full">
-              <input className="nf-input" type="password" value={account.confirmPassword} onChange={e => setAccount(p => ({ ...p, confirmPassword: e.target.value }))} placeholder="confirm password *" />
-              {account.confirmPassword && account.password !== account.confirmPassword && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>passwords do not match</div>}
-            </div>
-            <div style={{ marginTop: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", padding: "5px 0", fontSize: ".85rem", color: "#fff" }}
-                onClick={() => setAccount(p => ({ ...p, agreeTerms: !p.agreeTerms }))}>
-                <div style={{ width: 36, height: 20, borderRadius: 10, border: `1px solid ${account.agreeTerms ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.18)"}`, background: account.agreeTerms ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.35)", position: "relative", transition: "all .2s", flexShrink: 0 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, left: 2, transition: "transform .2s", transform: account.agreeTerms ? "translateX(16px)" : "none" }} />
-                </div>
-                <span>i agree to the <span style={{ textDecoration: "underline", opacity: .8 }}>terms of service</span> and <span style={{ textDecoration: "underline", opacity: .8 }}>privacy policy</span></span>
               </div>
             </div>
           </div>

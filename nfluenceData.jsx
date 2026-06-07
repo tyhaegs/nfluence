@@ -34,7 +34,7 @@ const COMP_OPTIONS = [
   { value: "paid", label: "paid" },
   { value: "product+paid", label: "product + paid" },
 ];
-const STEPS = ["brand", "campaign", "platforms", "terms", "account", "preview"];
+const STEPS = ["brand", "campaign", "platforms", "terms", "preview"];
 const VIBES = ["bold", "playful", "minimal", "luxury", "edgy", "warm", "professional", "raw", "inspirational", "witty", "clean", "authentic"];
 const SOCIAL_OPTIONS = ["Instagram", "TikTok", "YouTube", "X", "Facebook", "Website"];
 
