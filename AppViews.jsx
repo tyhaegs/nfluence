@@ -2335,7 +2335,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
   const clearAll = () => { setSearch(""); setFilterPlatform("All"); setFilterComp("All"); setFilterIndustry("All"); };
 
   const pillBtn = (active, onClick, label) => (
-    <button onClick={onClick} style={{
+    <button key={label} onClick={onClick} style={{
       padding: "6px 14px", borderRadius: 20, border: `1px solid ${active ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`,
       background: active ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.04)",
       color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif",
@@ -2504,6 +2504,217 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── GigBrowse (creator-facing live gig listings) ──
+
+function GigBrowse({ onBack, onSelectGig, appliedGigs = [], creatorUser }) {
+  const [gigs, setGigs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filterSkill, setFilterSkill] = useState("All");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const sb = getSB();
+      if (!sb) { setError("connection unavailable"); setLoading(false); return; }
+      try {
+        // Step 1: open gigs (anon read; RLS exposes stage<>'draft')
+        const { data: rows, error: gErr } = await sb
+          .from("gig_listings")
+          .select("id,title,description,comp,pay_type,deadline,location,platforms,skills_required,requirements,equipment,deliverables,created_at,brand_id")
+          .eq("stage", "open")
+          .order("created_at", { ascending: false });
+        if (gErr) throw gErr;
+        const list = rows || [];
+        // Step 2: brand name/logo via public projection (profiles is own-row-only under RLS)
+        const brandIds = [...new Set(list.map(g => g.brand_id).filter(Boolean))];
+        let brandMap = {};
+        if (brandIds.length) {
+          const { data: profs } = await sb.from("profiles_public").select("id,name,logo_url").in("id", brandIds);
+          brandMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
+        }
+        const merged = list.map(g => ({ ...g, brandName: brandMap[g.brand_id]?.name || "a brand", brandLogo: brandMap[g.brand_id]?.logo_url || null }));
+        if (!cancelled) { setGigs(merged); setLoading(false); }
+      } catch (e) {
+        if (!cancelled) { setError(e.message || "failed to load gigs"); setLoading(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = filterSkill === "All" ? gigs : gigs.filter(g => (g.skills_required || []).includes(filterSkill));
+
+  const pill = (active, onClick, label) => (
+    <button key={label} onClick={onClick} style={{ padding: "6px 14px", borderRadius: 20, border: `1px solid ${active ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.12)"}`, background: active ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.04)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", opacity: active ? 1 : .65, transition: "all .15s", whiteSpace: "nowrap", textTransform: "lowercase" }}>{label}</button>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,.06) 0%, transparent 55%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`
+        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
+        .nf-gig-card { background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0)); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s, border-color .25s; }
+        .nf-gig-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 28px 65px rgba(0,0,0,.5); border-color: rgba(255,255,255,.25); }
+      `}</style>
+
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px,4vw,32px)" }}>
+        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onBack(); } }} onClick={onBack} style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }}>nfluence</div>
+        <span role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onBack(); } }} onClick={onBack} style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }}>back</span>
+      </div>
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
+        <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 8, fontWeight: 600 }}>gig listings</h2>
+        <p style={{ textAlign: "center", opacity: .4, fontSize: ".85rem", marginBottom: 24 }}>brands hiring photographers &amp; videographers</p>
+
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 28, flexWrap: "wrap" }}>
+          {pill(filterSkill === "All", () => setFilterSkill("All"), "all")}
+          {GIG_SKILLS.map(s => pill(filterSkill === s, () => setFilterSkill(s), s))}
+        </div>
+
+        {loading && <div style={{ textAlign: "center", opacity: .4, fontSize: ".9rem", marginTop: 60 }}>loading gigs…</div>}
+        {!loading && error && <div style={{ textAlign: "center", color: "rgba(255,120,120,.8)", fontSize: ".9rem", marginTop: 60 }}>{error}</div>}
+        {!loading && !error && filtered.length === 0 && <div style={{ textAlign: "center", opacity: .3, fontSize: ".9rem", marginTop: 60 }}>no open gig listings right now</div>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          {filtered.map(gig => {
+            const applied = appliedGigs.includes(gig.id);
+            return (
+              <div key={gig.id} className="nf-gig-card" onClick={() => onSelectGig(gig)}>
+                <div style={{ padding: "16px 18px 18px", flex: 1, display: "flex", flexDirection: "column" }}>
+                  <div style={{ fontSize: "1.02rem", fontWeight: 700, marginBottom: 3, lineHeight: 1.3 }}>{gig.title}</div>
+                  <div style={{ fontSize: ".82rem", opacity: .45, marginBottom: 12 }}>{gig.brandName}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
+                    {(gig.platforms || []).slice(0, 4).map(p => (
+                      <span key={p} style={{ padding: "2px 9px", borderRadius: 20, border: "1px solid rgba(255,255,255,.15)", fontSize: ".7rem", opacity: .7 }}>{p}</span>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    {[["location", gig.location], ["deadline", gig.deadline]].map(([label, val]) => (
+                      <div key={label} style={{ display: "flex", gap: 8, padding: "2px 0", fontSize: ".85rem" }}>
+                        <div style={{ opacity: .35, minWidth: 72 }}>{label}:</div>
+                        <div style={{ opacity: .75 }}>{val || "—"}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 14, marginTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+                    <div>
+                      <div style={{ fontSize: ".7rem", opacity: .4, marginBottom: 2 }}>{gig.pay_type === "hourly" ? "hourly rate" : "pay"}</div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: 700 }}>{gig.comp || "—"}{gig.pay_type === "hourly" ? <span style={{ fontSize: ".72rem", opacity: .5 }}>/hr</span> : ""}</div>
+                    </div>
+                    {applied
+                      ? <div style={{ padding: "8px 16px", borderRadius: 12, border: "1px solid rgba(100,255,150,.2)", fontSize: ".85rem", fontWeight: 600, color: "rgba(100,255,150,.8)" }}>applied</div>
+                      : <div style={{ padding: "8px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,.3)", fontSize: ".85rem", fontWeight: 600 }}>view</div>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── GigDetail (creator-facing gig detail + apply) ──
+
+function GigDetail({ gig, onBack, creatorUser, appliedGigs = [], onApply, onSignInRedirect }) {
+  const [hasApplied, setHasApplied] = useState(appliedGigs.includes(gig.id));
+  const [showApply, setShowApply] = useState(false);
+  const [pitch, setPitch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const openApply = () => { if (!creatorUser) { onSignInRedirect?.(); return; } setSubmitError(""); setShowApply(true); };
+  const submit = async () => {
+    if (!pitch.trim()) return;
+    setSubmitting(true); setSubmitError("");
+    try {
+      const res = await onApply?.(gig, { pitch: pitch.trim() });
+      if (res && res.error) throw new Error(res.error);
+      setHasApplied(true); setDone(true);
+    } catch (e) { setSubmitError(e.message || "could not submit application"); }
+    finally { setSubmitting(false); }
+  };
+
+  const Field = ({ label, value }) => value ? (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 4, textTransform: "lowercase" }}>{label}</div>
+      <div style={{ fontSize: ".92rem", opacity: .85, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{value}</div>
+    </div>
+  ) : null;
+
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+      <style>{`@font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }`}</style>
+
+      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(16px,4vw,32px)" }}>
+        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onBack(); } }} onClick={onBack} style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer" }}>nfluence</div>
+        <span role="button" tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onBack(); } }} onClick={onBack} style={{ fontSize: ".9rem", opacity: .75, cursor: "pointer" }}>back</span>
+      </div>
+
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "8px 16px 100px" }}>
+        <div style={{ fontSize: ".82rem", opacity: .45, marginBottom: 4 }}>{gig.brandName || "a brand"}</div>
+        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.7rem", fontWeight: 700, marginBottom: 14 }}>{gig.title}</h1>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, padding: "16px 18px", borderRadius: 16, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)", marginBottom: 24 }}>
+          <div><div style={{ fontSize: ".7rem", opacity: .4 }}>{gig.pay_type === "hourly" ? "hourly rate" : "pay"}</div><div style={{ fontSize: "1.3rem", fontWeight: 700 }}>{gig.comp || "—"}{gig.pay_type === "hourly" ? <span style={{ fontSize: ".72rem", opacity: .5 }}>/hr</span> : ""}</div></div>
+          <div><div style={{ fontSize: ".7rem", opacity: .4 }}>location</div><div style={{ fontSize: ".95rem", marginTop: 4 }}>{gig.location || "—"}</div></div>
+          <div><div style={{ fontSize: ".7rem", opacity: .4 }}>deadline</div><div style={{ fontSize: ".95rem", marginTop: 4 }}>{gig.deadline || "—"}</div></div>
+        </div>
+
+        {((gig.platforms || []).length > 0 || (gig.skills_required || []).length > 0) && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
+            {(gig.platforms || []).map(p => <span key={"p" + p} style={{ padding: "3px 11px", borderRadius: 20, border: "1px solid rgba(255,255,255,.15)", fontSize: ".75rem", opacity: .75 }}>{p}</span>)}
+            {(gig.skills_required || []).map(s => <span key={"s" + s} style={{ padding: "3px 11px", borderRadius: 20, border: "1px solid rgba(100,200,255,.25)", color: "rgba(150,200,255,.9)", fontSize: ".75rem" }}>{s}</span>)}
+          </div>
+        )}
+
+        <Field label="description" value={gig.description} />
+        <Field label="deliverables" value={typeof gig.deliverables === "string" ? gig.deliverables : (gig.deliverables && Object.entries(gig.deliverables).map(([k, v]) => `${k}: ${v}`).join("\n"))} />
+        <Field label="requirements" value={gig.requirements} />
+        <Field label="equipment" value={gig.equipment} />
+
+        <div style={{ textAlign: "center", marginTop: 32 }}>
+          {hasApplied
+            ? <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 32px", borderRadius: 16, background: "rgba(100,255,150,.06)", border: "1px solid rgba(100,255,150,.2)", color: "rgba(100,255,150,.85)", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", fontWeight: 600 }}>application submitted</div>
+            : <button onClick={openApply} style={{ width: "100%", maxWidth: 400, padding: "18px 32px", borderRadius: 16, background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", color: "#fff", cursor: "pointer", fontSize: "1.05rem", fontWeight: 600, fontFamily: "system-ui, sans-serif", textTransform: "lowercase" }}>apply for this gig</button>}
+        </div>
+      </div>
+
+      {showApply && (
+        <div role="dialog" aria-modal="true" tabIndex={-1} ref={el => { if (el && !el.__f) { el.__f = true; el.focus(); } }} onKeyDown={e => { if (e.key === "Escape" && !submitting) setShowApply(false); }} onClick={() => { if (done || !submitting) setShowApply(false); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.78)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#0a1322", border: "1px solid rgba(255,255,255,.12)", borderRadius: 22, padding: 24, maxWidth: 440, width: "100%" }}>
+            {done ? (
+              <div style={{ textAlign: "center", padding: "12px 0" }}>
+                <div style={{ width: 60, height: 60, borderRadius: "50%", background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 8 }}>application sent!</div>
+                <div style={{ fontSize: ".88rem", opacity: .5, marginBottom: 22 }}>{gig.brandName || "the brand"} will review your application.</div>
+                <button onClick={() => setShowApply(false)} style={{ padding: "12px 28px", borderRadius: 12, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", cursor: "pointer", fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase" }}>done</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                  <div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase" }}>apply for this gig</div>
+                    <div style={{ fontSize: ".85rem", opacity: .4, marginTop: 3 }}>{gig.title}</div>
+                  </div>
+                  <div onClick={() => { if (!submitting) setShowApply(false); }} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,.06)", opacity: .7 }}><XIcon size={16} /></div>
+                </div>
+                <div style={{ fontSize: ".75rem", opacity: .4, margin: "18px 0 6px", textTransform: "lowercase" }}>why are you a great fit?</div>
+                <textarea aria-label="pitch" value={pitch} onChange={e => setPitch(e.target.value)} rows={5} placeholder={`Tell ${gig.brandName || "the brand"} about your experience, gear, and why you're right for this shoot…`} style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)", background: "rgba(0,0,0,.3)", color: "#fff", fontSize: ".9rem", outline: "none", fontFamily: "system-ui, sans-serif", resize: "vertical", lineHeight: 1.5 }} />
+                {submitError && <div style={{ fontSize: ".8rem", color: "rgba(255,120,120,.9)", marginTop: 10 }}>{submitError}</div>}
+                <button disabled={!pitch.trim() || submitting} onClick={submit} style={{ width: "100%", marginTop: 16, padding: "14px", borderRadius: 12, border: "1px solid " + (pitch.trim() ? "rgba(100,255,150,.35)" : "rgba(255,255,255,.15)"), background: pitch.trim() && !submitting ? "rgba(100,255,150,.1)" : "transparent", color: pitch.trim() ? "rgba(100,255,150,.9)" : "rgba(255,255,255,.3)", fontSize: ".95rem", fontWeight: 600, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", cursor: pitch.trim() && !submitting ? "pointer" : "not-allowed" }}>{submitting ? "submitting…" : "submit application"}</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2923,7 +3134,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
 
 // ── CreatorDashboard ──
 
-function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse, onOpenMessages, onViewOwnProfile, scheduledCalls = {}, onRespondToCall, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, onSignOut, onBack, onUpload, onEditProfile, creatorProfile, onSelectCampaign, onBrowse, onBrowseGigs, onOpenMessages, onViewOwnProfile, scheduledCalls = {}, onRespondToCall, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showCreatorReviews, setShowCreatorReviews] = useState(false);
@@ -2981,6 +3192,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
         <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
+          <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowseGigs?.()}>gig listings</span>
           <NotificationBell notifications={notifications.filter(n => n.for === "creator")} onOpen={() => setShowTray(v => !v)} />
           <div style={{ position: "relative" }}>
             <div onClick={() => setShowMenu(v => !v)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: 10, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", display: "flex", alignItems: "center", justifyContent: "center", gap: 3, flexDirection: "column" }}>

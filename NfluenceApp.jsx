@@ -50,6 +50,8 @@ function NfluenceApp() {
   const [pendingBuilderView, setPendingBuilderView] = useState(null); // 'builder'|'gigbuilder' to resume after sign-in
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [appliedCampaigns, setAppliedCampaigns] = useState([]); // ["Brand::Campaign", ...]
+  const [appliedGigs, setAppliedGigs] = useState([]); // gig_listings ids the creator applied to
+  const [selectedGig, setSelectedGig] = useState(null);
   const [demoCampaignOverrides, setDemoCampaignOverrides] = useState({}); // index → campaign override
   const [signInRedirect, setSignInRedirect] = useState(null); // campaign to redirect back to after sign in
   const [detailSource, setDetailSource] = useState("landing"); // "landing" | "dashboard" | "browse"
@@ -237,6 +239,9 @@ function NfluenceApp() {
               applicationId: a.id,
             })));
           });
+        // Load creator gig applications (ids only — for "applied" badges)
+        sb.from('gig_applications').select('gig_id').eq('creator_id', u.id)
+          .then(({ data }) => { if (data) setAppliedGigs(data.map(a => a.gig_id)); });
         // Load notifications
         sb.from('notifications')
           .select('*')
@@ -745,6 +750,7 @@ function NfluenceApp() {
     setCreatorUser(null);
     setCreatorProfile({});
     setCreatorApplied([]);
+    setAppliedGigs([]);
     setCreatorActive([]);
     setScheduledCalls({});
     setAllMessages(DEMO_MESSAGES);
@@ -798,6 +804,17 @@ function NfluenceApp() {
       }));
     }
     addNotification({ for: "brand", type: "new_application", title: "new application received", body: `${enriched.name} applied to ${campaign.brand} · ${campaign.campaign}` });
+  };
+
+  const handleGigApply = async (gig, { pitch }) => {
+    const sb = getSB();
+    if (!sb || !creatorUser?.id) return { error: 'You must be signed in as a creator to apply.' };
+    const { error } = await sb.from('gig_applications').insert({
+      gig_id: gig.id, creator_id: creatorUser.id, stage: 'applied', message: pitch,
+    });
+    if (error) return { error: error.message };
+    setAppliedGigs(prev => prev.includes(gig.id) ? prev : [...prev, gig.id]);
+    return {};
   };
 
   const handleSignInRedirect = () => {
@@ -940,10 +957,10 @@ function NfluenceApp() {
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={(email, name, password, profileData) => { handleCreatorSignIn(email, name, password, profileData); }} onSignIn={() => setView("signin")} />;
   if (view === "confirmemail") return <ConfirmEmailNotice email={confirmEmailInfo?.email} role={confirmEmailInfo?.role} onSignIn={() => setView(confirmEmailInfo?.role === "creator" ? "creatorsignin" : "signin")} onHome={() => setView("landing")} />;
   if (view === "creatordashboard") return <>
-    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} creatorProfile={creatorProfile} onEditProfile={async (form) => {
+    <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} onBrowseGigs={() => setView("gigbrowse")} creatorProfile={creatorProfile} onEditProfile={async (form) => {
         setCreatorProfile(prev => ({ ...prev, ...form, platforms: { Instagram: form.instagram, TikTok: form.tiktok, YouTube: form.youtube, X: form.x } }));
         const sb = getSB();
-        if (sb && creatorUser?.id) await sb.from('creator_profiles').upsert({
+        if (sb && creatorUser?.id) { const { error } = await sb.from('creator_profiles').upsert({
           id: creatorUser.id,
           bio: form.bio,
           location: form.location,
@@ -962,7 +979,7 @@ function NfluenceApp() {
           facebook_followers: form.facebookFollowers,
           avatar_url: form.avatarUrl || null,
           banner_url: form.bannerUrl || null,
-        }).catch(console.error);
+        }); if (error) console.error('[creator profile] update:', error); }
       }} onUpload={(upload) => setCreatorUploads(prev => [upload, ...prev])} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([key]) => key.endsWith(`::`+(creatorProfile?.name || creatorUser?.name || ""))))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
@@ -1016,8 +1033,8 @@ function NfluenceApp() {
     setSelectedCampaign(updated);
     setView("dashboard");
     const sb = getSB();
-    if (sb && updated.id && !String(updated.id).startsWith('demo-'))
-      await sb.from('campaigns').update({
+    if (sb && updated.id && !String(updated.id).startsWith('demo-')) {
+      const { error } = await sb.from('campaigns').update({
         name: updated.name,
         brand_name: updated.brand_name,
         description: updated.description,
@@ -1032,9 +1049,11 @@ function NfluenceApp() {
         spots_total: updated.spots_total,
         location: updated.location,
         niches: updated.niches,
-      }).eq('id', updated.id).catch(console.error);
+      }).eq('id', updated.id); if (error) console.error('[campaign edit] update:', error); }
   }} />;
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
+  if (view === "gigbrowse") return <GigBrowse onBack={() => creatorUser ? setView("creatordashboard") : setView("landing")} onSelectGig={(g) => { setSelectedGig(g); setView("gigdetail"); }} appliedGigs={appliedGigs} creatorUser={creatorUser} />;
+  if (view === "gigdetail" && selectedGig) return <GigDetail gig={selectedGig} onBack={() => setView("gigbrowse")} creatorUser={creatorUser} appliedGigs={appliedGigs} onApply={handleGigApply} onSignInRedirect={() => setView("creatorsignin")} />;
   if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c) => { setSelectedBrand(c.brand); setView("brandprofile"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
