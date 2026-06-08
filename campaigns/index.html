@@ -8664,8 +8664,8 @@ function NfluenceApp() {
           return;
         }
         if (signUpData?.user) {
-          await _sb.from('profiles').upsert({ id: signUpData.user.id, email, name, role: 'creator' }).catch(console.error);
-          await _sb.from('creator_profiles').upsert({ id: signUpData.user.id }).catch(console.error);
+          { const { error: pErr } = await _sb.from('profiles').upsert({ id: signUpData.user.id, email, name, role: 'creator' }); if (pErr) console.error('[creator signup] profiles upsert:', pErr); }
+          { const { error: cErr } = await _sb.from('creator_profiles').upsert({ id: signUpData.user.id }); if (cErr) console.error('[creator signup] creator_profiles upsert:', cErr); }
           setAuthSession(signUpData.session);
           setCreatorUser({ id: signUpData.user.id, email, name });
           setCreatorProfile({ ...profileData, name });
@@ -9054,7 +9054,7 @@ function NfluenceApp() {
     const isOwnCampaign = myCampaigns.some(c => c.id === selectedCampaign.id);
     const isDemoFromDashboard = user && DEMO_CAMPAIGNS.some(d => d.brand === selectedCampaign.brand && d.campaign === selectedCampaign.campaign) && detailSource === "dashboard";
     const isOwner = isOwnCampaign || isDemoFromDashboard;
-    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
+    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user || creatorUser} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
 
   if (authLoading) return null;
