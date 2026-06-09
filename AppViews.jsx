@@ -2432,8 +2432,8 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
-            {filtered.map((c, i) => (
-              <div key={i} className="nf-browse-card" onClick={() => onSelectCampaign(c)}>
+            {filtered.map((c) => (
+              <div key={`${c.brand}::${c.campaign}`} className="nf-browse-card" onClick={() => onSelectCampaign(c)}>
                 <div style={{ position: "relative" }}>
                   <div style={{ height: 150, background: c.imgBg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                     {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ fontSize: "2.8rem", opacity: .25 }}>{c.imgIcon}</div>}

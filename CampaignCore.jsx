@@ -2063,39 +2063,6 @@ function CampaignBuilder({ onBack, onPublish, session }) {
           background: rgba(255,255,255,.10); color: #fff;
         }
 
-        /* account / pricing */
-        .nf-account-pricing {
-          border: 1px solid rgba(255,255,255,.12); border-radius: 20px;
-          padding: 28px 24px; text-align: center;
-          background: radial-gradient(circle at top, rgba(255,255,255,.045), rgba(4,11,21,0));
-          backdrop-filter: blur(20px);
-        }
-        .nf-account-price {
-          font-size: 3.4rem; font-weight: 700; color: #fff;
-          letter-spacing: -0.02em;
-        }
-        .nf-account-price-label {
-          font-size: .9rem; opacity: .45; margin-top: 4px;
-          text-transform: lowercase;
-        }
-        .nf-account-price-line {
-          width: 60px; height: 1px; margin: 22px auto;
-          background: rgba(255,255,255,.12);
-        }
-        .nf-account-includes { text-align: left; max-width: 320px; margin: 0 auto; }
-        .nf-account-includes-title {
-          font-size: .8rem; text-transform: lowercase;
-          letter-spacing: .05em; opacity: .35; margin-bottom: 12px;
-        }
-        .nf-account-include-item {
-          font-size: .9rem; color: rgba(255,255,255,.75);
-          padding: 6px 0; padding-left: 22px; position: relative;
-        }
-        .nf-account-include-item::before {
-          content: "✓"; position: absolute; left: 0;
-          color: rgba(255,255,255,.6); font-size: .85rem; font-weight: 700;
-        }
-
         @media (max-width: 600px) {
           .nf-header { padding: 0 18px; }
           .nf-field-row { flex-direction: column; }
