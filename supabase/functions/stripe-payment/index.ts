@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   let body: any;
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON body' }, 400, cors); }
   const action = body?.action;
-  if (action !== 'quote' && action !== 'charge' && action !== 'cancel') return json({ error: 'invalid action' }, 400, cors);
+  if (action !== 'quote' && action !== 'charge' && action !== 'cancel' && action !== 'unfeature') return json({ error: 'invalid action' }, 400, cors);
 
   // ── CANCEL — roll back an abandoned/failed charge; sweep stale drafts (Layer 1/2 cleanup) ──
   if (action === 'cancel') {
@@ -128,6 +128,21 @@ Deno.serve(async (req) => {
         await admin.from('gig_listings').delete().in('id', gigIds).eq('brand_id', user.id).eq('stage', 'draft');
       }
     }
+    return json({ ok: true }, 200, cors);
+  }
+
+  // ── UNFEATURE — remove featured placement (owner-verified; service role bypasses the payment gate) ──
+  if (action === 'unfeature') {
+    const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
+    if (!cid) return json({ error: 'campaignId required' }, 400, cors);
+    const { data: camp } = await admin.from('campaigns').select('id, brand_id').eq('id', cid).maybeSingle();
+    if (!camp) return json({ error: 'campaign not found' }, 404, cors);
+    if (camp.brand_id !== user.id) return json({ error: 'forbidden' }, 403, cors);
+    // Non-refundable per UI copy — no Stripe refund. service_role write bypasses enforce_campaign_payment_gate.
+    const { error: upErr } = await admin.from('campaigns')
+      .update({ featured: false, featured_until: null, featured_weeks: 0 })
+      .eq('id', cid).eq('brand_id', user.id);
+    if (upErr) return json({ error: upErr.message }, 500, cors);
     return json({ ok: true }, 200, cors);
   }
 

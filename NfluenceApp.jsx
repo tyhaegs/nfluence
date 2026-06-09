@@ -817,6 +817,18 @@ function NfluenceApp() {
     return {};
   };
 
+  const handleUnfeature = async (campaign) => {
+    if (!campaign?.id || String(campaign.id).startsWith('demo-')) return;
+    try {
+      await callStripePaymentV2({ action: 'unfeature', campaignId: campaign.id }, authSession?.access_token);
+      setMyCampaigns(prev => prev.map(c => c.id === campaign.id ? { ...c, featured: false, featured_until: null, featuredWeeks: 0 } : c));
+      setSelectedCampaign(prev => (prev && prev.id === campaign.id) ? { ...prev, featured: false, featured_until: null, featuredWeeks: 0 } : prev);
+    } catch (e) {
+      console.error('unfeature failed:', e);
+      setToastMessage('Could not remove featured placement'); setShowToast(true);
+    }
+  };
+
   const handleSignInRedirect = () => {
     setSignInRedirect(selectedCampaign);
     setView("signin");
@@ -995,7 +1007,7 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
+    <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onUnfeature={handleUnfeature} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
       setUser(prev => ({ ...prev, ...updatedUser }));
       const sb = getSB();
       if (updatedUser?.id && sb) {

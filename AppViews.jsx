@@ -756,13 +756,14 @@ function ReviewsPage({ campaigns, demoCampaigns, onBack, onUpdateReview }) {
   );
 }
 
-function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, onUpdateUser, onFaq, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
+function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCampaign, onNewGig, onSelectCampaign, onEditCampaign, onUnfeature, onViewReviews, lastReviewsVisitedAt, onBrowse, onOpenMessages, onUpdateUser, onFaq, scheduledCalls = {}, notifications = [], onMarkAllNotifsRead, onViewAllNotifications }) {
   const [showTray, setShowTray] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showBrandEdit, setShowBrandEdit] = useState(false);
   const [brandEditForm, setBrandEditForm] = useState({ name: "", location: "", website: "", logoEditing: false, bannerEditing: false, logoTransform: null, bannerTransform: null });
   const [showAttentionModal, setShowAttentionModal] = useState(false);
   const [editWarnCampaign, setEditWarnCampaign] = useState(null); // campaign pending edit warning
+  const [unfeaturingId, setUnfeaturingId] = useState(null); // campaign id currently being unfeatured
   const STAGE_LABELS = { draft: "draft", open: "accepting creators", active: "content in production", fulfillment: "approvals & payouts", wrap_up: "completed" };
   const STAGE_COLORS = { draft: "rgba(255,255,255,.15)", open: "rgba(100,200,255,.25)", active: "rgba(255,200,100,.25)", fulfillment: "rgba(200,100,255,.25)", wrap_up: "rgba(100,255,150,.25)" };
   // Item 2 — edit-modal section styling: prominent uppercase labels + a divider/gap before each
@@ -1005,6 +1006,9 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     )}
                     {isUserCampaign && (
                       <div onClick={e => { e.stopPropagation(); setEditWarnCampaign(c); }} style={{ position: "absolute", top: 10, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,255,255,.25)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,255,255,.8)", cursor: "pointer", zIndex: 3 }}>edit</div>
+                    )}
+                    {isUserCampaign && c.featured && (
+                      <div onClick={async e => { e.stopPropagation(); if (unfeaturingId) return; if (!window.confirm('Remove featured placement? This is non-refundable.')) return; setUnfeaturingId(c.id); await onUnfeature?.(c); setUnfeaturingId(null); }} style={{ position: "absolute", top: 44, right: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(251,191,36,.4)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(251,191,36,.95)", cursor: unfeaturingId === c.id ? "wait" : "pointer", zIndex: 3, opacity: unfeaturingId === c.id ? .6 : 1 }}>{unfeaturingId === c.id ? "removing…" : "remove featured"}</div>
                     )}
                     {c._publishing && (
                       <div style={{ position: "absolute", top: 10, left: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,200,60,.3)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,220,140,.9)", zIndex: 3 }}>publishing…</div>
