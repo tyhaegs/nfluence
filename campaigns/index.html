@@ -7961,7 +7961,7 @@ function NfluenceApp() {
     const channelRef = { current: null };
 
     console.log('[auth] getSession() — calling on mount');
-    sb.auth.getSession().then(({ data: { session }, error }) => {
+    sb.auth.getSession().then(async ({ data: { session }, error }) => {
       console.log("[auth] getSession result:", { hasSession: !!session, userId: session?.user?.id, error: error?.message });
       console.log('[auth] getSession() result:', { hasSession: !!session, userId: session?.user?.id, role: session?.user?.user_metadata?.role });
       if (!session) { setAuthLoading(false); return; }
@@ -7970,6 +7970,53 @@ function NfluenceApp() {
       const u = session.user;
       const role = u.user_metadata?.role;
       const name = u.user_metadata?.name || u.email;
+
+      // Replay onboarding profile stashed before email confirmation, BEFORE the role branches'
+      // profile reads run — so a user returning via the confirmation-link auto-session (which
+      // never hits the manual sign-in handlers) gets their stashed onboarding data written, and
+      // the subsequent bare-profile read sees it instead of racing ahead. Mirrors handleSignIn /
+      // handleCreatorSignIn. Guarded on role+email so it can't replay onto the wrong account;
+      // on error the stash is left in place so a later manual sign-in can still replay it. (B1)
+      const pending = readPendingProfile();
+      if (pending && pending.role === role && (pending.email || '').toLowerCase() === (u.email || '').toLowerCase()) {
+        const d = pending.data || {};
+        if (role === 'brand') {
+          const { error: rErr } = await sb.from('profiles').upsert({
+            id: u.id, email: u.email,
+            name: d.name, tagline: d.tagline, bio: d.bio, phone: d.phone, website: d.website,
+            country: d.country, city: d.city, state: d.state, location: d.location,
+            industry: d.industry, logo_url: d.logoPreview, banner_url: d.bannerPreview,
+            social_links: d.socialLinks, role: 'brand',
+          });
+          if (rErr) { console.error('[pending-profile] brand replay (bootstrap) failed:', rErr); }
+          else {
+            clearPendingProfile();
+            setUser(prev => ({ ...prev,
+              name: d.name || prev?.name, tagline: d.tagline, bio: d.bio, phone: d.phone,
+              website: d.website, country: d.country, city: d.city, state: d.state, location: d.location,
+              industry: d.industry, industries: d.industries, socialLinks: d.socialLinks,
+              logoUrl: d.logoPreview || prev?.logoUrl, bannerUrl: d.bannerPreview || prev?.bannerUrl,
+            }));
+          }
+        } else if (role === 'creator') {
+          const { error: pErr } = await sb.from('profiles').upsert({ id: u.id, email: u.email, name: d.name || name, role: 'creator' });
+          const { error: cErr } = await sb.from('creator_profiles').upsert({
+            id: u.id, bio: d.bio, location: d.location, age: d.age, languages: d.languages, niches: d.niches,
+            instagram: d.instagram, instagram_followers: d.instagramFollowers,
+            tiktok: d.tiktok, tiktok_followers: d.tiktokFollowers,
+            youtube: d.youtube, youtube_followers: d.youtubeFollowers,
+            x: d.x, x_followers: d.xFollowers,
+            facebook: d.facebook, facebook_followers: d.facebookFollowers,
+            avatar_url: d.avatarUrl || null, banner_url: d.bannerUrl || null,
+          });
+          if (pErr || cErr) { console.error('[pending-profile] creator replay (bootstrap) failed:', pErr || cErr); }
+          else {
+            clearPendingProfile();
+            setCreatorProfile(prev => ({ ...prev, ...d, name: d.name || name,
+              platforms: { Instagram: d.instagram, TikTok: d.tiktok, YouTube: d.youtube, X: d.x, Facebook: d.facebook } }));
+          }
+        }
+      }
 
       const BRAND_AUTH_VIEWS = ["dashboard", "browse", "inbox", "messages", "detail", "edit", "builder", "gigbuilder", "reviews", "notifications", "brandprofile", "creatorprofile", "faq"];
       const CREATOR_AUTH_VIEWS = ["creatordashboard", "creatorinbox", "creatormessages", "creatorprofile", "browse", "detail", "notifications", "faq"];
