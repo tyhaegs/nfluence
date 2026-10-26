@@ -272,6 +272,11 @@
       box-shadow: 0 0 12px rgba(255,255,255,.18);
     }
 
+    .project-type-input:focus-visible + .project-type-btn {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+
     button[type="submit"] {
       display: inline-flex;
       align-items: center;
@@ -491,6 +496,11 @@
       <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">project type</div>
 
       <div class="project-type-group">
+        <input type="checkbox" id="pt-website-design" value="website design" class="project-type-input" name="project_type"><label for="pt-website-design" class="project-type-btn">website design</label>
+        <input type="checkbox" id="pt-seo" value="SEO" class="project-type-input" name="project_type"><label for="pt-seo" class="project-type-btn">SEO</label>
+        <input type="checkbox" id="pt-ecommerce" value="ecommerce / Shopify" class="project-type-input" name="project_type"><label for="pt-ecommerce" class="project-type-btn">ecommerce / Shopify</label>
+        <input type="checkbox" id="pt-paid-ads" value="paid advertising" class="project-type-input" name="project_type"><label for="pt-paid-ads" class="project-type-btn">paid advertising</label>
+        <input type="checkbox" id="pt-email-marketing" value="email marketing" class="project-type-input" name="project_type"><label for="pt-email-marketing" class="project-type-btn">email marketing</label>
         <input type="checkbox" id="pt-consulting" value="consulting" class="project-type-input" name="project_type"><label for="pt-consulting" class="project-type-btn">consulting</label>
         <input type="checkbox" id="pt-influencer" value="influencer" class="project-type-input" name="project_type"><label for="pt-influencer" class="project-type-btn">influencer</label>
         <input type="checkbox" id="pt-social" value="social media" class="project-type-input" name="project_type"><label for="pt-social" class="project-type-btn">social media</label>
@@ -549,6 +559,17 @@ document.addEventListener('touchend', function (event) {
 
 
 const form=document.getElementById('contact-form');
+const requestedService=new URLSearchParams(window.location.search).get('service');
+const serviceOptions={
+  'website-design':'pt-website-design',
+  'seo':'pt-seo',
+  'ecommerce':'pt-ecommerce',
+  'paid-ads':'pt-paid-ads',
+  'email-marketing':'pt-email-marketing'
+};
+if(Object.prototype.hasOwnProperty.call(serviceOptions,requestedService)){
+  document.getElementById(serviceOptions[requestedService]).checked=true;
+}
 const submitBtn=document.querySelector('button[type="submit"]');
 const thankYou=document.querySelector('.thank-you-section');
 const brandLink=document.querySelector('.nav-brand');
