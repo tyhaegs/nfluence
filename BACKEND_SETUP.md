@@ -2,7 +2,7 @@
 
 The active frontend source is `campaigns/src/`. Run `npm ci`, then `npm run check`. `build.sh` delegates to the same production build. The older root JSX files are historical references and are not used by the build.
 
-Production uses GitHub Pages from `main` at the repository root, with Supabase project `xynujmscxjxbfivylfne`. Three October 27, 2026 migrations implement the audit repairs. Do not reset the production database or run the old schema file over it.
+Production frontend hosting uses the public Sites project `appgprj_6ae022d409a88191b1a20166a6e9580d`, with Supabase project `xynujmscxjxbfivylfne`. GitHub Pages from `main` remains available as a rollback copy. Three October 27, 2026 migrations implement the audit repairs. Do not reset the production database or run the old schema file over it.
 
 ## Payments
 
@@ -27,11 +27,15 @@ Leaked-password protection is now enabled on the existing Pro plan. The site URL
 
 Deliverables live in the private `content` bucket, under creator/application paths. Participants obtain five-minute signed links. Storage and database rules verify the exact application and actor. Never make this bucket public. Manual payment records are immutable to clients and require an amount and transfer reference.
 
-## Remaining hosting work
+## Website hosting
 
-DNS currently uses Namecheap nameservers. The `www` CNAME to `tyhaegs.github.io` is saved and verified on authoritative and recursive DNS. GitHub's certificate still needs to include `www`; do not call HTTPS complete until it does. Keep the existing apex configuration. Reference: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
+The user approved public hosting and domain migration on October 26, 2026. The sibling `nfluence-secure-host/.openai/hosting.json` records the existing Site identity; reuse it for every update. Its public URL is `https://nfluence-secure-host.tyhaegs.chatgpt.site`. The Worker serves the same 59 published assets and sets actual CSP, HSTS, frame protection, MIME protection, referrer and permissions response headers. Both GitHub Pages and Sites static mode ignored `_headers`; the active serving layer is the Worker.
 
-GitHub Pages does not apply the checked-in `_headers` file. HTML pages now have a script-restricting Content Security Policy and referrer policy, but response-only controls such as `frame-ancestors` require a suitable hosting layer or proxy. `_headers` is prepared for a compatible host. Do not assume the response headers are active on Pages.
+Namecheap DNS targets are two apex A records (`162.159.143.30`, `172.66.3.26`) and a `www` CNAME to `custom-domains.chatgpt.site.`. Website records use a 60-second TTL. Ownership TXT records must stay in place. The Worker redirects `www` to the HTTPS apex and preserves paths and query strings. Both custom domains and certificates are active. Eleven public HTTPS checks passed for page/asset headers, the canonical redirect and 404 handling. Verification evidence is recorded in `notes/remediation-status.json`.
+
+For future frontend releases, build and check this repository, synchronize its published files into the hosting repository's `public/`, run that repository's `npm test` and `npm run build`, and publish the exact pushed source through Sites. `scripts/build-worker.mjs` embeds the public assets into `worker/index.js` and `dist/server/index.js`; do not hand-edit those generated files. Verify actual response headers after publishing. A GitHub push alone does not update the Sites deployment.
+
+Rollback: restore apex A records `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` and `www` CNAME `tyhaegs.github.io.`. Keep GitHub Pages and its apex CNAME configured. The old GitHub certificate covered only the apex, so restoring it also restores the known `www` certificate limitation. Do not change MX, SPF, DKIM, DMARC or Supabase DNS records during a website rollback.
 
 ## Verification
 
@@ -43,4 +47,4 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The prepared private hosting copy is recorded in the sibling `nfluence-secure-host/.openai/hosting.json`. Public access and domain cutover await the specific hosting approval requested in chat. Its source must be kept in sync with this repository before cutover.
+The current hosting deployment is `appgdep_6ae02ee3259481919543a2dd07357d25`, saved version 3, source commit `0b172dd378eec262fcddd038820a9b7c8a038696`. It was checked against all 59 original asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.

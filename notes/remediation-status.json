@@ -90,12 +90,12 @@
       "change": "Published /work/nfluence/ to demonstrate this website and creator workspace using verified first-party scope and features. No client endorsements or sales outcomes invented."
     },
     "A21": {
-      "status": "dns_fixed_certificate_pending",
-      "change": "Saved Namecheap CNAME www to tyhaegs.github.io; verified on authoritative and recursive DNS. GitHub HTTPS certificate still covers only the apex domain."
+      "status": "fixed",
+      "change": "Migrated apex and www DNS to Sites. Both certificates and custom domains are active. HTTPS www redirects to the apex while preserving path and query."
     },
     "A22": {
-      "status": "prepared_hosting_switch_approval_pending",
-      "change": "Prepared private hosting copy with response security headers. Explicit public-hosting approval requested before changing domain traffic."
+      "status": "fixed",
+      "change": "User-approved public hosting cutover complete. Dependency-free Worker serves identical published assets with CSP including frame-ancestors, HSTS, X-Frame-Options, nosniff, referrer and permissions headers. Verified on public domain."
     },
     "A23": {
       "status": "fixed",
@@ -134,21 +134,27 @@
       "dkim": "pass",
       "dmarc": "pass",
       "test_folder": "Spam"
-    }
+    },
+    "hosting_unit_tests": 4,
+    "live_hosting_checks": 11,
+    "live_hosting_checks_passed": true,
+    "apex_https_verified": true,
+    "www_https_verified": true,
+    "response_security_headers_verified": true
   },
   "external_requirements": [
-    "Access to verified live nfluence Stripe account; existing deployment is sandbox only",
-    "Approval for prepared hosting copy to be made public before domain cutover",
-    "GitHub www HTTPS certificate provisioning",
-    "Approved client evidence for any client testimonials or outcome claims"
+    "Access to verified live nfluence Stripe account; existing deployment is sandbox only"
   ],
   "hosting_preparation": {
     "project_id": "appgprj_6ae022d409a88191b1a20166a6e9580d",
     "url": "https://nfluence-secure-host.tyhaegs.chatgpt.site",
-    "audience": "private",
-    "public_switch_approval": "pending",
+    "audience": "public",
+    "public_switch_approval": "approved_by_user",
     "domain_ownership_records": "configured",
-    "ssl": "pending_validation",
-    "primary_site_traffic_changed": false
+    "ssl": "active_both_domains",
+    "primary_site_traffic_changed": true,
+    "deployment_id": "appgdep_6ae02ee3259481919543a2dd07357d25",
+    "source_commit": "0b172dd378eec262fcddd038820a9b7c8a038696",
+    "cutover_state": "complete_verified"
   }
 }
