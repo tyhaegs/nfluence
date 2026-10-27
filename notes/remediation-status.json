@@ -196,8 +196,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae0fae456648191b7348c09d2a66e7a",
-    "source_commit": "7e5faab2c76ecd2009ac44059812159436b89fe4",
+    "deployment_id": "appgdep_6ae0fc7c88388191a90950cd4f3947eb",
+    "source_commit": "19f938bdac95a4dfdb7fc10eb64a9528c7a5f459",
     "cutover_state": "complete_verified"
   },
   "homepage_brand_correction": {
@@ -212,5 +212,17 @@
       1440
     ],
     "horizontal_overflow": false
+  },
+  "demo_campaigns": {
+    "status": "restored_published_verified",
+    "examples": [
+      "Nike",
+      "Alani Nu",
+      "Alo",
+      "GoPro"
+    ],
+    "purpose": "Public examples showing brands how their own campaigns can look; preserve these demos.",
+    "behavior": "Original sample briefs, images, creator activity and reviews restored. Explicit demo labels and read-only previews; no real applications or owner controls.",
+    "verification": "Landing, browse and detail layouts checked at 320, 375, 768 and 1440px. Search, detail navigation, posting-guide preview and campaign-start action checked. 13 application tests and 4 hosting tests passed."
   }
 }

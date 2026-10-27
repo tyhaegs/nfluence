@@ -8,6 +8,7 @@ import { ConversationHub, RecoveryScreen, UploadLibrary, AnnualPlanPanel, AppBou
 import './accessibility.js';
 import './app.css';
 import './auth.css';
+import {DEMO_CAMPAIGNS, DEMO_BRAND_META} from './demos.js';
 import {AuthLayout, AuthSteps, PasswordField, AccountSignIn} from './auth-ui.jsx';
 window.supabase = { createClient };
 window.Cropper = Cropper;
@@ -93,10 +94,7 @@ const GIG_STEPS = ["brand", "details", "inspo", "pay", "preview"];
 
 const DEMO_GIG_LISTINGS = [];
 
-// Demo campaign data for the browse view
-const DEMO_CAMPAIGNS = [];
-
-const BRAND_META = {};
+// Demo campaigns are illustrative, read-only examples kept alongside live listings.
 
 const PLAT_SVGS_SMALL = {
   Instagram: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff" stroke="none"/></svg>,
@@ -252,10 +250,12 @@ async function confirmStripeCard(clientSecret,cardElement){
  await callStripePaymentV2({action:'reconcile',paymentIntentId:paymentIntent.id},session?.access_token);
 }
 
-function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onAutoApplyConsumed, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
+function CampaignDetail({ campaign: initialCampaign, onStartCampaign, onBack, isOwner, user, onApply, onSignInRedirect, appliedCampaigns = [], onOpenMessage, onOpenInbox, messageCount = 0, autoApply = false, onAutoApplyConsumed, onEditCampaign, onScheduleCall, onViewCreatorProfile, onNotify }) {
   const [c, setC] = useState(JSON.parse(JSON.stringify(initialCampaign)));
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, []);
   const derivedSpotsFilled = Math.max(c.spotsFilled || 0, c.creators?.approved?.length || 0);
   const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - derivedSpotsFilled) : null;
+  const [showDemoGuide, setShowDemoGuide] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyStep, setApplyStep] = useState(0); // 0=info, 1=platforms, 2=pitch, 3=done
@@ -277,6 +277,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
   const applyHandlesComplete = applyPlatformKeys.length > 0 && applyPlatformKeys.every(p => applyForm.handles[p]?.trim());
 
   const handleApplyClick = () => {
+    if (c.isDemo) return;
     if (!user) {
       onSignInRedirect?.();
       return;
@@ -489,6 +490,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
       {/* Content */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "68px 16px 60px" }}>
 
+        {c.isDemo && <aside className="nf-demo-notice"><strong>demo campaign</strong><p>Explore how a campaign can look. The brief, dates, creator activity, and reviews shown here are sample data.</p></aside>}
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: "clamp(1.3rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", textTransform: "lowercase", letterSpacing: "-.01em" }}>{c.brand}</div>
@@ -705,7 +707,7 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
         </div>
 
         {/* Compensation + Platforms side-by-side */}
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, marginBottom: 12 }}>
+        <div className="nf-comp-deliverables" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, marginBottom: 12 }}>
           {/* Compensation — compact */}
           <div style={{ padding: "16px 22px", borderRadius: 16, background: "linear-gradient(135deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 100%)", border: "1px solid rgba(255,255,255,.15)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 160 }}>
             <div style={{ fontSize: ".75rem", opacity: .4, textTransform: "lowercase", fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>creators get</div>
@@ -784,10 +786,11 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
               <div style={{ fontSize: ".9rem", fontWeight: 500 }}>{c.brand} creator posting guide</div>
               <div style={{ fontSize: ".75rem", opacity: .35, marginTop: 1 }}>brand guidelines, content dos & don'ts</div>
             </div>
-            <div style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,.2)", fontSize: ".8rem", cursor: "pointer", flexShrink: 0 }}>view</div>
+            {c.isDemo ? <button className="nf-demo-preview" aria-expanded={showDemoGuide} onClick={() => setShowDemoGuide(v => !v)}>{showDemoGuide ? "close" : "view example"}</button> : <div style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,.2)", fontSize: ".8rem", cursor: "pointer", flexShrink: 0 }}>view</div>}
           </div>
         )}
 
+        {c.isDemo && showDemoGuide && <div className="nf-demo-guide"><strong>example creator posting guide</strong><p>Show the product in your usual setting and explain what you like about it in your own voice.</p><p>Follow the deliverables and platform requirements in the brief. Include a clear gifted or paid partnership disclosure, avoid unsupported claims, and share your draft for review before posting.</p></div>}
         {/* Creator Roster */}
         {c.creators && (c.creators.approved?.length > 0 || c.creators.pending?.length > 0) && (() => {
           // Deterministic pravatar index from creator name so each person keeps the same face
@@ -1054,7 +1057,8 @@ function CampaignDetail({ campaign: initialCampaign, onBack, isOwner, user, onAp
         )}
 
         {/* Apply CTA — creator view only */}
-        {!isOwner && (
+        {c.isDemo && <div className="nf-demo-end"><p>Ready to build a campaign for your brand?</p><button className="nf-cta-btn" onClick={onStartCampaign}>start a campaign</button></div>}
+        {!isOwner && !c.isDemo && (
           <div style={{ textAlign: "center" }}>
             {hasApplied ? (
               <div style={{
@@ -4485,7 +4489,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
 
         {/* Campaign List */}
         {allCampaigns.length > 0 && <div style={{ fontSize: "1.1rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 16 }}>your campaigns</div>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))", gap: 20 }}>
           {allCampaigns.length === 0 ? (
             <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "center", padding: "60px 0" }}>
               <button className="nf-new-campaign-btn" onClick={onNewCampaign} style={{ padding: "16px 36px", fontSize: "1rem" }}>
@@ -4519,7 +4523,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                       <div style={{ position: "absolute", top: 10, left: 10, padding: "5px 12px", borderRadius: 8, fontSize: ".72rem", fontWeight: 600, border: "1px solid rgba(255,200,60,.3)", background: "rgba(0,0,0,.5)", backdropFilter: "blur(10px)", color: "rgba(255,220,140,.9)", zIndex: 3 }}>publishing…</div>
                     )}
                   </div>
-                  <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div className="nf-campaign-summary" style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ paddingTop: 34 }}>
                       <div className={c.featured ? "nf-featured-name" : ""} style={{ fontSize: "1.7rem", fontWeight: 700, color: c.featured ? undefined : "#fff", lineHeight: 1.15 }}>{c.brand}</div>
                       <div style={{ fontSize: "1.05rem", opacity: .5, marginTop: 4 }}>{c.campaign}</div>
@@ -5564,7 +5568,7 @@ function NotificationToast({ message, onView, onDismiss }) {
 function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCampaigns = [], onApplyClick, user }) {
   const campaigns = allCampaigns.filter(c => c.brand === brand);
   const firstCampaign = campaigns[0] || {};
-  const meta = BRAND_META[brand] || {};
+  const meta = firstCampaign.isDemo ? DEMO_BRAND_META[brand] || {} : {};
 
   // Aggregate reviews across all campaigns
   const allReviews = campaigns.flatMap(c => (c.reviews || []).map(r => ({ ...r, _campaign: c.campaign })));
@@ -5631,6 +5635,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
         const socialEntries = Object.entries(socials).filter(([, url]) => url && String(url).trim());
         return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 16px 0" }}>
+        {firstCampaign.isDemo && <aside className="nf-demo-notice"><strong>demo brand profile</strong><p>The campaign activity and reviews on this example profile are sample data.</p></aside>}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
           <div>
             <div style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 4 }}>{brand}</div>
@@ -5685,9 +5690,9 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
         {/* Campaigns tab */}
         {activeTab === "campaigns" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20, paddingBottom: 60 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))", gap: 20, paddingBottom: 60 }}>
             {campaigns.map((c, i) => {
-              const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - (c.creators?.approved?.length || 0)) : null;
+              const spotsLeft = c.spotsTotal != null ? Math.max(0, c.spotsTotal - Math.max(c.spotsFilled || 0, c.creators?.approved?.length || 0)) : null;
               const applied = appliedCampaigns.includes(c.id);
               return (
                 <div key={i} className="bp-card" onClick={() => onSelectCampaign(c)}>
@@ -5793,7 +5798,7 @@ function BrandProfile({ brand, allCampaigns, onBack, onSelectCampaign, appliedCa
 
 // ── BrowseCampaigns ──
 
-function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn, user, creatorUser }) {
+function BrowseCampaigns({ loading = false, error = null, onRetry, campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign, onApplyClick, appliedCampaigns = [], onFaq, onSignIn, user, creatorUser }) {
   const [search, setSearch] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("All");
   const [filterComp, setFilterComp] = useState("All");
@@ -5892,8 +5897,11 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
       </div>
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 24px 80px" }}>
-        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.8rem", fontWeight: 700, marginBottom: 28, textAlign: "center" }}>open campaigns</h1>
+        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.8rem", fontWeight: 700, marginBottom: 28, textAlign: "center" }}>browse campaigns</h1>
 
+        <p className="nf-demo-intro">Explore live opportunities and demo campaigns that show what your own campaign can look like.</p>
+        {loading && <p role="status" className="nf-demo-intro">Loading live campaigns…</p>}
+        {error && <p role="alert" className="nf-demo-intro">Live campaigns couldn’t load. You can still explore the demos below. <button onClick={onRetry}>Try again</button></p>}
         {/* Search bar */}
         <div style={{ position: "relative", marginBottom: 20 }}>
           <svg style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", opacity: .35, pointerEvents: "none" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -5940,10 +5948,11 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
             <div style={{ fontSize: ".85rem", marginTop: 6 }}>try adjusting or clearing your filters</div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))", gap: 20 }}>
             {filtered.map((c) => (
-              <div key={`${c.brand}::${c.campaign}`} className="nf-browse-card" onClick={() => onSelectCampaign(c)}>
+              <div key={c.id} data-demo={c.isDemo || undefined} className="nf-browse-card" tabIndex={0} role="group" aria-label={`${c.brand}: ${c.campaign}${c.isDemo ? " demo" : ""}`} onKeyDown={e=>{if(e.target===e.currentTarget && (e.key==="Enter" || e.key===" ")){e.preventDefault();onSelectCampaign(c);}}} onClick={() => onSelectCampaign(c)}>
                 <div style={{ position: "relative" }}>
+                  {c.isDemo && <span className="nf-demo-badge">demo campaign</span>}
                   <div style={{ height: 150, background: c.imgBg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                     {c.imgUrl ? <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ fontSize: "2.8rem", opacity: .25 }}>{c.imgIcon}</div>}
                   </div>
@@ -5953,7 +5962,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
                     <div style={{ position: "absolute", bottom: -41, left: 16, width: 82, height: 82, borderRadius: 14, background: "#0c1424", border: "3px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ".65rem", color: "rgba(255,255,255,.5)", zIndex: 2 }}>logo</div>
                   )}
                 </div>
-                <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div className="nf-campaign-summary" style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div style={{ paddingTop: 34 }}>
                     <div className={c.featured ? "nf-featured-name" : ""} style={{ fontSize: "1.7rem", fontWeight: 700, color: c.featured ? undefined : "#fff", lineHeight: 1.15 }}>{c.brand}</div>
                     <div style={{ fontSize: "1.05rem", opacity: .5, marginTop: 4 }}>{c.campaign}</div>
@@ -5961,7 +5970,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     {c.spotsTotal && (
                       <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
-                        {c.spotsTotal != null ? `${Math.max(0, c.spotsTotal - (c.creators?.approved?.length || 0))} spots left` : "open"}
+                        {c.spotsTotal != null ? `${Math.max(0, c.spotsTotal - Math.max(c.spotsFilled || 0, c.creators?.approved?.length || 0))} spots left` : "open"}
                       </div>
                     )}
                     <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
@@ -5998,7 +6007,7 @@ function BrowseCampaigns({ campaigns = DEMO_CAMPAIGNS, onBack, onSelectCampaign,
                         {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                       </div>
                     </div>
-                    {appliedCampaigns.includes(c.id) ? (
+                    {c.isDemo ? <button className="nf-demo-preview" onClick={e => {e.stopPropagation();onSelectCampaign(c);}}>view demo</button> : appliedCampaigns.includes(c.id) ? (
                       <div style={{ padding: "8px 16px", borderRadius: 12, border: "1px solid rgba(100,255,150,.2)", fontSize: ".85rem", fontWeight: 600, color: "rgba(100,255,150,.8)", display: "flex", alignItems: "center", gap: 6 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         applied
@@ -7535,7 +7544,7 @@ function NfluenceApp() {
     return () => clearTimeout(t);
   }, [showToast]);
 
-  const mergedDemos=publicCampaigns;
+  const mergedDemos=[...publicCampaigns,...DEMO_CAMPAIGNS];
   const brandDemoCampaigns=[];
   const handlePublish=async(campaignData,account={},result={})=>{
     if(!result.campaignId)throw Error('The campaign could not be confirmed. Contact support before paying again.');
@@ -7634,6 +7643,7 @@ function NfluenceApp() {
   };
 
   const handleApply=async(campaign,data)=>{
+    if(campaign.isDemo || String(campaign.id).startsWith("demo-")) throw Error("Demo campaigns are examples and do not accept applications.");
     if(!creatorUser?.id)throw Error('Please sign in with a creator account.');
     const row=unwrap(await getSB().from('applications').insert({campaign_id:campaign.id,creator_id:creatorUser.id,status:'applied',stage:'applied',name:data.name,pitch:data.pitch,portfolio:data.portfolio,platforms:data.platforms}).select().single());
     setAppliedCampaigns(prev=>[...new Set([...prev,campaign.id])]);
@@ -7781,7 +7791,7 @@ function NfluenceApp() {
   if(view==='plans'&&authSession&&user)return <AnnualPlanPanel session={authSession} onBack={()=>setView('dashboard')}/>;
   if(['inbox','messages','creatorinbox','creatormessages'].includes(view)&&authSession)return <ConversationHub user={authSession.user} campaignId={view==='inbox'||view==='creatorinbox'?null:selectedCampaign?.id} recipientId={messageCreator?.userId} onBack={()=>setView(user?'dashboard':'creatordashboard')}/>;
   if(view==='content'&&authSession)return <UploadLibrary user={authSession.user} campaignId={selectedCampaign?.id} onBack={()=>setView(user?'dashboard':'creatordashboard')}/>;
-  if(view==='browse'&&(publicLoading||publicError))return <main id="main-content" className="workspace"><PublicNav onSignIn={()=>setView('signin')}/><h1>Open campaigns</h1><p role={publicError?'alert':'status'}>{publicError?'Campaigns could not be loaded. Please try again.':'Loading current campaigns…'}</p>{publicError&&<button onClick={refreshPublic}>Try again</button>}</main>;
+
   if (view === "notifications") return <NotificationsPage notifications={notifications} forRole={user ? "brand" : "creator"} onBack={() => setView(user ? "dashboard" : "creatordashboard")} onMarkAllRead={markAllNotifsRead} onMarkRead={markNotifRead} />;
   if (view === "faq") return <FAQPage onBack={() => setView("landing")} onStart={() => goToBuilder("builder")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "signin") return <SignIn onSignIn={handleSignIn} onBack={() => setView("landing")} onSignUp={() => setView("signupchoice")} />;
@@ -7868,7 +7878,7 @@ function NfluenceApp() {
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
   if (view === "gigbrowse") return <GigBrowse onBack={() => creatorUser ? setView("creatordashboard") : setView("landing")} onSelectGig={(g) => { setSelectedGig(g); setView("gigdetail"); }} appliedGigs={appliedGigs} creatorUser={creatorUser} />;
   if (view === "gigdetail" && selectedGig) return <GigDetail gig={selectedGig} onBack={() => setView("gigbrowse")} creatorUser={creatorUser} appliedGigs={appliedGigs} onApply={handleGigApply} onSignInRedirect={() => setView("creatorsignin")} />;
-  if (view === "browse") return <BrowseCampaigns campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c)=>{setSelectedCampaign(c);setDetailSource("browse");setView("detail");}} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
+  if (view === "browse") return <BrowseCampaigns loading={publicLoading} error={publicError} onRetry={refreshPublic} campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c)=>{setSelectedCampaign(c);setDetailSource("browse");setView("detail");}} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages
@@ -7901,9 +7911,8 @@ function NfluenceApp() {
   }
   if (view === "detail" && selectedCampaign) {
     const isOwnCampaign = myCampaigns.some(c => c.id === selectedCampaign.id);
-    const isDemoFromDashboard = user && DEMO_CAMPAIGNS.some(d => d.brand === selectedCampaign.brand && d.campaign === selectedCampaign.campaign) && detailSource === "dashboard";
-    const isOwner = isOwnCampaign || isDemoFromDashboard;
-    return <CampaignDetail campaign={selectedCampaign} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user || creatorUser} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
+    const isOwner = !selectedCampaign.isDemo && isOwnCampaign;
+    return <CampaignDetail key={selectedCampaign.id} campaign={selectedCampaign} onStartCampaign={() => goToBuilder("builder")} onBack={() => { setAutoApply(false); if (detailSource === "dashboard") setView("dashboard"); else if (detailSource === "browse") setView("browse"); else setView("landing"); }} isOwner={isOwner} user={user || creatorUser} onApply={handleApply} onSignInRedirect={handleSignInRedirect} appliedCampaigns={appliedCampaigns} onOpenMessage={(creatorName) => handleOpenMessage(selectedCampaign, creatorName, "detail")} onOpenInbox={() => handleOpenInbox(selectedCampaign, "detail")} messageCount={getConversationsForCampaign(selectedCampaign).filter(c => c.messages.length > 0).length} autoApply={autoApply} onAutoApplyConsumed={() => setAutoApply(false)} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onScheduleCall={handleScheduleCall} onViewCreatorProfile={(creator) => { setSelectedCreatorProfile(creator); setCreatorProfileReturnView("detail"); setView("creatorprofile"); }} onNotify={addNotification} />;
   }
 
   if (authLoading) return null;
@@ -8031,16 +8040,19 @@ function NfluenceApp() {
       {/* Open Campaigns */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
         <p style={{textAlign:'center',color:'#b9c7d8',marginBottom:24}}>$299 per campaign · $1,999 for 12 months · Free for creators</p>
-        <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 28, fontWeight: 600 }}>current campaigns</h2>
-        {publicLoading?<p className="nf-empty-state" role="status">Loading current campaigns…</p>:publicError?<div className="nf-empty-state" role="alert"><p>Campaigns couldn’t load. Please try again.</p><button onClick={refreshPublic}>Try again</button></div>:!publicCampaigns.length&&<div className="nf-empty-state"><h2>New campaigns are on the way.</h2><p>There are no open campaigns right now. Creators can create a profile and check back. Brands can start preparing a brief.</p></div>}
+        {publicCampaigns.length > 0 && <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 28, fontWeight: 600 }}>current campaigns</h2>}
+        {publicLoading?<p className="nf-empty-state" role="status">Loading current campaigns…</p>:publicError?<div className="nf-empty-state" role="alert"><p>Campaigns couldn’t load. Please try again.</p><button onClick={refreshPublic}>Try again</button></div>:null}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {mergedDemos.map((c, i) => {
             const isApplied = appliedCampaigns.includes(c.id);
             return (
-            <div key={i} className="nf-campaign-card" onClick={() => { setSelectedCampaign(c); setDetailSource("landing"); setView("detail"); }}>
+            <React.Fragment key={c.id}>
+            {c.isDemo && i === publicCampaigns.length && <div className="nf-demo-heading"><h2>demo campaigns</h2><p>Example briefs to show how your campaign, deliverables, and creator compensation can look.</p></div>}
+            <div data-demo={c.isDemo || undefined} className="nf-campaign-card" tabIndex={0} role="group" aria-label={`${c.brand}: ${c.campaign}${c.isDemo ? " demo" : ""}`} onKeyDown={e=>{if(e.target===e.currentTarget && (e.key==="Enter" || e.key===" ")){e.preventDefault();setSelectedCampaign(c);setDetailSource("landing");setView("detail");}}} onClick={() => { setSelectedCampaign(c); setDetailSource("landing"); setView("detail"); }}>
               {/* Product image area */}
               <div style={{ position: "relative" }}>
-                <div style={{ height: 150, background: c.imgBg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
+                {c.isDemo && <span className="nf-demo-badge">demo campaign</span>}
+                  <div style={{ height: 150, background: c.imgBg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "20px 20px 0 0" }}>
                   {c.imgUrl ? (
                     <img src={c.imgUrl} alt={c.brand} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
@@ -8056,7 +8068,7 @@ function NfluenceApp() {
               </div>
 
               {/* Under banner: brand name left, spots + icons right */}
-              <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div className="nf-campaign-summary" style={{ padding: "12px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 {/* Brand + campaign name — left, pushed down to clear logo */}
                 <div style={{ paddingTop: 34 }}>
                   <div className={c.featured ? "nf-featured-name" : ""} style={{ fontSize: "1.7rem", fontWeight: 700, color: c.featured ? undefined : "#fff", lineHeight: 1.15 }}>{c.brand}</div>
@@ -8066,7 +8078,7 @@ function NfluenceApp() {
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   {c.spotsTotal && (
                     <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "6px 12px", fontSize: ".85rem", color: "#fff", fontWeight: 600, whiteSpace: "nowrap", display: "inline-block", marginBottom: 6 }}>
-                      {c.spotsTotal != null ? `${Math.max(0, c.spotsTotal - (c.creators?.approved?.length || 0))} spots left` : "open"}
+                      {c.spotsTotal != null ? `${Math.max(0, c.spotsTotal - Math.max(c.spotsFilled || 0, c.creators?.approved?.length || 0))} spots left` : "open"}
                     </div>
                   )}
                   <div style={{ fontSize: ".82rem", opacity: .35, textTransform: "lowercase", letterSpacing: ".03em", marginBottom: 6 }}>available for</div>
@@ -8109,7 +8121,7 @@ function NfluenceApp() {
                       {c.compType === "product+paid" ? <span style={{ fontSize: ".85rem", fontWeight: 400, opacity: .45, marginLeft: 4 }}>+ product</span> : ""}
                     </div>
                   </div>
-                  {isApplied ? (
+                  {c.isDemo ? <button className="nf-demo-preview" onClick={e => {e.stopPropagation();setSelectedCampaign(c);setDetailSource("landing");setView("detail");}}>view demo</button> : isApplied ? (
                     <div style={{ padding: "8px 16px", borderRadius: 12, border: "1px solid rgba(100,255,150,.2)", fontSize: ".85rem", fontWeight: 600, color: "rgba(100,255,150,.8)", display: "flex", alignItems: "center", gap: 6 }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(100,255,150,.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       applied
@@ -8120,6 +8132,7 @@ function NfluenceApp() {
                 </div>
               </div>
             </div>
+            </React.Fragment>
           );
           })}
         </div>

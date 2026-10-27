@@ -19,3 +19,15 @@ test('past campaign dates are rejected before checkout',()=>assert.throws(()=>ca
 
 import {serviceKey} from '../supabase/functions/_shared/environment.mjs';
 test('server operations prefer current keys when legacy keys are disabled',()=>{assert.equal(serviceKey(k=>({SUPABASE_SECRET_KEYS:JSON.stringify({default:'sb_secret_fixture'}),SUPABASE_SERVICE_ROLE_KEY:'disabled-jwt'})[k]),'sb_secret_fixture');assert.throws(()=>serviceKey(()=>undefined));assert.throws(()=>serviceKey(k=>k==='SUPABASE_SECRET_KEYS'?'invalid':undefined));});
+
+import {DEMO_CAMPAIGNS} from '../campaigns/src/demos.js';
+test('public demos cannot become application targets when dates or capacity change',()=>{
+ assert.equal(DEMO_CAMPAIGNS.length,4);
+ assert.equal(new Set(DEMO_CAMPAIGNS.map(c=>c.id)).size,4);
+ for(const c of DEMO_CAMPAIGNS){
+  assert.ok(existsSync('.'+c.imgUrl));assert.ok(existsSync('.'+c.logoUrl));
+  assert.equal(eligibleCampaign({...c,stage:'open',closes_at:'2099-01-01',spotsFilled:0}),false);
+  assert.equal(eligibleCampaign({...c,isDemo:false,stage:'open',closes_at:'2099-01-01',spotsFilled:0}),false);
+ }
+ assert.equal(eligibleCampaign({id:'real-campaign',stage:'open',closes_at:'2099-01-01',spotsTotal:10,spotsFilled:0}),true);
+});

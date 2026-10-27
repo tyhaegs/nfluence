@@ -47,8 +47,10 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae0fae456648191b7348c09d2a66e7a`, saved version 11, source commit `7e5faab2c76ecd2009ac44059812159436b89fe4`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae0fc7c88388191a90950cd4f3947eb`, saved version 12, source commit `19f938bdac95a4dfdb7fc10eb64a9528c7a5f459`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
 
 Marketing headers are generated from `scripts/navigation.mjs` during the production build. Shared presentation and mobile interaction live in `assets/navigation.css` and `assets/navigation.js`. Edit these sources instead of changing a single generated page header. The campaign application retains its React navigation.
 
 Account access uses the shared `campaigns/src/auth-ui.jsx` components and `auth.css`, adapted from the Oasis Peptides panel design with nfluence branding. Brand and creator login, role selection, signup steps, email confirmation and password recovery share the same panel. Recovery stays centered below the Back / Log in action row. Auth service calls and signup persistence remain in the existing handlers.
+
+The four original public demo campaigns in `campaigns/src/demos.js` are intentional examples for prospective brands. Preserve them on the landing and browse pages. Demo records use stable `demo-` IDs and explicit labels, stay separate from live database records, and never accept real applications.
