@@ -16,3 +16,6 @@ test('service inquiry paths match all twelve services and privacy routes exist',
 test('pending signup profiles never store entered passwords',()=>{const clean=sanitizePendingProfile({email:'qa@example.invalid',role:'brand',password:'root-secret',data:{name:'Brand',password:'secret',confirmPassword:'secret',confirm_password:'secret'}});assert.deepEqual(clean.data,{name:'Brand'});assert.doesNotMatch(JSON.stringify(clean),/secret/);});
 
 test('past campaign dates are rejected before checkout',()=>assert.throws(()=>campaignRecord({campaign:'Brief',deadline:'2020-01-01'},'b'),/future/));
+
+import {serviceKey} from '../supabase/functions/_shared/environment.mjs';
+test('server operations prefer current keys when legacy keys are disabled',()=>{assert.equal(serviceKey(k=>({SUPABASE_SECRET_KEYS:JSON.stringify({default:'sb_secret_fixture'}),SUPABASE_SERVICE_ROLE_KEY:'disabled-jwt'})[k]),'sb_secret_fixture');assert.throws(()=>serviceKey(()=>undefined));assert.throws(()=>serviceKey(k=>k==='SUPABASE_SECRET_KEYS'?'invalid':undefined));});

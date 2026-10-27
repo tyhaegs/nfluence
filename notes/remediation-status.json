@@ -1,36 +1,136 @@
 {
-  "baseline":"023940b",
-  "date":"2026-10-26",
-  "pricing":{"campaign_usd":299,"annual_usd":1999,"confirmed_by_user":true,"annual_auto_renews":false},
-  "payout_preference":"manual_confirmed_by_user",
-  "findings":{
-    "A01":{"status":"fixed","change":"Public catalogue reads real open, unexpired campaigns with capacity. Fabricated campaigns, gigs, messages and reviews removed."},
-    "A02":{"status":"fixed","change":"Deployed webhook without Supabase JWT gateway; raw Stripe signature remains mandatory. Unsigned request returns 400."},
-    "A03":{"status":"blocked_external","change":"Test key removed from website and build script. Live checkout fails closed. Requires matching live Stripe credentials and signed live webhook verification."},
-    "A04":{"status":"fixed_as_selected","change":"Manual creator-payment ledger, verified actor, minimum agreed amount, reference and completed-transfer confirmation. No automatic-transfer claims."},
-    "A05":{"status":"fixed","change":"Actor-aware application, review, upload and call guards; ownership and event timestamps preserved; accepted terms locked; capacity serialized."},
-    "A06":{"status":"fixed","change":"Server prices $299 campaign / $1999 annual, annual cap and monthly placement entitlement. Invalid featured terms rejected. Creator compensation excluded from platform charges."},
-    "A07":{"status":"fixed","change":"useLayoutEffect explicitly imported and editor verified in browser."},
-    "A08":{"status":"fixed","change":"Persistent UUID-backed inbox, calls, private file uploads, creator reviews, brand replies and read markers. Errors preserve drafts."},
-    "A09":{"status":"fixed","change":"Inquiry checks HTTP status and preserves form on failure. Simulated failure verified in browser without sending mail."},
-    "A10":{"status":"fixed","change":"Published Terms and Privacy routes with actual pricing, manual-payment explanation and data use."},
-    "A11":{"status":"fixed_code_live_acceptance_pending","change":"Durable request keys, preserved cancellation ledger, provider cancellation, signed events, checked atomic reconciliation and duplicate-event handling."},
-    "A12":{"status":"fixed","change":"Normalized field mapping, awaited saves, checked database responses, errors stay visible; failed campaign save verified in browser."},
-    "A13":{"status":"fixed","change":"Drafts are visible only to owners or authorized participants; public catalogue rules require open and future closing time."},
-    "A14":{"status":"fixed","change":"Shared responsive FAQ navigation."},
-    "A15":{"status":"improved","change":"Keyboard activation, focus indicators, modal focus containment, Escape, FAQ semantics and explicit form names. Automated and manual checks do not establish full accessibility conformance."},
-    "A16":{"status":"fixed","change":"Zoom allowed, main landmarks and skip links, persistent contact labels."},
-    "A17":{"status":"implemented_email_acceptance_pending","change":"Password reset request/recovery screens and Auth callbacks implemented. Dashboard redirect settings and real recovery-email acceptance require account access."},
-    "A18":{"status":"fixed","change":"Service pages, canonical/social metadata, social PNG, favicon, sitemap, robots and stable campaign hashes. Anonymous campaign navigation works."},
-    "A19":{"status":"fixed","change":"Pinned production React/Supabase bundles; removed browser Babel and development runtime; build.sh uses npm build."},
-    "A20":{"status":"improved","change":"Clear agency message, project CTA, process, FAQs, scope pages and audit path. Verified case-study material still requires approved client evidence."},
-    "A21":{"status":"blocked_external","change":"www DNS remains missing; Namecheap DNS administration is unavailable through connected tools."},
-    "A22":{"status":"partial_hosting_required","change":"HTML Content Security Policy and referrer policy applied. GitHub Pages ignores _headers; response-only controls need hosting/proxy access."},
-    "A23":{"status":"partial_account_setting_required","change":"Security-invoker public directory and fixed function search paths deployed. Leaked-password protection remains disabled; dashboard session is signed out."},
-    "A24":{"status":"fixed","change":"Foreign-key coverage, scalar auth predicates and consolidated participant policies. Supabase reports zero performance warnings."},
-    "A25":{"status":"fixed","change":"Error boundary, visible failures, first-party events without inquiry content, generic backend logs, regression tests and CI checks."},
-    "A26":{"status":"fixed","change":"All twelve service CTAs have service-specific inquiry selection and accessible names."}
+  "baseline": "023940b",
+  "date": "2026-10-26",
+  "pricing": {
+    "campaign_usd": 299,
+    "annual_usd": 1999,
+    "confirmed_by_user": true,
+    "annual_auto_renews": false
   },
-  "verification":{"unit_tests":11,"backend":"Transactional workflow/billing fixtures passed and rolled back; no real charges or emails","responsive_widths":[375,768,1440],"horizontal_overflow":false,"live_billing_enabled":false},
-  "external_requirements":["Live Stripe configuration and account-owner purchase/webhook acceptance","Namecheap DNS administration for www","Compatible host or proxy for security response headers","Supabase dashboard leaked-password and email-redirect verification","Approved client case-study evidence"]
+  "payout_preference": "manual_confirmed_by_user",
+  "findings": {
+    "A01": {
+      "status": "fixed",
+      "change": "Public catalogue reads real open, unexpired campaigns with capacity. Fabricated campaigns, gigs, messages and reviews removed."
+    },
+    "A02": {
+      "status": "fixed",
+      "change": "Deployed webhook without Supabase JWT gateway; raw Stripe signature remains mandatory. Unsigned request returns 400."
+    },
+    "A03": {
+      "status": "blocked_external",
+      "change": "Existing credentials verified as Nfluence Agency sandbox (test mode); live charges and business details are disabled. Correct live account and business activation required."
+    },
+    "A04": {
+      "status": "fixed_as_selected",
+      "change": "Manual creator-payment ledger, verified actor, minimum agreed amount, reference and completed-transfer confirmation. No automatic-transfer claims."
+    },
+    "A05": {
+      "status": "fixed",
+      "change": "Actor-aware application, review, upload and call guards; ownership and event timestamps preserved; accepted terms locked; capacity serialized."
+    },
+    "A06": {
+      "status": "fixed",
+      "change": "Server prices $299 campaign / $1999 annual, annual cap and monthly placement entitlement. Invalid featured terms rejected. Creator compensation excluded from platform charges."
+    },
+    "A07": {
+      "status": "fixed",
+      "change": "useLayoutEffect explicitly imported and editor verified in browser."
+    },
+    "A08": {
+      "status": "fixed",
+      "change": "Persistent UUID-backed inbox, calls, private file uploads, creator reviews, brand replies and read markers. Errors preserve drafts."
+    },
+    "A09": {
+      "status": "fixed",
+      "change": "Inquiry checks HTTP status and preserves form on failure. Simulated failure verified in browser without sending mail."
+    },
+    "A10": {
+      "status": "fixed",
+      "change": "Published Terms and Privacy routes with actual pricing, manual-payment explanation and data use."
+    },
+    "A11": {
+      "status": "fixed_code_live_acceptance_pending",
+      "change": "Durable request keys, preserved cancellation ledger, provider cancellation, signed events, checked atomic reconciliation and duplicate-event handling."
+    },
+    "A12": {
+      "status": "fixed",
+      "change": "Normalized field mapping, awaited saves, checked database responses, errors stay visible; failed campaign save verified in browser."
+    },
+    "A13": {
+      "status": "fixed",
+      "change": "Drafts are visible only to owners or authorized participants; public catalogue rules require open and future closing time."
+    },
+    "A14": {
+      "status": "fixed",
+      "change": "Shared responsive FAQ navigation."
+    },
+    "A15": {
+      "status": "improved",
+      "change": "Keyboard activation, focus indicators, modal focus containment, Escape, FAQ semantics and explicit form names. Automated and manual checks do not establish full accessibility conformance."
+    },
+    "A16": {
+      "status": "fixed",
+      "change": "Zoom allowed, main landmarks and skip links, persistent contact labels."
+    },
+    "A17": {
+      "status": "email_delivery_verification_in_progress",
+      "change": "Leaked-password checks enabled and exact recovery redirect added. A recovery email was requested using a temporary QA account; authenticated service checks passed."
+    },
+    "A18": {
+      "status": "fixed",
+      "change": "Service pages, canonical/social metadata, social PNG, favicon, sitemap, robots and stable campaign hashes. Anonymous campaign navigation works."
+    },
+    "A19": {
+      "status": "fixed",
+      "change": "Pinned production React/Supabase bundles; removed browser Babel and development runtime; build.sh uses npm build."
+    },
+    "A20": {
+      "status": "improved",
+      "change": "Published a first-party example of nfluence\u2019s own website and creator workspace. Client testimonials and sales results still require approved evidence."
+    },
+    "A21": {
+      "status": "dns_fixed_certificate_pending",
+      "change": "Saved Namecheap CNAME www to tyhaegs.github.io; verified on authoritative and recursive DNS. GitHub HTTPS certificate still covers only the apex domain."
+    },
+    "A22": {
+      "status": "prepared_hosting_switch_approval_pending",
+      "change": "Prepared private hosting copy with response security headers. Explicit public-hosting approval requested before changing domain traffic."
+    },
+    "A23": {
+      "status": "fixed",
+      "change": "Enabled leaked-password protection on the existing Pro plan; configured recovery redirect; current security advisors report zero findings."
+    },
+    "A24": {
+      "status": "fixed",
+      "change": "Foreign-key coverage, scalar auth predicates and consolidated participant policies. Supabase reports zero performance warnings."
+    },
+    "A25": {
+      "status": "fixed",
+      "change": "Error boundary, visible failures, first-party events without inquiry content, generic backend logs, regression tests and CI checks. Server functions now prefer current Supabase secret keys; authenticated $299 quote and telemetry write verified against deployed endpoints."
+    },
+    "A26": {
+      "status": "fixed",
+      "change": "All twelve service CTAs have service-specific inquiry selection and accessible names."
+    }
+  },
+  "verification": {
+    "unit_tests": 12,
+    "backend": "Transactional workflow/billing fixtures passed and rolled back; no real charges or emails",
+    "responsive_widths": [
+      375,
+      768,
+      1440
+    ],
+    "horizontal_overflow": false,
+    "live_billing_enabled": false,
+    "authenticated_quote_cents": 29900,
+    "security_advisor_findings": 0
+  },
+  "external_requirements": [
+    "Access to verified live nfluence Stripe account; existing deployment is sandbox only",
+    "Approval for prepared hosting copy to be made public before domain cutover",
+    "GitHub www HTTPS certificate provisioning",
+    "Approved client evidence for any client testimonials or outcome claims"
+  ]
 }

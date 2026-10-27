@@ -1,3 +1,4 @@
+import {serviceKey} from '../_shared/environment.mjs';
 import Stripe from 'npm:stripe@14.25.0';
 import {createClient} from 'npm:@supabase/supabase-js@2.108.2';
 const checked=(r:any)=>{if(r.error)throw Error(r.error.message);return r.data;};
@@ -8,7 +9,7 @@ Deno.serve(async req=>{
  const stripe=new Stripe(key,{apiVersion:'2023-10-16'});let event:Stripe.Event;
  try{event=await stripe.webhooks.constructEventAsync(await req.text(),sig,secret,undefined,Stripe.createSubtleCryptoProvider());}catch{return new Response('Invalid signature',{status:400});}
  try{
-  const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
+  const admin=createClient(Deno.env.get('SUPABASE_URL')!,serviceKey(k=>Deno.env.get(k)),{auth:{persistSession:false}});
   if(checked(await admin.from('billing_events').select('event_id').eq('event_id',event.id)).length)return Response.json({received:true});
   if(event.type==='payment_intent.succeeded'){
    const pi=event.data.object as Stripe.PaymentIntent;const id=pi.metadata.payment_id;

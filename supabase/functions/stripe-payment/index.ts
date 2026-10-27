@@ -1,3 +1,4 @@
+import {serviceKey} from '../_shared/environment.mjs';
 import Stripe from 'npm:stripe@14.25.0';
 import {createClient} from 'npm:@supabase/supabase-js@2.108.2';
 import {price,campaignRecord,checkoutEnabled} from '../_shared/pricing.mjs';
@@ -11,7 +12,7 @@ Deno.serve(async req=>{
  if(origin&&!origins.includes(origin))return json({error:'Origin not allowed'},403);
  try{
   if(Number(req.headers.get('content-length')||0)>2000000)return json({error:'Request too large'},413);
-  const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
+  const admin=createClient(Deno.env.get('SUPABASE_URL')!,serviceKey(k=>Deno.env.get(k)),{auth:{persistSession:false}});
   const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');const auth=await admin.auth.getUser(token);
   if(auth.error||!auth.data.user)return json({error:'Please sign in again.'},401);const user=auth.data.user;
   const profile=checked(await admin.from('profiles').select('role').eq('id',user.id).single());if(profile.role!=='brand')return json({error:'A brand account is required.'},403);
