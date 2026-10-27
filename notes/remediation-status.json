@@ -196,8 +196,21 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae05d4242748191b5dfed73e4f51839",
-    "source_commit": "b168c137ecc454c79ba0ff4e33520c1aaea1fc9d",
+    "deployment_id": "appgdep_6ae0fae456648191b7348c09d2a66e7a",
+    "source_commit": "7e5faab2c76ecd2009ac44059812159436b89fe4",
     "cutover_state": "complete_verified"
+  },
+  "homepage_brand_correction": {
+    "status": "published_verified",
+    "hero_button": "campaigns \u2192 /campaigns/ (restored original)",
+    "sections": "Monda lowercase headings, existing glass-card styling and outlined actions",
+    "responsive_widths": [
+      320,
+      375,
+      768,
+      1024,
+      1440
+    ],
+    "horizontal_overflow": false
   }
 }

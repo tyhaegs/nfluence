@@ -465,6 +465,27 @@
         background-color: #040b15;
       }
     }
+
+    /* Reuse the homepage's Monda headings, glass surfaces and outlined actions. */
+    .home-process,.home-work{width:min(1100px,100%);padding:0 24px;margin:0 auto 88px;scroll-margin-top:28px}
+    .home-process .popular-head h2{font-size:1.1rem}
+    .process-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+    .process-card,.work-panel{background:radial-gradient(circle at top,rgba(255,255,255,.045),rgba(4,11,21,0));border:1px solid rgba(255,255,255,.12);border-radius:20px;backdrop-filter:blur(20px);box-shadow:0 20px 55px rgba(0,0,0,.35)}
+    .process-card{min-width:0;padding:28px 24px;text-align:center}
+    .process-number{display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin:0 auto 22px;border:1px solid rgba(255,255,255,.4);border-radius:14px;font:1.05rem 'Monda',sans-serif;color:rgba(255,255,255,.8)}
+    .process-card h3,.work-copy h2{font-family:'Monda',system-ui,sans-serif;font-weight:600;line-height:1.2;letter-spacing:-.02em;text-transform:lowercase;margin:0 0 16px}
+    .process-card h3{font-size:1.65rem}
+    .process-card p,.work-copy p{font-size:.95rem;line-height:1.65;color:rgba(255,255,255,.7);margin:0;text-wrap:pretty}
+    .process-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:28px}
+    .work-panel{display:grid;grid-template-columns:1fr 1fr;align-items:center;overflow:hidden}
+    .work-brand{display:flex;align-items:center;justify-content:center;align-self:stretch;min-height:260px;padding:40px;background:radial-gradient(ellipse at center,rgba(255,255,255,.065),transparent 70%);border-right:1px solid rgba(255,255,255,.1)}
+    .work-brand svg{width:min(100%,300px);height:auto;display:block}
+    .work-copy{padding:40px;min-width:0}
+    .work-copy h2{font-size:2rem}
+    .work-copy p{max-width:42ch;margin-bottom:24px}
+    .work-copy .btn{min-width:160px}
+    @media(max-width:760px){.process-grid{grid-template-columns:1fr}.home-process,.home-work{margin-bottom:64px}.process-card{padding:28px;max-width:480px;width:100%;margin:auto}.process-card p{max-width:38ch;margin:auto}.work-panel{grid-template-columns:1fr}.work-brand{min-height:180px;border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}.work-brand svg{max-width:240px}.work-copy{padding:32px 24px;text-align:center}.work-copy p{margin-left:auto;margin-right:auto}}
+    @media(max-width:360px){.process-actions{flex-direction:column}.process-actions .btn{width:100%;min-width:0}.work-copy h2{font-size:1.8rem}}
   </style>
   <script src="/assets/supabase.min.js"></script>
   <script>
@@ -530,7 +551,7 @@
     <p class="hero-description">Website design, search visibility, ecommerce, and marketing that connect your brand with its next customers.</p>
     <div class="actions">
       <a href="#popular" class="btn">view services</a>
-      <a href="/contact.html" class="btn">talk about your project</a>
+      <a href="/campaigns/" class="btn">campaigns</a>
     </div>
     <div class="hero-line" aria-hidden="true"></div>
 
@@ -669,9 +690,38 @@
     </div>
   </section>
 
-  <section class="agency-section" id="how-we-work"><h2>A clear path from idea to launch</h2><div class="agency-steps"><div><h3>1. Understand the goal</h3><p>We review your brand, audience, current website and priorities before recommending a scope.</p></div><div><h3>2. Build the right plan</h3><p>You get a defined project scope, deliverables, timing and price before work begins.</p></div><div><h3>3. Launch and improve</h3><p>We put the agreed work into action, review what happens and identify the next improvements.</p></div></div><p>Want to start with a focused review? Explore our <a href="/brandaudit/">$250 brand audit</a>, or <a href="/contact.html">discuss your project scope</a>.</p></section>
-  <section class="agency-section" id="selected-work" aria-labelledby="work-title"><h2 id="work-title">Inside nfluence</h2><p>See how our own website connects a clear service offering, focused project inquiries, responsive branding and a creator workspace.</p><p><a href="/work/nfluence/">Explore our website and creator workspace →</a></p></section>
-<section class="agency-section" id="agency-faq"><h2>Before we work together</h2><details><summary>Can I hire you for just one service?</summary><p>Yes. Tell us the result you need and we can scope a focused project or a combination of services.</p></details><details><summary>How are projects priced?</summary><p>Agency projects are quoted for their agreed scope. The brand audit is $250. Creator campaigns have separate platform pricing: $299 per campaign or $1,999 annually.</p></details><details><summary>What should I include in my inquiry?</summary><p>Share your website, goals, services of interest, preferred timing and any constraints. We will use that context to discuss a practical scope.</p></details><details><summary>Where can creators find campaigns?</summary><p>Visit the <a href="/campaigns/#browse">campaign marketplace</a> to see currently available opportunities. Joining as a creator is free.</p></details></section>
+  <section class="home-process" id="how-we-work" aria-labelledby="process-title">
+    <div class="popular-head"><h2 id="process-title">how we work</h2></div>
+    <ol class="process-grid">
+      <li class="process-card">
+        <span class="process-number" aria-hidden="true">01</span>
+        <h3>find your focus</h3>
+        <p>Tell us where you are and where you want to go. We look at your brand, your audience, and what needs attention.</p>
+      </li>
+      <li class="process-card">
+        <span class="process-number" aria-hidden="true">02</span>
+        <h3>make a plan</h3>
+        <p>We map out the work, timing, and cost together. You know what we are building and what comes next.</p>
+      </li>
+      <li class="process-card">
+        <span class="process-number" aria-hidden="true">03</span>
+        <h3>put it to work</h3>
+        <p>We handle the details and get it out into the world. Then we look at what is working and where to go next.</p>
+      </li>
+    </ol>
+    <div class="process-actions"><a class="btn" href="/brandaudit/">brand audit · $250</a><a class="btn" href="/contact.html">get started</a></div>
+  </section>
+  <section class="home-work" id="selected-work" aria-labelledby="work-title">
+    <div class="work-panel">
+      <div class="work-brand" aria-hidden="true"><svg viewBox="318 449 2267 495" width="2267" height="495"><image href="/assets/brand-logos/nfluence.png" width="2903" height="1393" /></svg></div>
+      <div class="work-copy">
+        <h2 id="work-title">inside nfluence</h2>
+        <p>A closer look at our own website and campaign platform. One place for brands to get started and creators to find their next opportunity.</p>
+        <a class="btn" href="/work/nfluence/">take a look</a>
+      </div>
+    </div>
+  </section>
+  <section class="agency-section" id="agency-faq"><h2>Before we work together</h2><details><summary>Can I hire you for just one service?</summary><p>Yes. Tell us the result you need and we can scope a focused project or a combination of services.</p></details><details><summary>How are projects priced?</summary><p>Agency projects are quoted for their agreed scope. The brand audit is $250. Creator campaigns have separate platform pricing: $299 per campaign or $1,999 annually.</p></details><details><summary>What should I include in my inquiry?</summary><p>Share your website, goals, services of interest, preferred timing and any constraints. We will use that context to discuss a practical scope.</p></details><details><summary>Where can creators find campaigns?</summary><p>Visit the <a href="/campaigns/#browse">campaign marketplace</a> to see currently available opportunities. Joining as a creator is free.</p></details></section>
   </main>
   <script>
     document.addEventListener('DOMContentLoaded', function () {

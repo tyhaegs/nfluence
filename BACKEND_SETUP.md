@@ -47,7 +47,7 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae05d4242748191b5dfed73e4f51839`, saved version 10, source commit `b168c137ecc454c79ba0ff4e33520c1aaea1fc9d`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae0fae456648191b7348c09d2a66e7a`, saved version 11, source commit `7e5faab2c76ecd2009ac44059812159436b89fe4`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
 
 Marketing headers are generated from `scripts/navigation.mjs` during the production build. Shared presentation and mobile interaction live in `assets/navigation.css` and `assets/navigation.js`. Edit these sources instead of changing a single generated page header. The campaign application retains its React navigation.
 
