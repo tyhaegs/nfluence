@@ -74,8 +74,8 @@
       "change": "Zoom allowed, main landmarks and skip links, persistent contact labels."
     },
     "A17": {
-      "status": "email_delivery_verification_in_progress",
-      "change": "Leaked-password checks enabled and exact recovery redirect added. A recovery email was requested using a temporary QA account; authenticated service checks passed."
+      "status": "delivery_verified",
+      "change": "Recovery requests returned 200; receipt verified in the agency Gmail mailbox. SPF, DKIM and DMARC all pass. Test messages landed in Spam. Branded subject/body configured; original template was still observed during the test. Recovery redirect is allowed."
     },
     "A18": {
       "status": "fixed",
@@ -86,8 +86,8 @@
       "change": "Pinned production React/Supabase bundles; removed browser Babel and development runtime; build.sh uses npm build."
     },
     "A20": {
-      "status": "improved",
-      "change": "Published a first-party example of nfluence\u2019s own website and creator workspace. Client testimonials and sales results still require approved evidence."
+      "status": "fixed_with_first_party_example",
+      "change": "Published /work/nfluence/ to demonstrate this website and creator workspace using verified first-party scope and features. No client endorsements or sales outcomes invented."
     },
     "A21": {
       "status": "dns_fixed_certificate_pending",
@@ -125,12 +125,30 @@
     "horizontal_overflow": false,
     "live_billing_enabled": false,
     "authenticated_quote_cents": 29900,
-    "security_advisor_findings": 0
+    "security_advisor_findings": 0,
+    "temporary_auth_fixtures_removed": 2,
+    "diagnostic_function_removed": true,
+    "recovery_email_received": true,
+    "email_authentication": {
+      "spf": "pass",
+      "dkim": "pass",
+      "dmarc": "pass",
+      "test_folder": "Spam"
+    }
   },
   "external_requirements": [
     "Access to verified live nfluence Stripe account; existing deployment is sandbox only",
     "Approval for prepared hosting copy to be made public before domain cutover",
     "GitHub www HTTPS certificate provisioning",
     "Approved client evidence for any client testimonials or outcome claims"
-  ]
+  ],
+  "hosting_preparation": {
+    "project_id": "appgprj_6ae022d409a88191b1a20166a6e9580d",
+    "url": "https://nfluence-secure-host.tyhaegs.chatgpt.site",
+    "audience": "private",
+    "public_switch_approval": "pending",
+    "domain_ownership_records": "configured",
+    "ssl": "pending_validation",
+    "primary_site_traffic_changed": false
+  }
 }

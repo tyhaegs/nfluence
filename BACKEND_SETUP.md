@@ -23,7 +23,7 @@ Deploy functions using their checked-in `supabase/config.toml` settings. The fou
 
 ## Auth and files
 
-Leaked-password protection is now enabled on the existing Pro plan. The site URL and email redirect allowlist include `https://nfluenceagency.com/campaigns/` and `https://nfluenceagency.com/campaigns/?recovery=1`. The browser reset flow is implemented; actual recovery-email delivery still needs an account-owner acceptance test.
+Leaked-password protection is now enabled on the existing Pro plan. The site URL and email redirect allowlist include `https://nfluenceagency.com/campaigns/` and `https://nfluenceagency.com/campaigns/?recovery=1`. The browser reset flow is implemented; recovery-email delivery was verified in the agency Gmail mailbox using a temporary QA account. SPF, DKIM and DMARC passed; the test messages landed in Spam. A branded subject and body are configured, although the original template was still observed during the test. Both temporary QA accounts and the diagnostic function were removed.
 
 Deliverables live in the private `content` bucket, under creator/application paths. Participants obtain five-minute signed links. Storage and database rules verify the exact application and actor. Never make this bucket public. Manual payment records are immutable to clients and require an amount and transfer reference.
 
