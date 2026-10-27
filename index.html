@@ -122,6 +122,8 @@
       flex-direction: column;
       align-items: center;
       position: relative;
+      width: 100%;
+      max-width: 1100px;
       pointer-events: none;
     }
 
@@ -132,21 +134,21 @@
       position: absolute;
       top: 40px;
       left: 0;
-      width: 140%;
-      height: 140%;
+      width: 100%;
+      height: 100%;
       background: radial-gradient(circle at center, rgba(255,255,255,.1) 0%, transparent 70%);
       filter: blur(40px);
       z-index: 0;
       pointer-events: none;
     }
 
-    .logo img {
+    .hero-logo {
       position: relative;
       z-index: 1;
-      max-width: 485px;
-      height: auto;
       display: block;
-      margin-top: 24px;
+      width: min(430px, calc(100% - 64px));
+      height: auto;
+      margin: 40px 0 32px;
     }
 
     .actions {
@@ -191,63 +193,60 @@
       opacity: .6;
     }
 
+    /* Equal slots and centered wrapping keep the final row balanced. */
     .brand-strip {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      --columns: 5;
+      --logo-gap: 24px;
+      position: relative;
       z-index: 1;
-    }
-
-    .brand-strip-logos,
-    .brand-strip-logos--row2 {
       display: flex;
-      gap: 30px;
       flex-wrap: wrap;
       justify-content: center;
-      align-items: center;
-      opacity: .95;
-    }
-
-    .brand-strip-logos--row2 {
-      margin-top: -64px;
+      gap: 16px var(--logo-gap);
       width: 100%;
+      max-width: 1020px;
+      margin: 32px 0 0;
+      padding: 0 24px;
+      list-style: none;
     }
 
-    .brand-strip-logos img,
-    .brand-strip-logos--row2 img {
-      object-fit: contain;
-      filter: drop-shadow(0 3px 12px rgba(0,0,0,.4));
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 calc((100% - (var(--columns) - 1) * var(--logo-gap)) / var(--columns));
+      min-width: 0;
+      min-height: 88px;
     }
 
-    .brand-strip-logos img[alt="Brand 2"] {
-      width: 180px;
+    .brand-mark {
+      display: block;
+      width: min(var(--mark-width, 148px), 100%);
+      height: auto;
+      max-height: 62px;
+      opacity: .95;
+      filter: drop-shadow(0 3px 12px rgba(0,0,0,.25));
     }
 
-    .brand-strip-logos img[alt="Brand 1"],
-    .brand-strip-logos img[alt="Brand 3"],
-    .brand-strip-logos img[alt="Brand 4"],
-    .brand-strip-logos img[alt="Brand 5"] {
-      width: 150px;
+    .brand-logo--palms { --mark-width: 116px; }
+    .brand-logo--nicole-frank { --mark-width: 162px; }
+
+    @media (max-width: 999px) {
+      .brand-strip {
+        --columns: 3;
+        max-width: 680px;
+      }
     }
 
-    .brand-strip-logos--row2 img[alt="Brand 9"] {
-      width: 180px;
-    }
-
-    .brand-strip-logos--row2 img[alt="Brand 7"] {
-      width: 200px;
-    }
-
-    .brand-strip-logos--row2 img[alt="Brand 8"] {
-      width: 130px;
-    }
-
-    .brand-strip-logos--row2 img[alt="Brand 6"] {
-      width: 170px;
-    }
-
-    .brand-strip-logos--row2 img[alt="Brand 10"] {
-      width: 150px;
+    @media (max-width: 479px) {
+      .hero-logo { margin: 28px 0 28px; }
+      .brand-strip {
+        --columns: 2;
+        --logo-gap: 20px;
+        gap: 12px var(--logo-gap);
+      }
+      .brand-logo { min-height: 68px; }
+      .brand-mark { width: min(var(--mark-width, 130px), 100%); max-height: 52px; }
     }
 
     .intro-text {
@@ -416,27 +415,6 @@
         width: 80%;
       }
 
-      /* Logos: compact rows on mobile */
-      .brand-strip-logos,
-      .brand-strip-logos--row2 {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 0 8px;
-      }
-
-      .brand-strip-logos--row2 {
-        margin-top: -16px; /* slight overlap to reduce scroll height */
-      }
-
-      .brand-strip-logos img,
-      .brand-strip-logos--row2 img {
-        max-width: 110px;
-        width: 100%;
-      }
-
       /* Intro text: narrower and left-aligned on mobile only */
       .intro-text {
         padding: 0 24px;
@@ -557,28 +535,24 @@
   </header>
 
   <div class="logo">
-    <img src="https://imgur.com/tpcqXvh.png" alt="Logo" />
+    <svg class="hero-logo" viewBox="318 449 2267 495" width="2267" height="495" role="img" aria-label="nfluence"><image href="assets/brand-logos/nfluence.png" width="2903" height="1393" /></svg>
     <div class="actions">
       <a href="#popular" class="btn">view services</a>
       <a href="/campaigns/" class="btn">campaigns</a>
     </div>
     <div class="hero-line" aria-hidden="true"></div>
 
-    <div class="brand-strip">
-      <div class="brand-strip-logos">
-        <img src="https://i.imgur.com/jqxXhAP.png" alt="Brand 1" />
-        <img src="https://i.imgur.com/GguIvy9.png" alt="Brand 2" />
-        <img src="https://i.imgur.com/AuxsHcF.png" alt="Brand 3" />
-        <img src="https://i.imgur.com/gwDjvyq.png" alt="Brand 4" />
-        <img src="https://i.imgur.com/2eGzJ4h.png" alt="Brand 5" />
-      </div>
-      <div class="brand-strip-logos brand-strip-logos--row2">
-        <img src="https://i.imgur.com/UPOJknH.png" alt="Brand 7" />
-        <img src="https://i.imgur.com/dBttJW1.png" alt="Brand 8" />
-        <img src="https://i.imgur.com/1e9nGnN.png" alt="Brand 6" />
-        <img src="https://i.imgur.com/MQJiIiX.png" alt="Brand 10" />
-      </div>
-    </div>
+    <ul class="brand-strip" aria-label="Brands">
+      <li class="brand-logo"><svg class="brand-mark" viewBox="34 126 1128 296" width="1128" height="296" role="img" aria-label="Choolip"><image href="assets/brand-logos/choolip.png" width="1200" height="592" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="144 366 1263 240" width="1263" height="240" role="img" aria-label="Sweet Sweat"><image href="assets/brand-logos/sweet-sweat.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="0 231 1200 166" width="1200" height="166" role="img" aria-label="Jupiter"><image href="assets/brand-logos/jupiter.png" width="1200" height="628" /></svg></li>
+      <li class="brand-logo brand-logo--palms"><svg class="brand-mark" viewBox="174 196 706 207" width="706" height="207" role="img" aria-label="Palms"><image href="assets/brand-logos/palms.png" width="1050" height="600" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="167 386 1222 225" width="1222" height="225" role="img" aria-label="Nouhaus"><image href="assets/brand-logos/nouhaus.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo brand-logo--nicole-frank"><svg class="brand-mark" viewBox="128 387 1327 209" width="1327" height="209" role="img" aria-label="Nicole Frank"><image href="assets/brand-logos/nicole-frank.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="196 157 1114 618" width="1114" height="618" role="img" aria-label="Outstanding Foods"><image href="assets/brand-logos/outstanding-foods.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="182 221 1212 410" width="1212" height="410" role="img" aria-label="Caliwater"><image href="assets/brand-logos/caliwater.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo"><svg class="brand-mark" viewBox="49 404 937 221" width="937" height="221" role="img" aria-label="Pendry Hotels"><image href="assets/brand-logos/pendry.png" width="1024" height="1024" /></svg></li>
+    </ul>
   </div>
 
   <div class="intro-text">
