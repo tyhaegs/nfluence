@@ -8300,8 +8300,8 @@ function NfluenceApp() {
 
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "50px 24px 20px", maxWidth: 700, margin: "0 auto" }}>
-        <h1 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
-          <span style={{ color: "rgba(255,255,255,.4)" }}>launch creator campaigns<br /> with </span><span style={{ color: "#fff" }}>a clear path to delivery</span>
+        <h1 className="campaign-title" style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
+          <span style={{ color: "rgba(255,255,255,.4)" }}>launch creator campaigns</span>{" "}<span style={{ color: "#fff" }}>with a clear path to delivery</span>
         </h1>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
           <button onClick={() => goToBuilder("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>

@@ -1,0 +1,8 @@
+/* Keep headings balanced and avoid short, stranded final lines in body copy. */
+:where(h1,h2,h3,h4,h5,h6,[role="heading"],summary,.nf-faq-q){text-wrap:balance}
+:where(p,li,dd,figcaption,.nf-hint){text-wrap:pretty}
+:where(h1,h2,h3,h4,h5,h6,p,li,dd,figcaption){overflow-wrap:break-word}
+:where(.button,.action,.btn,.nf-cta-btn){text-wrap:balance;max-width:100%}
+:where(.agency-steps p, main > ul > li){text-wrap:balance}
+:where(.project-intro,.page-intro,.hero-copy p,.logo > h1 + p,#selected-work > p){text-wrap:balance}
+.project-title > span,.campaign-title > span{display:block;text-wrap:balance}

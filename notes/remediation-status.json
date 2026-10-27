@@ -140,7 +140,21 @@
     "live_hosting_checks_passed": true,
     "apex_https_verified": true,
     "www_https_verified": true,
-    "response_security_headers_verified": true
+    "response_security_headers_verified": true,
+    "typography": {
+      "public_pages": 20,
+      "campaign_screens": 6,
+      "widths": [
+        320,
+        375,
+        768,
+        1024,
+        1440
+      ],
+      "page_viewport_checks": 130,
+      "detected_single_word_endings": 0,
+      "horizontal_overflow_cases": 0
+    }
   },
   "external_requirements": [
     "Access to verified live nfluence Stripe account; existing deployment is sandbox only"
