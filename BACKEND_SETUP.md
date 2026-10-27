@@ -47,4 +47,4 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae02ee3259481919543a2dd07357d25`, saved version 3, source commit `0b172dd378eec262fcddd038820a9b7c8a038696`. It was checked against all 59 original asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae0331941b48191965a7f118d00d53c`, saved version 5, source commit `9345012c01653c572f273fe639a220c811bd2c29`. It was checked against all 59 original asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.

@@ -153,8 +153,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae02ee3259481919543a2dd07357d25",
-    "source_commit": "0b172dd378eec262fcddd038820a9b7c8a038696",
+    "deployment_id": "appgdep_6ae0331941b48191965a7f118d00d53c",
+    "source_commit": "9345012c01653c572f273fe639a220c811bd2c29",
     "cutover_state": "complete_verified"
   }
 }
