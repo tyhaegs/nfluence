@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8" /><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://js.stripe.com 'sha256-tRdn222Y0nCKZdfKtk7CHlTpRr8f9M+YXDmIXcpaR8g=' 'sha256-c5dBFL5fo+iJN5RdBiXBpv0x+CHLcHZMosFvnBvM/Dw='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://xynujmscxjxbfivylfne.supabase.co wss://xynujmscxjxbfivylfne.supabase.co https://api.stripe.com https://formspree.io; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io">
   <!-- UPDATED VIEWPORT FOR PINCH-ZOOM-OUT BEHAVIOR -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>nfluence — Contact</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact nfluence | Plan Your Next Project</title>
   <style>
     html {
       scroll-behavior: smooth;
@@ -15,7 +15,7 @@
 
     @font-face {
       font-family: 'Monda';
-      src: url('https://cdn.jsdelivr.net/gh/tyhaegs/monta-font/Monda.ttf') format('truetype');
+      src: url('/assets/Monda-Regular.woff') format('woff');
     }
 
     :root {
@@ -385,7 +385,7 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/supabase.min.js"></script>
   <script>
     (function () {
       var SUPABASE_URL = "https://xynujmscxjxbfivylfne.supabase.co";
@@ -426,8 +426,20 @@
       }
     })();
   </script>
+<meta name="description" content="Tell nfluence about your website, SEO, ecommerce or marketing goals. Select the services you need and start a conversation.">
+<link rel="canonical" href="https://nfluenceagency.com/contact.html">
+<meta property="og:title" content="Contact nfluence | Plan Your Next Project">
+<meta property="og:description" content="Tell nfluence about your website, SEO, ecommerce or marketing goals. Select the services you need and start a conversation.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nfluenceagency.com/contact.html">
+<meta property="og:image" content="https://nfluenceagency.com/assets/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 <header>
   <a href="index.html" class="nav-brand" style="color:#fff; text-decoration:none;">nfluence</a>
   <nav class="nav-links">
@@ -435,7 +447,7 @@
     <a href="/campaigns/">campaigns</a>
     <a href="/#popular">services</a>
     <a href="contact.html">contact us</a>
-    <a href="/campaigns/#faq">faq</a>
+    <a href="/#agency-faq">faq</a>
     <span class="nav-divider">|</span>
     <a href="/campaigns/#signin" class="nav-signin">sign in</a>
   </nav>
@@ -447,15 +459,16 @@
     <a href="/campaigns/">campaigns</a>
     <a href="/#popular">services</a>
     <a href="contact.html">contact us</a>
-    <a href="/campaigns/#faq">faq</a>
+    <a href="/#agency-faq">faq</a>
     <a href="/campaigns/#signin">sign in</a>
   </div>
 </header>
 
+<main id="main-content" style="width:100%">
 <form action="https://formspree.io/f/xrbvdekl" method="POST" id="contact-form">
 
   <div class="logo">
-    <img src="https://i.imgur.com/O0P96pA.png" alt="Hero Image" />
+    <h1 style="font-family:Monda,system-ui;font-size:2.3rem;margin:40px 24px 12px;text-align:center">Let’s build your next chapter.</h1><p style="color:#c1cad5;text-align:center;margin:0 24px;max-width:470px;line-height:1.6">Tell us where you are and what you want to achieve.</p>
     <div class="hero-line"></div>
   </div>
 
@@ -464,13 +477,13 @@
       <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">your info</div>
 
       <div class="field-row" style="margin-bottom:15px;">
-        <div class="field"><input type="text" name="full_name" placeholder="full name *" required></div>
-        <div class="field"><input type="email" name="email" placeholder="email *" required></div>
+        <div class="field"><label for="contact-full_name">Full name</label><input id="contact-full_name" autocomplete="name" type="text" name="full_name" placeholder="full name *" required></div>
+        <div class="field"><label for="contact-email">Email</label><input id="contact-email" autocomplete="email" type="email" name="email" placeholder="email *" required></div>
       </div>
 
       <div class="field-row" style="margin-bottom:15px;">
-        <div class="field"><input type="text" name="phone" placeholder="phone number"></div>
-        <div class="field"><input type="text" name="location" placeholder="location (city, state)"></div>
+        <div class="field"><label for="contact-phone">Phone number</label><input id="contact-phone" autocomplete="tel" type="text" name="phone" placeholder="phone number"></div>
+        <div class="field"><label for="contact-location">Location</label><input id="contact-location" autocomplete="address-level2" type="text" name="location" placeholder="location (city, state)"></div>
       </div>
     </div>
   </section>
@@ -480,13 +493,13 @@
       <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">brand info</div>
 
       <div class="field-row" style="margin-bottom:15px;">
-        <div class="field"><input type="text" name="brand_name" placeholder="brand name"></div>
-        <div class="field"><input type="text" name="website" placeholder="website"></div>
+        <div class="field"><label for="contact-brand_name">Brand name</label><input id="contact-brand_name" autocomplete="organization" type="text" name="brand_name" placeholder="brand name"></div>
+        <div class="field"><label for="contact-website">Website</label><input id="contact-website" autocomplete="url" type="text" name="website" placeholder="website"></div>
       </div>
 
       <div class="field-row" style="margin-bottom:15px;">
-        <div class="field"><input type="text" name="instagram" placeholder="instagram"></div>
-        <div class="field"><input type="text" name="tiktok" placeholder="tiktok"></div>
+        <div class="field"><label for="contact-instagram">Instagram</label><input id="contact-instagram" autocomplete="off" type="text" name="instagram" placeholder="instagram"></div>
+        <div class="field"><label for="contact-tiktok">TikTok</label><input id="contact-tiktok" autocomplete="off" type="text" name="tiktok" placeholder="tiktok"></div>
       </div>
     </div>
   </section>
@@ -530,10 +543,11 @@
     <div style="max-width:470px; width:100%;">
       <div style="text-align:center; font-family:'Monda'; font-size:1.5rem; margin-bottom:15px;">project details</div>
 
-      <div class="field"><textarea name="project_details" maxlength="500" placeholder="share details, goals, context, or anything we should know"></textarea></div>
+      <div class="field"><label for="project-details">Project details</label><textarea id="project-details" name="project_details" maxlength="500" placeholder="share details, goals, context, or anything we should know"></textarea></div>
     </div>
   </section>
 
+  <p class="form-note">We use this information to respond to your inquiry. Read our <a href="/privacy/">privacy policy</a>. Please don’t include passwords or payment details.</p><p id="form-error" class="form-error" role="alert" tabindex="-1" hidden></p><input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true">
   <section class="submit-section" style="display:flex; justify-content:center; margin-top:40px; margin-bottom:80px;">
     <div style="max-width:470px; width:100%; text-align:center;"><button type="submit">submit</button></div>
   </section>
@@ -546,17 +560,10 @@
   </section>
 
 </form>
+</main>
 
 <script>
-// prevent iOS double-tap zoom / horizontal snap on Safari
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function (event) {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300) {
-    event.preventDefault();
-  }
-  lastTouchEnd = now;
-}, { passive: false });
+
 
 
 const form=document.getElementById('contact-form');
@@ -567,7 +574,9 @@ const serviceOptions={
   'ecommerce':'pt-ecommerce',
   'paid-ads':'pt-paid-ads',
   'email-marketing':'pt-email-marketing',
-  'conversion-optimization':'pt-conversion-optimization'
+  'conversion-optimization':'pt-conversion-optimization',
+  'consulting':'pt-consulting', 'influencer':'pt-influencer', 'social-media':'pt-social',
+  'events':'pt-events', 'brand-launch':'pt-launching', 'content-creation':'pt-content'
 };
 if(Object.prototype.hasOwnProperty.call(serviceOptions,requestedService)){
   document.getElementById(serviceOptions[requestedService]).checked=true;
@@ -587,11 +596,17 @@ form.addEventListener('submit',e=>{
   form.classList.add('submitted');
   if(!form.reportValidity()) return;
 
+  const errorBox=document.getElementById('form-error');
+  errorBox.hidden=true;
   submitBtn.disabled=true;
   const original=submitBtn.textContent;
   submitBtn.textContent='sending...';
 
   fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}})
+    .then(async response=>{
+      if(!response.ok) throw new Error(response.status===429 ? 'Too many attempts. Please wait a moment and try again.' : 'Your inquiry could not be sent. Your details are still here; please try again or email support@nfluenceagency.com.');
+      return response;
+    })
     .then(()=>{
       form.reset();
       form.classList.remove('submitted');
@@ -603,15 +618,17 @@ form.addEventListener('submit',e=>{
       if(logo) logo.style.display='none';
 
       thankYou.style.display='flex';
+      window.nfluenceTrack?.('inquiry_sent',{service:requestedService});
       window.scrollTo(0,0);
 
       submitBtn.disabled=false;
       submitBtn.textContent=original;
     })
-    .catch(()=>{
+    .catch(error=>{
       submitBtn.disabled=false;
       submitBtn.textContent=original;
-      alert('Something went wrong. Try again.');
+      errorBox.textContent=error.message || 'Your inquiry could not be sent. Please try again.';
+      errorBox.hidden=false; errorBox.focus();
     });
 });
 
@@ -632,5 +649,7 @@ form.addEventListener('submit',e=>{
 })();
 </script>
 
+<footer class="site-footer"><span>© 2026 nfluence</span><a href="/services/">Services</a><a href="/brandaudit/">Brand audit</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="mailto:support@nfluenceagency.com">support@nfluenceagency.com</a></footer>
+<script src="/assets/site.js" defer></script>
 </body>
 </html>

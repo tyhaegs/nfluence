@@ -1,292 +1,42 @@
-# Nfluence — Backend Setup Guide
+# nfluence operations
 
-## Overview
-- **Database + Auth + Storage**: Supabase
-- **Payments**: Stripe (charges only — manual creator payouts for now)
-- **Hosting**: GitHub Pages (existing, unchanged)
+The active frontend source is `campaigns/src/`. Run `npm ci`, then `npm run check`. `build.sh` delegates to the same production build. The older root JSX files are historical references and are not used by the build.
 
----
+Production uses GitHub Pages from `main` at the repository root, with Supabase project `xynujmscxjxbfivylfne`. Three October 27, 2026 migrations implement the audit repairs. Do not reset the production database or run the old schema file over it.
 
-## Step 1 — Create Supabase Project
+## Payments
 
-1. Go to [supabase.com](https://supabase.com) and sign in
-2. Click **New project**
-3. Name it `nfluence`, choose a region close to your users (US East recommended)
-4. Set a strong database password — save it somewhere safe
-5. Wait ~2 minutes for the project to spin up
+The user confirmed $299 per campaign, $1,999 for annual access, and manual creator payments. Annual access is a single payment for 12 months, with up to three active campaigns and one 30-day featured placement each subscription month. It does not renew automatically. Creator compensation is paid separately by the brand; the platform records completed transfers and does not claim to move that money.
 
----
+Online checkout is deliberately unavailable until live configuration is verified. `billing-info` exposes only public pricing, availability and a publishable key. `stripe-payment` checks the signed-in brand, calculates prices, reserves a durable request and records the Stripe reference. A signed webhook or authenticated reconciliation completes payment and publication in one database transaction. Repeated requests and events do not publish twice. Canceling an attempt cancels its unpaid Stripe intent and retains the ledger.
 
-## Step 2 — Run the Schema
+Configure these secrets through the Supabase dashboard or a secure environment, never source control or chat:
 
-1. In your Supabase dashboard, go to **Database → SQL Editor**
-2. Click **New query**
-3. Copy the entire contents of `supabase/schema.sql`
-4. Paste it into the editor and click **Run**
-5. You should see "Success. No rows returned" — that's correct
+- `STRIPE_SECRET_KEY`: live Stripe secret key.
+- `STRIPE_PUBLISHABLE_KEY`: matching live publishable key.
+- `STRIPE_WEBHOOK_SECRET`: signature secret for this project's webhook endpoint.
+- `BILLING_ENABLED`: set to `true` only after the live integration has been verified.
 
----
+Stripe webhook URL: `https://xynujmscxjxbfivylfne.supabase.co/functions/v1/stripe-webhook`. Subscribe to `payment_intent.succeeded`, `payment_intent.payment_failed`, and `payment_intent.canceled`. The Supabase JWT gateway is disabled for this function because Stripe authenticates with its signature; the handler requires and verifies that signature. The checkout function authenticates its user with Supabase.
 
-## Step 3 — Create Storage Bucket
+Deploy functions using their checked-in `supabase/config.toml` settings. The four deployed functions are `stripe-payment`, `stripe-webhook`, `billing-info`, and `site-events`. After configuration, verify the signed webhook and a live purchase/refund with the account owner before opening checkout publicly. No real charge was made during remediation.
 
-1. Go to **Storage** in your Supabase dashboard
-2. Click **New bucket**
-3. Name it `content`
-4. Check **Public bucket** (creator content URLs need to be publicly accessible)
-5. Click **Save**
+## Auth and files
 
----
+Enable leaked-password protection in Supabase Authentication → Attack Protection if the account plan supports it. Verify the site URL and email redirect allowlist include `https://nfluenceagency.com/campaigns/` and `https://nfluenceagency.com/campaigns/?recovery=1`. The browser reset flow is implemented; actual recovery-email delivery still needs an account-owner acceptance test.
 
-## Step 4 — Get Your API Keys
+Deliverables live in the private `content` bucket, under creator/application paths. Participants obtain five-minute signed links. Storage and database rules verify the exact application and actor. Never make this bucket public. Manual payment records are immutable to clients and require an amount and transfer reference.
 
-1. Go to **Settings → API**
-2. Copy:
-   - **Project URL** → this is your `SUPABASE_URL`
-   - **anon / public key** → this is your `SUPABASE_ANON_KEY`
+## Remaining hosting work
 
----
+DNS currently uses Namecheap nameservers. `www.nfluenceagency.com` has no working record. Configure `www` as a CNAME to `tyhaegs.github.io`, verify GitHub Pages' domain check and HTTPS certificate, then confirm the redirect to the apex domain. Keep the existing apex configuration. Reference: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
 
-## Step 5 — Add Environment Variables
+GitHub Pages does not apply the checked-in `_headers` file. HTML pages now have a script-restricting Content Security Policy and referrer policy, but response-only controls such as `frame-ancestors` require a suitable hosting layer or proxy. `_headers` is prepared for a compatible host. Do not assume the response headers are active on Pages.
 
-Since the app is built with Babel standalone on GitHub Pages, add these directly to your `build.sh` or `index.html` as global constants before your script tags:
+## Verification
 
-```html
-<script>
-  window.SUPABASE_URL = 'https://your-project.supabase.co';
-  window.SUPABASE_ANON_KEY = 'your-anon-key';
-</script>
-```
+`tests/platform.test.mjs` covers pricing, entitlements, test-key blocking, normalized identifiers, capacity, time zones, safe URLs, credential-free pending profiles, and service routes. `tests/backend-regression.sql` creates isolated fixtures inside a transaction and must always be followed by `ROLLBACK`; it exercises actor permissions, content, messages, calls, payouts, reviews, payment replay and the annual cap. It sends no emails and makes no Stripe requests.
 
-Then update `src/lib/supabase.js` to use:
-```js
-const supabaseUrl = window.SUPABASE_URL;
-const supabaseAnonKey = window.SUPABASE_ANON_KEY;
-```
+The full database audit now reports no performance warnings. Unused indexes and Auth connection allocation are informational. Leaked-password protection remains an account setting requiring dashboard access. References: https://supabase.com/docs/guides/auth/password-security
 
-**Never commit real keys to a public repo.** For GitHub Pages, use a separate private config file that's in `.gitignore`, or use GitHub Actions secrets to inject them at build time.
-
----
-
-## Step 6 — Install Supabase JS
-
-Since you're using Babel standalone (no bundler), add the CDN script to `index.html` before your app scripts:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-```
-
-Then replace the import in `supabase.js` with:
-```js
-const { createClient } = window.supabase;
-```
-
----
-
-## Step 7 — Create Stripe Account
-
-1. Go to [stripe.com](https://stripe.com) and create an account
-2. Go to **Developers → API keys**
-3. Copy your **Publishable key** (starts with `pk_test_` for test mode)
-4. Add to your HTML config:
-```html
-<script>
-  window.STRIPE_PUBLISHABLE_KEY = 'pk_test_...';
-</script>
-```
-5. Install Stripe.js via CDN:
-```html
-<script src="https://js.stripe.com/v3/"></script>
-```
-
-**For taking real payments** you'll need a backend endpoint (Supabase Edge Function or separate server) to create Payment Intents — Stripe secret keys can never be in the browser. See Step 9.
-
----
-
-## Step 8 — Wire Auth Into the App
-
-Replace the demo `signIn` / `signUp` flows in `NfluenceApp.jsx`:
-
-**Brand sign in:**
-```js
-import { signIn } from './src/lib/supabase';
-
-const handleSignIn = async (email, password) => {
-  const { user } = await signIn(email, password);
-  setUser({ email: user.email, name: user.user_metadata.name, id: user.id });
-  setView('dashboard');
-};
-```
-
-**Brand sign up (new campaign flow):**
-```js
-import { signUpBrand } from './src/lib/supabase';
-
-const handleSignUp = async (email, password, name) => {
-  const { user } = await signUpBrand(email, password, name);
-  setUser({ email: user.email, name, id: user.id });
-};
-```
-
-**Persist session on page load:**
-```js
-import { getSession } from './src/lib/supabase';
-
-useEffect(() => {
-  getSession().then(session => {
-    if (session?.user) {
-      setUser({ email: session.user.email, name: session.user.user_metadata.name, id: session.user.id });
-      // fetch profile, campaigns, etc.
-    }
-  });
-}, []);
-```
-
----
-
-## Step 9 — Supabase Edge Function for Stripe
-
-Stripe Payment Intents must be created server-side. Create a Supabase Edge Function:
-
-1. Install Supabase CLI: `npm install -g supabase`
-2. Run: `supabase functions new create-payment-intent`
-3. Edit `supabase/functions/create-payment-intent/index.ts`:
-
-```ts
-import Stripe from 'npm:stripe@14';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
-
-Deno.serve(async (req) => {
-  const { amount, currency = 'usd', metadata } = await req.json();
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount, // in cents
-    currency,
-    metadata,
-    automatic_payment_methods: { enabled: true },
-  });
-
-  return new Response(JSON.stringify({ client_secret: paymentIntent.client_secret }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-});
-```
-
-4. Set your Stripe secret key:
-```
-supabase secrets set STRIPE_SECRET_KEY=sk_test_...
-```
-
-5. Deploy:
-```
-supabase functions deploy create-payment-intent
-```
-
-6. Call it from the frontend:
-```js
-const { data } = await supabase.functions.invoke('create-payment-intent', {
-  body: { amount: Math.round(totalDue * 100), metadata: { campaign_id, type: 'featured' } }
-});
-// data.client_secret → pass to Stripe.js to confirm payment
-```
-
----
-
-## Step 10 — Replace In-Memory State
-
-The `src/lib/api.js` file contains all the functions needed to replace useState calls. Key swaps in `NfluenceApp.jsx`:
-
-| Current (in-memory) | Replace with |
-|---|---|
-| `setMyCampaigns(...)` | `createCampaign(brandId, data)` |
-| `mergedDemos` (DEMO_CAMPAIGNS) | `getPublicCampaigns()` |
-| `setAppliedCampaigns(...)` | `applyToCampaign(...)` |
-| `setAllMessages(...)` | `sendMessage(...)` |
-| `setNotifications(...)` | `createNotification(...)` / `subscribeToNotifications(...)` |
-| `setScheduledCalls(...)` | `createScheduledCall(...)` |
-
----
-
-## Step 11 — Real-time Subscriptions
-
-Replace polling with Supabase real-time. In `NfluenceApp.jsx`:
-
-```js
-useEffect(() => {
-  if (!user?.id) return;
-
-  // Subscribe to notifications
-  const notifSub = subscribeToNotifications(user.id, (payload) => {
-    setNotifications(prev => [payload.new, ...prev]);
-  });
-
-  return () => { supabase.removeChannel(notifSub); };
-}, [user?.id]);
-```
-
-Same pattern for messages — subscribe when a thread is open, unsubscribe on close.
-
----
-
-## Email Confirmation
-
-By default Supabase requires email confirmation. During development, disable it:
-1. Go to **Authentication → Settings**
-2. Toggle off **Enable email confirmations**
-3. Re-enable before going live
-
----
-
-## Admin Dashboard Setup
-
-The admin dashboard lives at `admin/index.html` (excluded from git — contains your service role key).
-
-### 1 — Get your service role key
-
-1. Go to **Settings → API** in the Supabase dashboard
-2. Copy the **service_role / secret** key (starts with `eyJ...`)
-3. Open `admin/index.html` and replace `YOUR_SERVICE_KEY_HERE` with that key
-
-> Keep this file local only. The service role key bypasses all RLS — never commit or deploy it publicly.
-
-### 2 — Promote a user to admin
-
-After a user has signed up (so their row exists in `profiles`), open the **SQL Editor** in the Supabase dashboard and run:
-
-```sql
-UPDATE profiles
-SET role = 'admin'
-WHERE email = 'your@email.com';
-```
-
-If the `profiles` table stores the user's email in a different column, or you only have their user ID, use:
-
-```sql
--- By user ID (find it in Authentication → Users)
-UPDATE profiles
-SET role = 'admin'
-WHERE id = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
-```
-
-Confirm it worked:
-
-```sql
-SELECT id, email, role FROM profiles WHERE role = 'admin';
-```
-
-### 3 — Sign in to the admin dashboard
-
-Open `admin/index.html` directly in your browser (double-click the file or serve it locally). Sign in with the admin user's email and password — any account without `role = 'admin'` will be rejected.
-
----
-
-## Before Going Live Checklist
-
-- [ ] Attorney review complete
-- [ ] Supabase email confirmation enabled
-- [ ] Stripe account verified (out of test mode)
-- [ ] Real domain on HTTPS (required for Stripe.js)
-- [ ] `.env` / config file in `.gitignore`
-- [ ] Row Level Security tested — sign in as different users and confirm you can't see others' data
-- [ ] Storage bucket CORS configured for your domain
-- [ ] Supabase project on a paid plan if you expect > 500 MAU or > 1GB storage
+Agency proof should use approved client examples and verified outcomes. No new client testimonials or numerical case-study results were invented.

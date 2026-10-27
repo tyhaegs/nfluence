@@ -1,323 +1,73 @@
-import Stripe from 'npm:stripe@14';
-import { createClient } from 'npm:@supabase/supabase-js@2';
-
-const ALLOWED_ORIGINS = [
-  'https://nfluenceagency.com',
-  'https://www.nfluenceagency.com',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:8080',
-  'http://localhost:8799',
-];
-
-// ── Server-side pricing — the ONLY source of truth. Never trust client amounts. ──
-const FEATURED_PRICES_CENTS: Record<number, number> = { 1: 299, 7: 1499, 30: 4999 };
-const GIG_PRICE_CENTS = 4999;
-const VALID_PROMOS: Record<string, number> = { LAUNCH50: 0.50, NFLUENCE20: 0.20, FEATURED10: 0.10 };
-const CURRENCY = 'usd';
-
-function corsHeaders(origin: string | null): Record<string, string> {
-  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    'Access-Control-Allow-Origin': allowed,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-}
-function json(body: unknown, status: number, cors: Record<string, string>): Response {
-  return new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-}
-
-// "$500" | "500" | 500 → cents
-function parseAmountToCents(v: unknown): number {
-  if (typeof v === 'number' && isFinite(v)) return Math.round(v * 100);
-  if (typeof v !== 'string') return 0;
-  const n = parseFloat(v.replace(/[^0-9.]/g, ''));
-  return isFinite(n) ? Math.round(n * 100) : 0;
-}
-const isPaidComp = (t: unknown) => t === 'paid' || t === 'product+paid';
-
-// Price a campaign-like record (accepts both DB snake_case and client camelCase).
-function priceCampaign(rec: Record<string, unknown>): { escrowCents: number; featuredCents: number } {
-  const compType = (rec.comp_type ?? rec.compType) as unknown;
-  const spots = Number(rec.spots_total ?? rec.spotsTotal ?? 0) || 0;
-  const featured = !!rec.featured;
-  const weeks = Number(rec.featured_weeks ?? rec.featuredWeeks ?? 0) || 0;
-  const escrowCents = isPaidComp(compType) && spots > 0 ? parseAmountToCents(rec.comp) * spots : 0;
-  const featuredCents = featured ? (FEATURED_PRICES_CENTS[weeks] ?? 0) : 0;
-  return { escrowCents, featuredCents };
-}
-
-Deno.serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const cors = corsHeaders(origin);
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-
-  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!stripeKey) return json({ error: 'Payment service not configured' }, 500, cors);
-  if (!supabaseUrl || !supabaseAnonKey || !serviceKey) return json({ error: 'Auth service not configured' }, 500, cors);
-
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401, cors);
-  const token = authHeader.slice(7);
-
-  // User-scoped client (RLS) — used for auth + the user's own reads/writes (campaigns, payments insert_own).
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) return json({ error: 'Unauthorized' }, 401, cors);
-
-  // Service-role client — privileged writes (promo_redemptions has no INSERT/DELETE policy).
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-
-  let body: any;
-  try { body = await req.json(); } catch { return json({ error: 'Invalid JSON body' }, 400, cors); }
-  const action = body?.action;
-  if (action !== 'quote' && action !== 'charge' && action !== 'cancel' && action !== 'unfeature') return json({ error: 'invalid action' }, 400, cors);
-
-  // ── CANCEL — roll back an abandoned/failed charge; sweep stale drafts (Layer 1/2 cleanup) ──
-  if (action === 'cancel') {
-    const piId: string | undefined = typeof body.paymentIntentId === 'string' ? body.paymentIntentId : undefined;
-    const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
-    const gid: string | undefined = typeof body.gigId === 'string' ? body.gigId : undefined;
-
-    if (piId) {
-      const { data: pays } = await admin.from('payments').select('id, brand_id, status').eq('stripe_payment_intent_id', piId);
-      const own = (pays ?? []).filter((p: any) => p.brand_id === user.id && p.status === 'pending').map((p: any) => p.id);
-      if (own.length) {
-        await admin.from('promo_redemptions').delete().in('payment_id', own);
-        await admin.from('payments').delete().in('id', own);
-      }
-    }
-    if (cid) {
-      const { data: camp } = await admin.from('campaigns').select('id, brand_id, stage').eq('id', cid).maybeSingle();
-      if (camp && camp.brand_id === user.id && camp.stage === 'draft') {
-        const { data: pays } = await admin.from('payments').select('id, status').eq('campaign_id', cid);
-        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
-        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
-        await admin.from('campaigns').delete().eq('id', cid).eq('brand_id', user.id).eq('stage', 'draft');
-      }
-    }
-    if (gid) {
-      const { data: gig } = await admin.from('gig_listings').select('id, brand_id, stage').eq('id', gid).maybeSingle();
-      if (gig && gig.brand_id === user.id && gig.stage === 'draft') {
-        const { data: pays } = await admin.from('payments').select('id, status').eq('gig_id', gid);
-        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
-        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
-        await admin.from('gig_listings').delete().eq('id', gid).eq('brand_id', user.id).eq('stage', 'draft');
-      }
-    }
-    if (!piId && !cid && !gid) {
-      // Sweep ALL of the user's stale drafts (and their linked payments/redemptions).
-      const { data: drafts } = await admin.from('campaigns').select('id').eq('brand_id', user.id).eq('stage', 'draft');
-      const draftIds = (drafts ?? []).map((d: any) => d.id);
-      if (draftIds.length) {
-        const { data: pays } = await admin.from('payments').select('id, status').in('campaign_id', draftIds);
-        const ids = (pays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
-        if (ids.length) { await admin.from('promo_redemptions').delete().in('payment_id', ids); await admin.from('payments').delete().in('id', ids); }
-        await admin.from('campaigns').delete().in('id', draftIds).eq('brand_id', user.id).eq('stage', 'draft');
-      }
-      const { data: gdrafts } = await admin.from('gig_listings').select('id').eq('brand_id', user.id).eq('stage', 'draft');
-      const gigIds = (gdrafts ?? []).map((d: any) => d.id);
-      if (gigIds.length) {
-        const { data: gpays } = await admin.from('payments').select('id, status').in('gig_id', gigIds);
-        const gp = (gpays ?? []).filter((p: any) => p.status === 'pending').map((p: any) => p.id);
-        if (gp.length) { await admin.from('promo_redemptions').delete().in('payment_id', gp); await admin.from('payments').delete().in('id', gp); }
-        await admin.from('gig_listings').delete().in('id', gigIds).eq('brand_id', user.id).eq('stage', 'draft');
-      }
-    }
-    return json({ ok: true }, 200, cors);
+import Stripe from 'npm:stripe@14.25.0';
+import {createClient} from 'npm:@supabase/supabase-js@2.108.2';
+import {price,campaignRecord,checkoutEnabled} from '../_shared/pricing.mjs';
+const origins=['https://nfluenceagency.com','https://www.nfluenceagency.com'];
+const checked=(r:any)=>{if(r.error)throw Error(r.error.message);return r.data;};
+Deno.serve(async req=>{
+ const origin=req.headers.get('origin');const cors={'Access-Control-Allow-Origin':origins.includes(origin||'')?origin!:origins[0],'Access-Control-Allow-Headers':'authorization,content-type,apikey','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};
+ const json=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':'no-store'}});
+ if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
+ if(req.method!=='POST')return json({error:'Method not allowed'},405);
+ if(origin&&!origins.includes(origin))return json({error:'Origin not allowed'},403);
+ try{
+  if(Number(req.headers.get('content-length')||0)>2000000)return json({error:'Request too large'},413);
+  const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
+  const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');const auth=await admin.auth.getUser(token);
+  if(auth.error||!auth.data.user)return json({error:'Please sign in again.'},401);const user=auth.data.user;
+  const profile=checked(await admin.from('profiles').select('role').eq('id',user.id).single());if(profile.role!=='brand')return json({error:'A brand account is required.'},403);
+  const body=await req.json(),action=body.action;
+  if(!['quote','charge','cancel','unfeature','annual','reconcile','annual_reconcile'].includes(action))return json({error:'Invalid action'},400);
+  const enabled=checkoutEnabled(k=>Deno.env.get(k));
+  const stripe=new Stripe(Deno.env.get('STRIPE_SECRET_KEY')||'sk_unconfigured',{apiVersion:'2023-10-16'});
+  if(action==='unfeature'){
+   checked(await admin.from('campaigns').update({featured:false,featured_until:null,featured_weeks:0}).eq('id',body.campaignId).eq('brand_id',user.id).select().single());return json({ok:true});
   }
-
-  // ── UNFEATURE — remove featured placement (owner-verified; service role bypasses the payment gate) ──
-  if (action === 'unfeature') {
-    const cid: string | undefined = typeof body.campaignId === 'string' ? body.campaignId : undefined;
-    if (!cid) return json({ error: 'campaignId required' }, 400, cors);
-    const { data: camp } = await admin.from('campaigns').select('id, brand_id').eq('id', cid).maybeSingle();
-    if (!camp) return json({ error: 'campaign not found' }, 404, cors);
-    if (camp.brand_id !== user.id) return json({ error: 'forbidden' }, 403, cors);
-    // Non-refundable per UI copy — no Stripe refund. service_role write bypasses enforce_campaign_payment_gate.
-    const { error: upErr } = await admin.from('campaigns')
-      .update({ featured: false, featured_until: null, featured_weeks: 0 })
-      .eq('id', cid).eq('brand_id', user.id);
-    if (upErr) return json({ error: upErr.message }, 500, cors);
-    return json({ ok: true }, 200, cors);
+  if(action==='reconcile'||action==='annual_reconcile'){
+   let q=admin.from('payments').select('*').eq('brand_id',user.id);q=action==='reconcile'?q.eq('stripe_payment_intent_id',body.paymentIntentId):q.eq('stripe_checkout_session_id',body.sessionId);const pay=checked(await q.single());
+   let piId=pay.stripe_payment_intent_id;
+   if(action==='annual_reconcile'){const checkout=await stripe.checkout.sessions.retrieve(pay.stripe_checkout_session_id);if(checkout.payment_status!=='paid')throw Error('Annual payment is still pending.');piId=String(checkout.payment_intent);checked(await admin.from('payments').update({stripe_payment_intent_id:piId}).eq('id',pay.id));}
+   const pi=await stripe.paymentIntents.retrieve(piId);if(pi.status!=='succeeded')throw Error('Payment is still pending. Check your account before trying again.');
+   const saved=checked(await admin.rpc('finalize_checkout',{p_payment:pay.id,p_provider:pi.id,p_amount:pi.amount_received,p_currency:pi.currency}));return json({ok:true,status:saved.status,campaignId:saved.campaign_id});
   }
-
-  // ── QUOTE / CHARGE ──
-  const type = body?.type;
-  if (type !== 'campaign_new' && type !== 'campaign_edit' && type !== 'gig') return json({ error: 'invalid type' }, 400, cors);
-  const features = body?.features ?? {};
-  const campaignId: string | undefined = typeof body?.campaignId === 'string' ? body.campaignId : undefined;
-
-  // Promo validity is checked here for both quote & charge; one-use enforcement happens
-  // atomically at charge time via an insert-first claim (relies on UNIQUE(user_id, promo_code)).
-  const promo = typeof body?.promoCode === 'string' ? body.promoCode.trim().toUpperCase() : '';
-  let discountPct = 0;
-  if (promo) {
-    if (!(promo in VALID_PROMOS)) return json({ error: 'invalid promo code' }, 400, cors);
-    discountPct = VALID_PROMOS[promo];
+  if(action==='cancel'){
+   if(!body.paymentIntentId)return json({ok:true});
+   const pay=checked(await admin.from('payments').select('*').eq('stripe_payment_intent_id',body.paymentIntentId).eq('brand_id',user.id).single());
+   const pi=await stripe.paymentIntents.retrieve(pay.stripe_payment_intent_id);
+   if(pi.status==='succeeded'){checked(await admin.rpc('finalize_checkout',{p_payment:pay.id,p_provider:pi.id,p_amount:pi.amount_received,p_currency:pi.currency}));return json({ok:true,status:'succeeded'});}
+   if(pi.status!=='canceled')await stripe.paymentIntents.cancel(pi.id,{}, {idempotencyKey:'cancel:'+pay.request_id});
+   checked(await admin.from('payments').update({status:'canceled',provider_status:'canceled'}).eq('id',pay.id).neq('status','succeeded'));
+   return json({ok:true,status:'canceled'});
   }
-
-  // Compute subtotal (server-side) per type.
-  let subtotalCents = 0;
-  let breakdown: Record<string, number> = {};
-  let draftId: string | null = null;
-  let gigDraftId: string | null = null;
-
-  if (type === 'gig') {
-    subtotalCents = GIG_PRICE_CENTS;
-    breakdown = { gig: GIG_PRICE_CENTS };
-    if (action === 'charge') {
-      const { data: created, error } = await admin.from('gig_listings').insert({
-        brand_id: user.id,
-        title: features.title ?? '',
-        description: features.description ?? null,
-        stage: 'draft',
-        comp: features.comp != null ? String(features.comp) : null,
-        pay_type: features.pay_type ?? features.payType ?? null,
-        deadline: features.deadline ?? null,
-        location: features.location ?? null,
-        platforms: features.platforms ?? [],
-        deliverables: features.deliverables ?? null,
-        skills_required: features.skills_required ?? features.skills ?? [],
-        requirements: features.requirements ?? null,
-        equipment: features.equipment ?? null,
-      }).select('id').single();
-      if (error || !created) return json({ error: 'could not create draft gig' }, 500, cors);
-      gigDraftId = created.id;
-    }
-  } else if (type === 'campaign_edit') {
-    if (!campaignId) return json({ error: 'campaignId required' }, 400, cors);
-    const { data: existing, error } = await supabase.from('campaigns').select('*').eq('id', campaignId).maybeSingle();
-    if (error || !existing) return json({ error: 'campaign not found' }, 404, cors);
-    const wantFeatured = !!features.featured && !existing.featured;
-    const featuredCents = wantFeatured ? (FEATURED_PRICES_CENTS[Number(features.featuredWeeks) || 0] ?? 0) : 0;
-    const newEscrow = priceCampaign({ comp_type: features.compType ?? existing.comp_type, comp: features.comp ?? existing.comp, spots_total: features.spotsTotal ?? existing.spots_total }).escrowCents;
-    const oldEscrow = priceCampaign(existing).escrowCents;
-    const escrowDeltaCents = Math.max(0, newEscrow - oldEscrow);
-    breakdown = { escrow: escrowDeltaCents, featured: featuredCents };
-    subtotalCents = escrowDeltaCents + featuredCents;
-  } else { // campaign_new
-    const { escrowCents, featuredCents } = priceCampaign(features);
-    breakdown = { escrow: escrowCents, featured: featuredCents };
-    subtotalCents = escrowCents + featuredCents;
-    if (action === 'charge') {
-      const featuredUntil = features.featured ? new Date(Date.now() + ((Number(features.featuredWeeks) || 7) * 86400000)).toISOString() : null;
-      const { data: created, error } = await admin.from('campaigns').insert({
-        brand_id: user.id,
-        brand_name: features.brand ?? features.brandName ?? '',
-        name: features.campaign ?? features.name ?? '',
-        description: features.description ?? null,
-        stage: 'draft',
-        comp_type: features.compType ?? null,
-        comp: features.comp ?? null,
-        spots_total: features.spotsTotal ?? null,
-        platforms: features.platforms ?? [],
-        deliverables: features.deliverables ?? {},
-        following: features.following ?? null,
-        deadline: features.deadline ?? null,
-        location: features.location ?? null,
-        requirements: features.requirements ?? null,
-        products: features.products ?? [],
-        featured: !!features.featured,
-        featured_weeks: features.featured ? (Number(features.featuredWeeks) || 7) : 0,
-        featured_until: featuredUntil,
-      }).select('id').single();
-      if (error || !created) return json({ error: 'could not create draft campaign' }, 500, cors);
-      draftId = created.id;
-    }
+  const type=action==='annual'?'annual':body.type;
+  if(body.promoCode)throw Error('Promotional codes are currently unavailable. Standard prices apply.');
+  let rec:any=body.features||{};
+  if(type==='campaign_new')rec=campaignRecord(rec,user.id);
+  if(type==='campaign_edit'){
+   const old=checked(await admin.from('campaigns').select('*').eq('id',body.campaignId).eq('brand_id',user.id).single());
+   rec={comp:String(rec.comp??old.comp),comp_type:rec.compType??old.comp_type,spots_total:rec.spotsTotal??old.spots_total,featured:!!rec.featured,featured_weeks:Number(rec.featuredWeeks||0)};
+   if(rec.featured&&old.featured&&new Date(old.featured_until)>new Date()){rec.featured=false;rec.featured_weeks=0;rec.keep_featured=true;}
   }
-
-  // Promos discount the FEE portion only (featured/gig) — never escrow, which is creator payment.
-  const escrowCents = breakdown.escrow ?? 0;
-  const discountedCents = escrowCents + Math.max(0, Math.round((subtotalCents - escrowCents) * (1 - discountPct)));
-
-  if (action === 'quote') {
-    return json({ amount_cents: discountedCents, subtotal_cents: subtotalCents, discount_pct: discountPct, breakdown }, 200, cors);
+  if(type==='gig'){
+   const f=rec;rec={title:String(f.title||'').trim(),description:f.description||null,comp:f.comp!=null?String(f.comp):null,pay_type:f.pay_type??f.payType??null,deadline:f.deadline||null,location:f.location||null,platforms:f.platforms||[],deliverables:f.deliverables||null,skills_required:f.skills_required??f.skills??[],requirements:f.requirements||null,equipment:f.equipment||null};if(rec.title.length<2)throw Error('Enter a gig title.');
   }
-
-  // ── CHARGE ──
-  const effectiveCampaignId = type === 'campaign_new' ? draftId : (campaignId ?? null);
-  const effectiveGigId = type === 'gig' ? gigDraftId : null;
-  const paymentType = type === 'gig' ? 'campaign_fee' : ((breakdown.escrow ?? 0) > 0 ? 'escrow' : 'featured');
-
-  let promoClaimed = false;
-  try {
-    // Zero-cost path — skip Stripe entirely. Per policy we do NOT claim a promo
-    // redemption when the charge is free (discountedCents === 0).
-    if (discountedCents === 0) {
-      if (type === 'campaign_new' && draftId) {
-        await admin.from('campaigns').update({ stage: 'open' }).eq('id', draftId).eq('brand_id', user.id);
-      }
-      if (type === 'gig' && gigDraftId) {
-        await admin.from('gig_listings').update({ stage: 'open' }).eq('id', gigDraftId).eq('brand_id', user.id);
-      }
-      return json({ free: true, client_secret: null, amount_cents: 0, campaignId: effectiveCampaignId, gigId: effectiveGigId, breakdown }, 200, cors);
-    }
-
-    // Atomic one-use promo claim — insert FIRST so the UNIQUE(user_id, promo_code)
-    // constraint (not a read-then-write check) enforces single use. Abort before any PI.
-    if (promo) {
-      const { error: claimErr } = await admin.from('promo_redemptions')
-        .insert({ user_id: user.id, promo_code: promo, payment_id: null });
-      if (claimErr) {
-        if ((claimErr as any).code === '23505') return json({ error: 'promo code already used' }, 400, cors);
-        return json({ error: 'could not apply promo code' }, 500, cors);
-      }
-      promoClaimed = true;
-    }
-
-    const stripe = new Stripe(stripeKey);
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: discountedCents,
-      currency: CURRENCY,
-      metadata: {
-        user_id: user.id,
-        type,
-        campaign_id: effectiveCampaignId ?? '',
-        gig_id: effectiveGigId ?? '',
-        promo_code: promo,
-        featured: features.featured ? '1' : '0',
-        featured_weeks: String(Number(features.featuredWeeks) || 7),
-      },
-      automatic_payment_methods: { enabled: true },
-    });
-
-    const { data: pay } = await admin.from('payments').insert({
-      brand_id: user.id,
-      campaign_id: effectiveCampaignId,
-      gig_id: effectiveGigId,
-      stripe_payment_intent_id: paymentIntent.id,
-      amount_cents: discountedCents,
-      type: paymentType,
-      status: 'pending',
-      promo_code: promo || null,
-      discount_pct: discountPct * 100,
-    }).select('id').single();
-
-    // Link the claimed redemption to its payment now that the row exists.
-    if (promo && pay?.id) {
-      await admin.from('promo_redemptions').update({ payment_id: pay.id })
-        .eq('user_id', user.id).eq('promo_code', promo);
-    }
-
-    return json({
-      client_secret: paymentIntent.client_secret,
-      payment_intent_id: paymentIntent.id,
-      amount_cents: discountedCents,
-      campaignId: effectiveCampaignId,
-      gigId: effectiveGigId,
-      breakdown,
-    }, 200, cors);
-  } catch (err) {
-    // Roll back anything created before the failure so nothing is orphaned/locked.
-    if (promoClaimed) await admin.from('promo_redemptions').delete().eq('user_id', user.id).eq('promo_code', promo);
-    if (draftId) await admin.from('campaigns').delete().eq('id', draftId).eq('brand_id', user.id); // don't orphan a draft on charge failure
-    if (gigDraftId) await admin.from('gig_listings').delete().eq('id', gigDraftId).eq('brand_id', user.id);
-    if (err instanceof Stripe.errors.StripeError) return json({ error: err.message, code: err.code }, err.statusCode ?? 500, cors);
-    return json({ error: 'Internal server error' }, 500, cors);
+  const sub=checked(await admin.from('subscriptions').select('*').eq('brand_id',user.id).eq('status','active').gt('current_period_end',new Date().toISOString()).order('current_period_end',{ascending:false}).limit(1))[0];
+  let period:string|null=null,available=false;
+  if(sub){const start=new Date(sub.current_period_start);const now=new Date();let month=(now.getUTCFullYear()-start.getUTCFullYear())*12+now.getUTCMonth()-start.getUTCMonth();let current=new Date(start);current.setUTCMonth(start.getUTCMonth()+month);if(current>now){month--;current=new Date(start);current.setUTCMonth(start.getUTCMonth()+month);}period=current.toISOString().slice(0,10);available=!checked(await admin.from('annual_feature_redemptions').select('id').eq('subscription_id',sub.id).eq('period_start',period)).length;}
+  const quote=price(type,rec,!!sub,available);
+  if(action==='quote')return json({...quote,checkout_available:enabled});
+  if(!enabled)return json({error:'Online checkout is temporarily unavailable. Contact nfluence to discuss your campaign.'},503);
+  if(!/^[0-9a-f-]{36}$/i.test(body.requestId||''))throw Error('A checkout request ID is required.');
+  const changes={record:rec,annual_included:quote.annual_included,monthly_feature:quote.monthly_feature,feature_period:period};
+  const pay=checked(await admin.rpc('prepare_checkout',{p_brand:user.id,p_request:body.requestId,p_type:type,p_amount:quote.amount_cents,p_changes:changes,p_campaign:body.campaignId||null}));
+  if(pay.status==='canceled')throw Error('This checkout was canceled. Close and reopen checkout.');
+  if(pay.status==='succeeded')return json({free:true,campaignId:pay.campaign_id,gigId:pay.gig_id,...quote});
+  if(!quote.amount_cents){checked(await admin.rpc('finalize_checkout',{p_payment:pay.id,p_provider:null,p_amount:0,p_currency:'usd'}));return json({free:true,campaignId:pay.campaign_id,gigId:pay.gig_id,...quote});}
+  if(type==='annual'){
+   const checkout=await stripe.checkout.sessions.create({mode:'payment',client_reference_id:pay.id,customer_email:user.email,line_items:[{price_data:{currency:'usd',unit_amount:199900,product_data:{name:'nfluence annual access — 12 months, no automatic renewal'}},quantity:1}],payment_intent_data:{metadata:{payment_id:pay.id,user_id:user.id}},success_url:origins[0]+'/campaigns/?annual_session={CHECKOUT_SESSION_ID}',cancel_url:origins[0]+'/campaigns/#plans',metadata:{payment_id:pay.id,user_id:user.id}},{idempotencyKey:'annual:'+pay.request_id});
+   checked(await admin.from('payments').update({stripe_checkout_session_id:checkout.id}).eq('id',pay.id));return json({url:checkout.url});
   }
+  const pi=pay.stripe_payment_intent_id?await stripe.paymentIntents.retrieve(pay.stripe_payment_intent_id):await stripe.paymentIntents.create({amount:pay.amount_cents,currency:'usd',payment_method_types:['card'],metadata:{payment_id:pay.id,user_id:user.id,type}},{idempotencyKey:'payment:'+pay.request_id});
+  checked(await admin.from('payments').update({stripe_payment_intent_id:pi.id,provider_status:pi.status}).eq('id',pay.id));
+  return json({client_secret:pi.client_secret,payment_intent_id:pi.id,campaignId:pay.campaign_id,gigId:pay.gig_id,...quote});
+ }catch(error){console.error('billing_request_failed');return json({error:error instanceof Error?error.message:'Checkout could not be completed.'},400);}
 });

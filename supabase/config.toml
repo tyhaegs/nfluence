@@ -1,0 +1,12 @@
+
+[functions.stripe-payment]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.billing-info]
+verify_jwt = false
+
+[functions.site-events]
+verify_jwt = false

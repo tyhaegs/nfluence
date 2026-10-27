@@ -1,0 +1,21 @@
+begin;
+drop policy applications_brand_read on public.applications;
+drop policy applications_creator_read on public.applications;
+create policy applications_participant_read on public.applications for select to authenticated using((select auth.uid()) in(brand_id,creator_id));
+drop policy applications_brand_update on public.applications;
+drop policy applications_creator_update_own on public.applications;
+create policy applications_participant_update on public.applications for update to authenticated using((select auth.uid()) in(brand_id,creator_id)) with check((select auth.uid()) in(brand_id,creator_id));
+drop policy campaigns_public_read on public.campaigns;
+drop policy campaigns_participant_read on public.campaigns;
+create policy campaigns_anonymous_read on public.campaigns for select to anon using(stage='open' and closes_at>now());
+create policy campaigns_authenticated_read on public.campaigns for select to authenticated using((stage='open' and closes_at>now()) or brand_id=(select auth.uid()) or private.is_campaign_participant(id));
+drop policy uploads_read_own on public.content_uploads;
+drop policy uploads_brand_read on public.content_uploads;
+create policy uploads_participant_read on public.content_uploads for select to authenticated using(creator_id=(select auth.uid()) or exists(select 1 from public.campaigns where id=campaign_id and brand_id=(select auth.uid())));
+drop policy gig_applications_brand_read on public.gig_applications;
+drop policy gig_applications_creator_read on public.gig_applications;
+create policy gig_applications_participant_read on public.gig_applications for select to authenticated using(creator_id=(select auth.uid()) or exists(select 1 from public.gig_listings where id=gig_id and brand_id=(select auth.uid())));
+-- An explicit deny policy documents that telemetry and webhook ledgers are service-only.
+create policy billing_events_service_only on public.billing_events for all to authenticated using(false) with check(false);
+create policy site_events_service_only on public.site_events for all to authenticated using(false) with check(false);
+commit;

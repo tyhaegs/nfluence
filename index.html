@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8" /><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://js.stripe.com 'sha256-tRdn222Y0nCKZdfKtk7CHlTpRr8f9M+YXDmIXcpaR8g=' 'sha256-9AkhHUEv6Tncp+S/p6yDLpR2poyxbi5up3c4fHQFoL8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://xynujmscxjxbfivylfne.supabase.co wss://xynujmscxjxbfivylfne.supabase.co https://api.stripe.com https://formspree.io; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>nfluence | Brand, Web &amp; Digital Marketing</title>
-  <meta name="description" content="Build your brand with nfluence. Explore website design, SEO, ecommerce, paid advertising, email marketing, influencer campaigns, social media, and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Monda:wght@400..700&display=swap" rel="stylesheet">
@@ -17,7 +16,7 @@
 
     @font-face {
       font-family: 'Monda';
-      src: url('https://cdn.jsdelivr.net/gh/tyhaegs/monta-font/Monda.ttf') format('truetype');
+      src: url('/assets/Monda-Regular.woff') format('woff');
     }
 
     :root {
@@ -467,7 +466,7 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/supabase.min.js"></script>
   <script>
     (function () {
       var SUPABASE_URL = "https://xynujmscxjxbfivylfne.supabase.co";
@@ -508,8 +507,20 @@
       }
     })();
   </script>
+<meta name="description" content="Website design, SEO, ecommerce, paid advertising and creator campaigns. Build a brand people find, trust and choose with nfluence.">
+<link rel="canonical" href="https://nfluenceagency.com/">
+<meta property="og:title" content="nfluence | Brand, Web &amp; Digital Marketing">
+<meta property="og:description" content="Website design, SEO, ecommerce, paid advertising and creator campaigns. Build a brand people find, trust and choose with nfluence.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nfluenceagency.com/">
+<meta property="og:image" content="https://nfluenceagency.com/assets/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
   <header>
     <div class="nav-brand">nfluence</div>
     <nav class="nav-links">
@@ -517,7 +528,7 @@
       <a href="/campaigns/" class="nav-campaigns">campaigns</a>
       <a href="/#popular" class="nav-services">services</a>
       <a href="contact.html" class="nav-contact">contact us</a>
-      <a href="/campaigns/#faq" class="nav-faq">faq</a>
+      <a href="/#agency-faq" class="nav-faq">faq</a>
       <span class="nav-divider">|</span>
       <a href="/campaigns/#signin" class="nav-signin" id="nav-auth">sign in</a>
     </nav>
@@ -529,16 +540,19 @@
       <a href="/campaigns/">campaigns</a>
       <a href="/#popular">services</a>
       <a href="contact.html">contact us</a>
-      <a href="/campaigns/#faq">faq</a>
+      <a href="/#agency-faq">faq</a>
       <a href="/campaigns/#signin">sign in</a>
     </div>
   </header>
 
+  <main id="main-content" style="width:100%;display:flex;flex-direction:column;align-items:center">
   <div class="logo">
     <svg class="hero-logo" viewBox="318 449 2267 495" width="2267" height="495" role="img" aria-label="nfluence"><image href="assets/brand-logos/nfluence.png" width="2903" height="1393" /></svg>
+    <h1 class="hero-heading">Build a brand people find, trust, and choose.</h1>
+    <p class="hero-description">Website design, search visibility, ecommerce, and marketing that connect your brand with its next customers.</p>
     <div class="actions">
       <a href="#popular" class="btn">view services</a>
-      <a href="/campaigns/" class="btn">campaigns</a>
+      <a href="/contact.html" class="btn">talk about your project</a>
     </div>
     <div class="hero-line" aria-hidden="true"></div>
 
@@ -569,114 +583,117 @@
     <div class="popular-row">
       <article id="service-website" class="popular-card">
         <div class="popular-icon" aria-hidden="true">🌐</div>
-        <h3>website design</h3>
+        <h3><a href="/services/website-design/" style="color:inherit;text-decoration:none">website design</a></h3>
         <p>
           Your website should look like your brand and make the next step easy. We design and build responsive websites with clear messaging, intuitive navigation, and a focus on turning visitors into inquiries and customers. Starting fresh or ready for a redesign, we handle the details from concept to launch.
         </p>
-        <a href="contact.html?service=website-design" class="btn card-btn">get started</a>
+        <a href="contact.html?service=website-design" class="btn card-btn" aria-label="Discuss website design">get started</a>
       </article>
 
       <article id="service-seo" class="popular-card">
         <div class="popular-icon" aria-hidden="true">📈</div>
-        <h3>SEO</h3>
+        <h3><a href="/services/seo/" style="color:inherit;text-decoration:none">SEO</a></h3>
         <p>
           Help the right people find you when they are already searching for what you offer. We improve your site's search foundation through keyword research, on-page optimization, technical fixes, and useful content. Local SEO helps connect your business with nearby customers, while ongoing reporting shows where you are making progress.
         </p>
-        <a href="contact.html?service=seo" class="btn card-btn">get started</a>
+        <a href="contact.html?service=seo" class="btn card-btn" aria-label="Discuss SEO">get started</a>
       </article>
 
       <article id="service-ecommerce" class="popular-card">
         <div class="popular-icon" aria-hidden="true">🛍️</div>
-        <h3>ecommerce &amp; Shopify</h3>
+        <h3><a href="/services/ecommerce/" style="color:inherit;text-decoration:none">ecommerce &amp; Shopify</a></h3>
         <p>
           Make it easier for customers to find a product, feel confident, and check out. We build and improve Shopify stores with clear product pages, organized collections, mobile shopping experiences, and the integrations your business needs. From your first store to a refresh of an existing one, we help you get ready to sell.
         </p>
-        <a href="contact.html?service=ecommerce" class="btn card-btn">get started</a>
+        <a href="contact.html?service=ecommerce" class="btn card-btn" aria-label="Discuss ecommerce &amp; Shopify">get started</a>
       </article>
 
       <article id="service-paid-ads" class="popular-card">
         <div class="popular-icon" aria-hidden="true">🎯</div>
-        <h3>paid advertising</h3>
+        <h3><a href="/services/paid-ads/" style="color:inherit;text-decoration:none">paid advertising</a></h3>
         <p>
           Put your brand in front of people who are most likely to care. We plan, launch, and manage paid search and social campaigns, bringing together audience targeting, creative, landing pages, and conversion tracking. Ongoing testing and clear reporting help you understand what is working and where your budget goes next.
         </p>
-        <a href="contact.html?service=paid-ads" class="btn card-btn">get started</a>
+        <a href="contact.html?service=paid-ads" class="btn card-btn" aria-label="Discuss paid advertising">get started</a>
       </article>
 
       <article id="service-email" class="popular-card">
         <div class="popular-icon" aria-hidden="true">✉️</div>
-        <h3>email marketing</h3>
+        <h3><a href="/services/email-marketing/" style="color:inherit;text-decoration:none">email marketing</a></h3>
         <p>
           Keep the conversation going after the first visit or purchase. We create email campaigns and automated flows that welcome subscribers, follow up on abandoned carts, and bring customers back. From strategy and copy to design, segmentation, and reporting, we help you send messages with a clear purpose.
         </p>
-        <a href="contact.html?service=email-marketing" class="btn card-btn">get started</a>
+        <a href="contact.html?service=email-marketing" class="btn card-btn" aria-label="Discuss email marketing">get started</a>
       </article>
 
       <article id="service-conversion" class="popular-card">
         <div class="popular-icon" aria-hidden="true">📊</div>
-        <h3>conversion optimization</h3>
+        <h3><a href="/services/conversion-optimization/" style="color:inherit;text-decoration:none">conversion optimization</a></h3>
         <p>
           Make more of the traffic you already have. We review landing pages, product pages, and checkout flows to find where visitors get stuck or drop off. Through clearer messaging, simpler navigation, stronger calls to action, and testing, we help turn more visits into inquiries and purchases.
         </p>
-        <a href="contact.html?service=conversion-optimization" class="btn card-btn">get started</a>
+        <a href="contact.html?service=conversion-optimization" class="btn card-btn" aria-label="Discuss conversion optimization">get started</a>
       </article>
 
       <article id="service-consulting" class="popular-card">
         <div class="popular-icon">🔍</div>
-        <h3>consulting</h3>
+        <h3><a href="/services/consulting/" style="color:inherit;text-decoration:none">consulting</a></h3>
         <p>
           Whether you need focused feedback on one area or a full brand audit, we pinpoint what is working, what is holding you back, and the exact steps to move forward. It is the most cost effective and fastest way for a brand to see immediate progress and to start building momentum.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=consulting" class="btn card-btn" aria-label="Discuss consulting">get started</a>
       </article>
 
       <article id="service-influencer" class="popular-card">
         <div class="popular-icon">📣</div>
-        <h3>influencer campaigns</h3>
+        <h3><a href="/services/influencer/" style="color:inherit;text-decoration:none">influencer campaigns</a></h3>
         <p>
           Influencer campaigns take a lot of time to run the right way. We handle sourcing, outreach, communication, deliverables, and performance tracking so you stay focused on running your business while the campaign runs itself.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=influencer" class="btn card-btn" aria-label="Discuss influencer campaigns">get started</a>
       </article>
 
       <article id="service-social" class="popular-card">
         <div class="popular-icon">💻</div>
-        <h3>social media</h3>
+        <h3><a href="/services/social-media/" style="color:inherit;text-decoration:none">social media</a></h3>
         <p>
           Social media is the heartbeat of your brand and a key to scaling. We strategically optimize your presence on any platform that matters to your audience to help cut through the noise, build authentic connections, and drive measurable results where your customers already are.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=social-media" class="btn card-btn" aria-label="Discuss social media">get started</a>
       </article>
 
       <article id="service-events" class="popular-card">
         <div class="popular-icon">📅</div>
-        <h3>community events</h3>
+        <h3><a href="/services/events/" style="color:inherit;text-decoration:none">community events</a></h3>
         <p>
           Community events are one of the most powerful ways to deepen connection. We help plan, organize, and deliver memorable experiences that bring your audience together and make them feel part of something bigger.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=events" class="btn card-btn" aria-label="Discuss community events">get started</a>
       </article>
 
       <article id="service-launching" class="popular-card">
         <div class="popular-icon">🚀</div>
-        <h3>brand launching</h3>
+        <h3><a href="/services/brand-launch/" style="color:inherit;text-decoration:none">brand launching</a></h3>
         <p>
           Launching a brand is overwhelming and most founders waste months overthinking every detail. Whether you need only a logo, full branding, social profiles, Shopify setup, business emails, a go to market strategy, or everything at once, we jump in exactly where you need us and get you launched fast, polished, and right on schedule.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=brand-launch" class="btn card-btn" aria-label="Discuss brand launching">get started</a>
       </article>
 
       <article id="service-content" class="popular-card">
         <div class="popular-icon">📸</div>
-        <h3>content creation</h3>
+        <h3><a href="/services/content-creation/" style="color:inherit;text-decoration:none">content creation</a></h3>
         <p>
           Most brands struggle to stay consistent with content because it takes too much time and building an in house media team is out of the budget. We handle everything for you and deliver ready to post videos, photos, and UGC that keep your brand active and growing with no filming or editing required from you.
         </p>
-        <a href="contact.html" class="btn card-btn">get started</a>
+        <a href="contact.html?service=content-creation" class="btn card-btn" aria-label="Discuss content creation">get started</a>
       </article>
     </div>
   </section>
 
+  <section class="agency-section" id="how-we-work"><h2>A clear path from idea to launch</h2><div class="agency-steps"><div><h3>1. Understand the goal</h3><p>We review your brand, audience, current website and priorities before recommending a scope.</p></div><div><h3>2. Build the right plan</h3><p>You get a defined project scope, deliverables, timing and price before work begins.</p></div><div><h3>3. Launch and improve</h3><p>We put the agreed work into action, review what happens and identify the next improvements.</p></div></div><p>Want to start with a focused review? Explore our <a href="/brandaudit/">$250 brand audit</a>, or <a href="/contact.html">ask for relevant work examples and a project scope</a>.</p></section>
+  <section class="agency-section" id="agency-faq"><h2>Before we work together</h2><details><summary>Can I hire you for just one service?</summary><p>Yes. Tell us the result you need and we can scope a focused project or a combination of services.</p></details><details><summary>How are projects priced?</summary><p>Agency projects are quoted for their agreed scope. The brand audit is $250. Creator campaigns have separate platform pricing: $299 per campaign or $1,999 annually.</p></details><details><summary>What should I include in my inquiry?</summary><p>Share your website, goals, services of interest, preferred timing and any constraints. We will use that context to discuss a practical scope.</p></details><details><summary>Where can creators find campaigns?</summary><p>Visit the <a href="/campaigns/#browse">campaign marketplace</a> to see currently available opportunities. Joining as a creator is free.</p></details></section>
+  </main>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var btn = document.querySelector('.actions .btn[href="#popular"]');
@@ -714,5 +731,7 @@
       }
     });
   </script>
+<footer class="site-footer"><span>© 2026 nfluence</span><a href="/services/">Services</a><a href="/brandaudit/">Brand audit</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="mailto:support@nfluenceagency.com">support@nfluenceagency.com</a></footer>
+<script src="/assets/site.js" defer></script>
 </body>
 </html>

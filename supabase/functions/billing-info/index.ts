@@ -1,0 +1,2 @@
+import {checkoutEnabled,PRICES} from '../_shared/pricing.mjs';
+Deno.serve(req=>{const origin=req.headers.get('origin');const allowed=['https://nfluenceagency.com','https://www.nfluenceagency.com'];const live=checkoutEnabled(k=>Deno.env.get(k));return Response.json({checkout_available:live,public_key:live?Deno.env.get('STRIPE_PUBLISHABLE_KEY'):null,currency:'usd',prices:PRICES,creator_payments:'manual',automatic_renewal:false},{headers:{'Access-Control-Allow-Origin':allowed.includes(origin||'')?origin!:allowed[0],'Cache-Control':'no-store','Vary':'Origin'}});});
