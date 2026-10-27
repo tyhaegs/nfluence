@@ -169,11 +169,20 @@
     },
     "recovery_link_layout": {
       "brand_and_creator": true,
-      "below_password": true,
       "desktop_and_mobile_verified": true,
       "reset_navigation_verified": true,
       "alignment": "center",
-      "centered_live_page_verified": true
+      "centered_live_page_verified": true,
+      "below_action_buttons": true
+    },
+    "account_design": {
+      "reference": "Oasis Peptides account panel",
+      "shared_signin_signup_recovery": true,
+      "responsive_checks": 28,
+      "responsive_failures": 0,
+      "local_mock_signin_error_and_visibility_verified": true,
+      "live_tabs_creator_routing_and_recovery_verified": true,
+      "real_auth_submissions_during_design_test": 0
     }
   },
   "external_requirements": [
@@ -187,8 +196,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae057cf289c819197f973c1998a1292",
-    "source_commit": "cfe7960c7bf384b722c9c26dad876fabc010bebc",
+    "deployment_id": "appgdep_6ae05d4242748191b5dfed73e4f51839",
+    "source_commit": "b168c137ecc454c79ba0ff4e33520c1aaea1fc9d",
     "cutover_state": "complete_verified"
   }
 }

@@ -7,6 +7,8 @@ import { campaignFromRow, campaignToUpdate, eligibleCampaign, loadPublicCampaign
 import { ConversationHub, RecoveryScreen, UploadLibrary, AnnualPlanPanel, AppBoundary, ManualPaymentForm, CreatorReviewWorkspace } from './features.jsx';
 import './accessibility.js';
 import './app.css';
+import './auth.css';
+import {AuthLayout, AuthSteps, PasswordField, AccountSignIn} from './auth-ui.jsx';
 window.supabase = { createClient };
 window.Cropper = Cropper;
 
@@ -3741,159 +3743,29 @@ function PublicNav({ onSignIn, hideSignIn = false }) {
   );
 }
 
-function SignIn({ onSignIn, onBack, onSignUp }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [name, setName] = useState("");
-  const isSignUp = false;
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const isValid = email.includes("@") && password.length >= 8 && (!isSignUp || name.trim()) && (!isSignUp || agreeTerms);
-
-  return (
-    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <PublicNav onSignIn={() => {}} />
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .nf-signin-input {
-          border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
-          background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px;
-          font-size: .95rem; width: 100%; outline: none;
-          font-family: system-ui, sans-serif;
-          transition: border-color .12s, box-shadow .12s, background .12s;
-        }
-        .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
-        .nf-signin-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
-        .nf-signin-btn {
-          width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28);
-          background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff;
-          font-size: 1rem; font-family: system-ui, sans-serif; text-transform: lowercase;
-          cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25);
-        }
-        .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
-        .nf-signin-btn:disabled { opacity: .3; cursor: not-allowed; }
-      `}</style>
-      <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
-          <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>{isSignUp ? "create account" : "sign in"}</div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {isSignUp && (
-            <input className="nf-signin-input" value={name} onChange={e => setName(e.target.value)} aria-label="brand or company name" placeholder="brand or company name" />
-          )}
-          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
-          <div style={{ position: "relative" }}>
-            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
-            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-              {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-            </div>
-          </div>
-          <button type="button" className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>forgot your password?</button>
-          {isSignUp && (
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)" }}>
-              <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
-              <span style={{ fontSize: ".78rem", opacity: .5, lineHeight: 1.55 }}>
-                I agree to Nfluence's{" "}
-                <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
-                {" "}and{" "}
-                <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
-                I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
-              </span>
-            </label>
-          )}
-          {authError && (
-            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
-              {authError}
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 12 }}>
-            <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
-              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, isSignUp ? name : null, password); setLoading(false); if (err) setAuthError(err); }}>
-              {loading ? "signing in…" : isSignUp ? "create account" : "sign in"}
-            </button>
-          </div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
-          don't have an account?{" "}
-          <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={onSignUp}>
-            sign up for free!
-          </span>
-        </div>
-      </div>
-      </div>
-    </div>
-  );
+function SignIn({onSignIn,onBack,onSignUp}) {
+  return <AccountSignIn navigation={<PublicNav onSignIn={()=>{}}/>} onSignIn={onSignIn} onBack={onBack} onSignUp={onSignUp}/>;
 }
 
 // ── SignUpChoice ──
 
-function SignUpChoice({ onBack, onBrand, onCreator, onSignIn }) {
-  return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <style>{`
-        @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .suc-back { opacity: .5; cursor: pointer; transition: opacity .15s; }
-        .suc-back:hover { opacity: 1; }
-        .suc-btn { transition: transform .12s, border-color .2s, box-shadow .2s, background .2s; }
-        .suc-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); box-shadow: 0 0 18px rgba(255,255,255,.12); }
-        @media (max-width: 600px) { .suc-row { flex-direction: column !important; align-items: stretch !important; } .suc-btn { max-width: none !important; flex: 0 0 auto !important; } }
-      `}</style>
-
-      <PublicNav onSignIn={onSignIn} />
-
-      <div className="suc-back" style={{ padding: "16px 24px", fontSize: ".85rem", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
-        <span style={{ fontSize: "1.1rem" }}>←</span> back
-      </div>
-
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px 60px" }}>
-        <div style={{ width: "100%", maxWidth: 720 }}>
-          <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 10 }}>join nfluence</div>
-            <div style={{ fontSize: ".95rem", opacity: .5 }}>how do you want to use the platform?</div>
-          </div>
-
-          <div className="suc-row" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onBrand} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
-              i'm a brand
-            </button>
-            <button onClick={onCreator} className="suc-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "0 1 220px", padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "transparent", border: "1px solid rgba(255,255,255,.18)", color: "#fff", cursor: "pointer" }}>
-              i'm a creator
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function SignUpChoice({onBack,onBrand,onCreator,onSignIn}) {
+  return <AuthLayout navigation={<PublicNav onSignIn={onSignIn}/>} mode="signup" onLogIn={onSignIn} onCreate={()=>{}} description="Choose how you want to use nfluence.">
+    <div className="nf-auth-role-list"><button type="button" className="nf-auth-role" onClick={onBrand}><strong>I'm a brand</strong><span>Launch campaigns and work with creators.</span></button><button type="button" className="nf-auth-role" onClick={onCreator}><strong>I'm a creator</strong><span>Find campaigns and collaborate with brands.</span></button></div>
+    <button className="nf-auth-text-button" type="button" onClick={onBack}>Back to log in</button>
+  </AuthLayout>;
 }
 
 // ── BrandOnboarding ──
 
 // Shown after signup when email confirmation is enabled (signUp returns no session).
-function ConfirmEmailNotice({ email, role, onSignIn, onHome }) {
-  return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
-      <style>{`@font-face { font-family:'Monda'; src:url('/assets/Monda-Regular.woff') format('woff'); font-weight:400 700; font-display:swap; } * { box-sizing:border-box; margin:0; padding:0; }`}</style>
-      <PublicNav onSignIn={onSignIn} hideSignIn />
-      <div style={{ maxWidth: 460, margin: "0 auto", padding: "72px 24px", textAlign: "center" }}>
-        <div style={{ width: 64, height: 64, borderRadius: 16, margin: "0 auto 24px", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-        </div>
-        <div style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 12 }}>check your email</div>
-        <div style={{ fontSize: ".95rem", opacity: .6, lineHeight: 1.65, marginBottom: 28 }}>
-          We sent a confirmation link{email ? <> to <span style={{ color: "#fff", opacity: 1 }}>{email}</span></> : ""}. Confirm your account, then sign in.
-        </div>
-        <button onClick={onSignIn} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: ".95rem", fontFamily: "system-ui, sans-serif", textTransform: "lowercase", cursor: "pointer" }}>sign in</button>
-        <div onClick={onHome} style={{ marginTop: 18, fontSize: ".85rem", opacity: .45, cursor: "pointer", textDecoration: "underline" }}>back to home</div>
-        <div style={{ marginTop: 28, fontSize: ".8rem", opacity: .35, lineHeight: 1.6 }}>didn't get it? check spam, or try signing in to resend.</div>
-      </div>
-    </div>
-  );
+function ConfirmEmailNotice({email,role,onSignIn,onHome}) {
+  return <AuthLayout navigation={<PublicNav onSignIn={onSignIn} hideSignIn/>} title="Check your email" description="Confirm your account, then log in." headline>
+    <p className="nf-auth-notice">We sent a confirmation link{email?<> to <strong>{email}</strong></>:''}. Open that link to finish setting up your account.</p>
+    <button type="button" className="nf-auth-primary" onClick={onSignIn}>Log in</button>
+    <button type="button" className="nf-auth-text-button" onClick={onHome}>Back to home</button>
+    <p className="nf-auth-notice" style={{marginTop:16,marginBottom:0,textAlign:'center'}}>Didn't get it? Check your spam folder.</p>
+  </AuthLayout>;
 }
 
 // Multi-select industry picker shared by brand onboarding and the dashboard edit modal.
@@ -3968,7 +3840,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
     return true;
   }, [step, form]);
 
-  const inputStyle = { borderRadius: 12, border: "1px solid rgba(255,255,255,.18)", background: "rgba(0,0,0,.35)", color: "#fff", padding: "12px 14px", fontSize: ".92rem", width: "100%", outline: "none", fontFamily: "system-ui, sans-serif", boxSizing: "border-box" };
+  const inputStyle = { width: "100%" };
   const selectStyle = { ...inputStyle, padding: "12px 32px 12px 14px", appearance: "none" };
   // Prominent section labels: uppercase + letter-spacing + weight so titles don't blend into content above.
   const labelStyle = { fontSize: ".72rem", fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.55)", marginBottom: 9 };
@@ -4017,7 +3889,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
   };
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <AuthLayout pageRef={containerRef} navigation={<PublicNav onSignIn={onSignIn}/>} mode="signup" onLogIn={onSignIn} onCreate={()=>{}} disabled={submitting} title="Create a brand account" description="A few details to set up your workspace." onboarding>
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-style: normal; font-display: swap; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -4034,75 +3906,27 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         .bo-btn-finish { animation: nf-cta-pulse 2s ease-out infinite; }
       `}</style>
 
-      {/* Header */}
-      <PublicNav onSignIn={onSignIn} />
-      <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 0", fontSize: ".8rem", opacity: .35 }}>brand sign up</div>
-
-      {/* Step pips */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 16px 4px", maxWidth: 470, margin: "0 auto" }}>
-        {STEPS.map((s, i) => (
-          <div key={s} style={{ flex: 1, height: 3, borderRadius: 3, background: i < step ? "rgba(255,255,255,.25)" : i === step ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.08)", transition: "background .3s" }} />
-        ))}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", maxWidth: 470, margin: "0 auto", padding: "6px 16px 0", fontSize: ".7rem", textTransform: "lowercase", letterSpacing: ".03em" }}>
-        {STEPS.map((s, i) => (
-          <span key={s} style={{ flex: 1, textAlign: "center", color: i === step ? "rgba(255,255,255,.85)" : i < step ? "rgba(255,255,255,.45)" : "rgba(255,255,255,.25)", transition: "color .3s" }}>{s}</span>
-        ))}
-      </div>
+      <AuthSteps steps={STEPS} current={step}/>
 
       {/* Content */}
-      <div style={{ maxWidth: 470, margin: "0 auto", padding: "28px 24px 80px" }}>
+      <div className="nf-auth-onboarding-fields">
 
         {/* Step 0: Account */}
-        {step === 0 && (
-          <div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>create your account</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>start launching campaigns in minutes</div>
-            <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} aria-label="contact name *" placeholder="contact name *" />
-            </div>
-            <div style={fieldWrap}>
-              <input className="bo-input" style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} aria-label="email *" placeholder="email *" />
-              {form.email && !isValidEmail(form.email) && <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.6)", marginTop: 4 }}>enter a valid email address</div>}
-            </div>
-            <div style={fieldWrap}>
-              <div style={{ position: "relative" }}>
-                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} aria-label="password (8+ chars) *" placeholder="password (8+ chars) *" />
-                <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-                  {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-                </div>
-              </div>
-            </div>
-            <div style={fieldWrap}>
-              <div style={{ position: "relative" }}>
-                <input className="bo-input" style={{ ...inputStyle, paddingRight: 44 }} type={showConfirmPass ? "text" : "password"} value={form.confirmPassword} onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} aria-label="confirm password *" placeholder="confirm password *" />
-                <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-                  {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-                </div>
-              </div>
-              {form.confirmPassword && form.password !== form.confirmPassword && (
-                <div style={{ fontSize: ".7rem", color: "rgba(255,100,100,.8)", marginTop: 5 }}>passwords don't match</div>
-              )}
-            </div>
-
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 8 }}>
-              <input type="checkbox" checked={form.agreeTerms} onChange={e => setForm(f => ({ ...f, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#1a1f35", flexShrink: 0 }} />
-              <span style={{ fontSize: ".78rem", opacity: .55, lineHeight: 1.55 }}>
-                I agree to Nfluence's{" "}
-                <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Terms of Service</a>
-                {" "}and{" "}
-                <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.85)", textDecoration: "underline" }}>Privacy Policy</a>.
-                I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.
-              </span>
-            </label>
-          </div>
-        )}
+        {step === 0 && <div className="nf-auth-account-fields">
+            <label className="nf-auth-field">Contact name<input className="bo-input" autoComplete="name" value={form.contactName} onChange={e=>setForm(f=>({...f,contactName:e.target.value}))} aria-label="contact name *"/></label>
+            <label className="nf-auth-field">Email address<input className="bo-input" type="email" autoComplete="email" autoCapitalize="none" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} aria-label="email *"/></label>
+            {form.email&&!isValidEmail(form.email)&&<p className="nf-auth-error">Enter a valid email address.</p>}
+            <PasswordField id="nf-brand-password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}/>
+            <PasswordField id="nf-brand-confirm" label="Confirm password" value={form.confirmPassword} onChange={e=>setForm(f=>({...f,confirmPassword:e.target.value}))}/>
+            {form.confirmPassword&&form.password!==form.confirmPassword&&<p className="nf-auth-error">Passwords don’t match.</p>}
+            <label className="nf-auth-consent"><input type="checkbox" checked={form.agreeTerms} onChange={e=>setForm(f=>({...f,agreeTerms:e.target.checked}))}/><span>I agree to nfluence’s <a href="/terms/" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. I confirm I am at least 18 years old and authorized to act on behalf of the brand I represent.</span></label>
+        </div>}
 
         {/* Step 1: Brand */}
         {step === 1 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>about your brand</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>tell creators who you are</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 28 }}>tell creators who you are</div>
             <div style={fieldWrap}>
               <input className="bo-input" style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-label="brand name *" placeholder="brand name *" maxLength={60} />
             </div>
@@ -4132,7 +3956,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                       <input type="file" accept="image/*" style={{ display: "none", boxSizing: "border-box" }} onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logoPreview: ev.target.result, logoEditing: true, logoTransform: null })); r.readAsDataURL(f); } }} />
                       <div style={{ fontSize: ".82rem", opacity: .55 }}>{form.logoPreview ? "click to change logo" : "click to upload brand logo"}</div>
                     </label>
-                    {form.logoPreview && <div onClick={() => setForm(p => ({ ...p, logoEditing: true }))} style={{ fontSize: ".75rem", opacity: .4, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>}
+                    {form.logoPreview && <div onClick={() => setForm(p => ({ ...p, logoEditing: true }))} style={{ fontSize: ".75rem", opacity: .7, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>}
                   </div>
                 </div>
               )}
@@ -4155,12 +3979,12 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
                 </label>
               )}
               {form.bannerPreview && !form.bannerEditing && (
-                <div onClick={() => setForm(p => ({ ...p, bannerEditing: true }))} style={{ fontSize: ".75rem", opacity: .4, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>
+                <div onClick={() => setForm(p => ({ ...p, bannerEditing: true }))} style={{ fontSize: ".75rem", opacity: .7, marginTop: 6, cursor: "pointer", textDecoration: "underline" }}>reposition</div>
               )}
             </div>
             <div style={sectionWrap}>
               <div style={labelStyle}>industry</div>
-              <div style={{ fontSize: ".78rem", opacity: .35, marginBottom: 10, marginTop: -2 }}>select all that apply</div>
+              <div style={{ fontSize: ".78rem", opacity: .65, marginBottom: 10, marginTop: -2 }}>select all that apply</div>
               <IndustryMultiSelect value={form.industries} onChange={inds => setForm(f => ({ ...f, industries: inds }))} />
             </div>
           </div>
@@ -4170,7 +3994,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         {step === 2 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>where are you based?</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>optional — helps creators find you</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 28 }}>optional — helps creators find you</div>
 
             <div style={fieldWrap}>
               <input className="bo-input" style={inputStyle} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} aria-label="phone number" placeholder="phone number" />
@@ -4213,7 +4037,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
         {step === 3 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>connect your socials</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>optional — helps build trust with creators</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 28 }}>optional — helps build trust with creators</div>
 
             {[
               { key: "instagram", placeholder: "instagram url" },
@@ -4228,7 +4052,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
             ))}
 
             {error && <div style={{ fontSize: ".82rem", color: "rgba(255,120,120,.85)", marginTop: 12 }}>{error}</div>}
-            <div style={{ fontSize: ".82rem", opacity: .35, textAlign: "center", marginTop: 20 }}>you can edit all of this from your dashboard anytime</div>
+            <div style={{ fontSize: ".82rem", opacity: .65, textAlign: "center", marginTop: 20 }}>you can edit all of this from your dashboard anytime</div>
           </div>
         )}
 
@@ -4242,7 +4066,7 @@ function BrandOnboarding({ onBack, onComplete, onSignIn }) {
           )}
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -6406,61 +6230,8 @@ function GigDetail({ gig, onBack, creatorUser, appliedGigs = [], onApply, onSign
 
 // ── CreatorSignIn ──
 
-function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const isValid = email.includes("@") && password.length >= 8;
-
-  return (
-    <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
-      <PublicNav onSignIn={() => {}} />
-      <style>{`
-        .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
-        .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
-        .nf-signin-input:focus { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.2); background: rgba(0,0,0,.5); }
-        .nf-signin-btn { width: 100%; padding: 14px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); backdrop-filter: blur(20px); color: #fff; font-size: 1rem; font-family: system-ui, sans-serif; text-transform: lowercase; cursor: pointer; transition: all .12s; box-shadow: 0 10px 28px rgba(0,0,0,.25); }
-        .nf-signin-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
-        .nf-signin-btn:disabled { opacity: .3; cursor: not-allowed; }
-      `}</style>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
-      <div style={{ width: "100%", maxWidth: 400, padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 12 }}>
-          <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 700, marginBottom: 32, marginTop: "-40px" }}>nfluence</div>
-          <div style={{ fontSize: "1.5rem", fontWeight: 600, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 20 }}>sign in</div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <input className="nf-signin-input" type="email" value={email} onChange={e => setEmail(e.target.value)} aria-label="email" placeholder="email" />
-          <div style={{ position: "relative" }}>
-            <input className="nf-signin-input" type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} aria-label="password" placeholder="password" style={{ paddingRight: 44 }} />
-            <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-              {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-            </div>
-          </div>
-          <button type="button" className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>forgot your password?</button>
-          {authError && (
-            <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
-              {authError}
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 12 }}>
-            <button className="nf-signin-btn" style={{ flex: 1 }} onClick={onBack}>back</button>
-            <button className="nf-signin-btn" style={{ flex: 1 }} disabled={!isValid || loading}
-              onClick={async () => { setAuthError(""); setLoading(true); const err = await onSignIn(email, null, password); setLoading(false); if (err) setAuthError(err); }}>
-              {loading ? "signing in…" : "sign in"}
-            </button>
-          </div>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: ".85rem", opacity: .5 }}>
-          don't have an account?{" "}
-          <span style={{ color: "#fff", opacity: 1, cursor: "pointer", textDecoration: "underline" }} onClick={onSignUp}>sign up for free!</span>
-        </div>
-      </div>
-      </div>
-    </div>
-  );
+function CreatorSignIn({onSignIn,onBack,onSignUp}) {
+  return <AccountSignIn navigation={<PublicNav onSignIn={()=>{}}/>} onSignIn={onSignIn} onBack={onBack} onSignUp={onSignUp} role="creator"/>;
 }
 
 // ── CreatorOnboarding ──
@@ -6538,7 +6309,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
   };
 
   return (
-    <div ref={containerRef} style={{ minHeight: "100vh", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif" }}>
+    <AuthLayout pageRef={containerRef} navigation={<PublicNav onSignIn={onSignIn}/>} mode="signup" onLogIn={onSignIn} onCreate={()=>{}} disabled={signupBusy} title="Create a creator account" description="A few details to set up your workspace." onboarding>
       {signupError&&<p role="alert" className="async-error">{signupError}</p>}
       <style>{`
         @font-face { font-family: 'Monda'; src: url('/assets/Monda-Regular.woff') format('woff'); font-weight: 400 700; font-display: swap; }
@@ -6561,89 +6332,30 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
         .co-btn-finish { animation: nf-cta-pulse 2s ease-out infinite; }
       `}</style>
 
-      {/* Header */}
-      <PublicNav onSignIn={onSignIn} />
-      <div style={{ display: "flex", justifyContent: "center", padding: "8px 16px 0", fontSize: ".8rem", opacity: .35 }}>creator sign up</div>
-
-      {/* Step pips */}
-      <div className="nf-step-row" style={{ display: "flex", justifyContent: "center", gap: 8, padding: "8px 16px 4px", maxWidth: 470, margin: "0 auto" }}>
-        {STEPS.map((s, i) => (
-          <div key={s} style={{ flex: 1, height: 3, borderRadius: 3, background: i < step ? "rgba(255,255,255,.25)" : i === step ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.08)", transition: "background .3s" }} />
-        ))}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", maxWidth: 470, margin: "0 auto", padding: "6px 16px 0", fontSize: ".7rem", textTransform: "lowercase", letterSpacing: ".03em" }}>
-        {STEPS.map((s, i) => (
-          <span key={s} style={{ flex: 1, textAlign: "center", color: i === step ? "rgba(255,255,255,.85)" : i < step ? "rgba(255,255,255,.45)" : "rgba(255,255,255,.25)", transition: "color .3s" }}>{s}</span>
-        ))}
-      </div>
+      <AuthSteps steps={STEPS} current={step}/>
 
       {/* Content */}
-      <div style={{ maxWidth: 470, margin: "0 auto", padding: "28px 24px 80px" }}>
+      <div className="nf-auth-onboarding-fields">
 
         {/* Step 0: Account */}
-        {step === 0 && (
-          <div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>create your account</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>free forever for creators</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>first name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                  <input className="co-input" aria-label="first" placeholder="first" value={account.firstName} onChange={e => setAccount(a => ({ ...a, firstName: e.target.value }))} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>last name <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                  <input className="co-input" aria-label="last" placeholder="last" value={account.lastName} onChange={e => setAccount(a => ({ ...a, lastName: e.target.value }))} />
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>email <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                <input className="co-input" type="email" aria-label="you@email.com" placeholder="you@email.com" value={account.email} onChange={e => setAccount(a => ({ ...a, email: e.target.value }))} />
-              </div>
-              <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                <div style={{ position: "relative" }}>
-                  <input className="co-input" type={showPass ? "text" : "password"} aria-label="min 8 characters" placeholder="min 8 characters" value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} style={{ paddingRight: 44 }} />
-                  <div onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-                    {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>confirm password <span style={{ color: "rgba(255,100,100,.7)" }}>*</span></div>
-                <div style={{ position: "relative" }}>
-                  <input className="co-input" type={showConfirmPass ? "text" : "password"} aria-label="repeat password" placeholder="repeat password" value={account.confirmPassword} onChange={e => setAccount(a => ({ ...a, confirmPassword: e.target.value }))} style={{ paddingRight: 44 }} />
-                  <div onClick={() => setShowConfirmPass(v => !v)} style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", cursor: "pointer", opacity: showConfirmPass ? .7 : .35, display: "flex", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-                    {showConfirmPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
-                  </div>
-                </div>
-                {account.confirmPassword && account.password !== account.confirmPassword && (
-                  <div style={{ fontSize: ".72rem", color: "rgba(255,100,100,.8)", marginTop: 5 }}>passwords don't match</div>
-                )}
-              </div>
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)", marginTop: 4 }}>
-                <input type="checkbox" checked={account.agreeTerms} onChange={e => setAccount(a => ({ ...a, agreeTerms: e.target.checked }))} style={{ marginTop: 3, accentColor: "#1a1f35", flexShrink: 0 }} />
-                <span style={{ fontSize: ".78rem", opacity: .5, lineHeight: 1.55 }}>
-                  I agree to Nfluence's{" "}
-                  <a href="https://nfluenceagency.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.8)", textDecoration: "underline" }}>Terms of Service</a>
-                  {" "}and{" "}
-                  <a href="https://nfluenceagency.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.8)", textDecoration: "underline" }}>Privacy Policy</a>.
-                  I confirm I am at least 18 years old.
-                </span>
-              </label>
-            </div>
-          </div>
-        )}
+        {step === 0 && <div className="nf-auth-account-fields">
+            <div className="nf-auth-name-row"><label className="nf-auth-field">First name<input className="co-input" autoComplete="given-name" value={account.firstName} onChange={e=>setAccount(a=>({...a,firstName:e.target.value}))} aria-label="first"/></label><label className="nf-auth-field">Last name<input className="co-input" autoComplete="family-name" value={account.lastName} onChange={e=>setAccount(a=>({...a,lastName:e.target.value}))} aria-label="last"/></label></div>
+            <label className="nf-auth-field">Email address<input className="co-input" type="email" autoComplete="email" autoCapitalize="none" value={account.email} onChange={e=>setAccount(a=>({...a,email:e.target.value}))} aria-label="you@email.com"/></label>
+            <PasswordField id="nf-creator-password" value={account.password} onChange={e=>setAccount(a=>({...a,password:e.target.value}))}/>
+            <PasswordField id="nf-creator-confirm" label="Confirm password" value={account.confirmPassword} onChange={e=>setAccount(a=>({...a,confirmPassword:e.target.value}))}/>
+            {account.confirmPassword&&account.password!==account.confirmPassword&&<p className="nf-auth-error">Passwords don’t match.</p>}
+            <label className="nf-auth-consent"><input type="checkbox" checked={account.agreeTerms} onChange={e=>setAccount(a=>({...a,agreeTerms:e.target.checked}))}/><span>I agree to nfluence’s <a href="/terms/" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. I confirm I am at least 18 years old.</span></label>
+        </div>}
 
         {/* Step 1: Profile */}
         {step === 1 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>set up your profile</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>you can always update this later</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 28 }}>you can always update this later</div>
 
             {/* Banner upload */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8 }}>banner photo</div>
+              <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 8 }}>banner photo</div>
               {profile.bannerEditing && profile.bannerPreview ? (
                 <ImageEditor src={profile.bannerPreview} shape="banner"
                   initialScale={profile.bannerTransform?.scale} initialPos={profile.bannerTransform?.pos}
@@ -6660,7 +6372,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
                 <label className="co-upload-zone" style={{ height: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 14 }}>
                   <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={e => handleFileUpload("bannerPreview", e)} />
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <div style={{ fontSize: ".8rem", opacity: .35, marginTop: 8 }}>click to upload banner</div>
+                  <div style={{ fontSize: ".8rem", opacity: .65, marginTop: 8 }}>click to upload banner</div>
                   <div style={{ fontSize: ".68rem", opacity: .2, marginTop: 4 }}>1500×500px · JPG or PNG</div>
                 </label>
               )}
@@ -6668,7 +6380,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
 
             {/* Avatar upload */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8 }}>profile photo</div>
+              <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 8 }}>profile photo</div>
               {profile.avatarEditing && profile.avatarPreview ? (
                 <ImageEditor src={profile.avatarPreview} shape="square"
                   initialScale={profile.avatarTransform?.scale} initialPos={profile.avatarTransform?.pos}
@@ -6688,7 +6400,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
                       <div style={{ fontSize: ".82rem", opacity: .6 }}>{profile.avatarPreview ? "click to change photo" : "click to upload a photo"}</div>
                     </label>
                     <div style={{ fontSize: ".68rem", opacity: .25, marginTop: 3 }}>400×400px · JPG or PNG</div>
-                    {profile.avatarPreview && <div onClick={() => setProfile(p => ({ ...p, avatarEditing: true }))} style={{ fontSize: ".72rem", opacity: .4, marginTop: 5, cursor: "pointer", textDecoration: "underline" }}>reposition</div>}
+                    {profile.avatarPreview && <div onClick={() => setProfile(p => ({ ...p, avatarEditing: true }))} style={{ fontSize: ".72rem", opacity: .7, marginTop: 5, cursor: "pointer", textDecoration: "underline" }}>reposition</div>}
                   </div>
                 </div>
               )}
@@ -6696,31 +6408,31 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>bio <span style={{ opacity: .5 }}>(optional)</span></div>
+                <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>bio <span style={{ opacity: .5 }}>(optional)</span></div>
                 <textarea className="co-input" placeholder="tell brands about yourself..." rows={3} value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} style={{ resize: "vertical", lineHeight: 1.5 }} />
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>city</div>
+                  <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>city</div>
                   <input className="co-input" aria-label="city" placeholder="city" value={profile.city} onChange={e => setProfile(p => ({ ...p, city: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>state</div>
+                  <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>state</div>
                   <input className="co-input" aria-label="state" placeholder="state" value={profile.state} onChange={e => setProfile(p => ({ ...p, state: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>country</div>
+                  <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>country</div>
                   <input className="co-input" aria-label="country" placeholder="country" value={profile.country} onChange={e => setProfile(p => ({ ...p, country: e.target.value }))} />
                 </div>
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>age</div>
+                  <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>age</div>
                   <input className="co-input" aria-label="age" placeholder="age" value={profile.age} onChange={e => setProfile(p => ({ ...p, age: e.target.value }))} />
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 5 }}>languages</div>
+                <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 5 }}>languages</div>
                 <input className="co-input" aria-label="e.g. English, Spanish" placeholder="e.g. English, Spanish" value={profile.languages} onChange={e => setProfile(p => ({ ...p, languages: e.target.value }))} />
               </div>
             </div>
@@ -6731,7 +6443,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
         {step === 2 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>your platforms</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 24 }}>select every platform you create on</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 24 }}>select every platform you create on</div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
               {PLATFORM_LIST.map(p => (
@@ -6746,7 +6458,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
             {/* Handle + follower inputs */}
             {selectedPlatformKeys.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-                <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 4 }}>add your handles and follower counts</div>
+                <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 4 }}>add your handles and follower counts</div>
                 {selectedPlatformKeys.map(p => (
                   <div key={p} style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{PLAT_SVGS_SMALL[p]}</div>
@@ -6759,7 +6471,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
 
             {/* Niches */}
             <div>
-              <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 10 }}>content niches <span style={{ opacity: .5 }}>(select all that apply)</span></div>
+              <div style={{ fontSize: ".72rem", opacity: .65, marginBottom: 10 }}>content niches <span style={{ opacity: .5 }}>(select all that apply)</span></div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {INDUSTRIES.map(n => (
                   <div key={n} className={`co-niche-pill${selectedNiches.includes(n) ? " selected" : ""}`} onClick={() => toggleNiche(n)}>{n}</div>
@@ -6773,7 +6485,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
         {step === 3 && (
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 6 }}>looking good!</div>
-            <div style={{ fontSize: ".88rem", opacity: .4, marginBottom: 28 }}>here's your profile preview</div>
+            <div style={{ fontSize: ".88rem", opacity: .7, marginBottom: 28 }}>here's your profile preview</div>
 
             {/* Profile preview card */}
             <div style={{ borderRadius: 16, border: "1px solid rgba(255,255,255,.1)", overflow: "hidden", marginBottom: 24 }}>
@@ -6804,7 +6516,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
               </div>
             </div>
 
-            <div style={{ fontSize: ".82rem", opacity: .35, textAlign: "center", marginBottom: 20 }}>you can edit all of this from your dashboard anytime</div>
+            <div style={{ fontSize: ".82rem", opacity: .65, textAlign: "center", marginBottom: 20 }}>you can edit all of this from your dashboard anytime</div>
           </div>
         )}
 
@@ -6818,7 +6530,7 @@ function CreatorOnboarding({ onComplete, onBack, onSignIn }) {
           )}
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -8076,7 +7788,7 @@ function NfluenceApp() {
   if (view === "signupchoice") return <SignUpChoice onBack={() => setView("signin")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
-  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={handleCreatorSignIn} onSignIn={() => setView("signin")} />;
+  if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={handleCreatorSignIn} onSignIn={() => setView("creatorsignin")} />;
   if (view === "confirmemail") return <ConfirmEmailNotice email={confirmEmailInfo?.email} role={confirmEmailInfo?.role} onSignIn={() => setView(confirmEmailInfo?.role === "creator" ? "creatorsignin" : "signin")} onHome={() => setView("landing")} />;
   if (view === "creatordashboard") return <>
     <div style={{display:'flex',justifyContent:'center',gap:20,padding:12}}><button className="nf-recovery-link" onClick={()=>{setSelectedCampaign(null);setView('content')}}>Your deliverables</button><button className="nf-recovery-link" onClick={()=>setView('creatorreviews')}>Review a campaign</button></div>
