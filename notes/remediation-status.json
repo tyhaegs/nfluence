@@ -171,7 +171,9 @@
       "brand_and_creator": true,
       "below_password": true,
       "desktop_and_mobile_verified": true,
-      "reset_navigation_verified": true
+      "reset_navigation_verified": true,
+      "alignment": "center",
+      "centered_live_page_verified": true
     }
   },
   "external_requirements": [
@@ -185,8 +187,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae0440c5834819196c5f39820690299",
-    "source_commit": "822037ebe68942639a0ce908f631f4701f925d42",
+    "deployment_id": "appgdep_6ae057cf289c819197f973c1998a1292",
+    "source_commit": "cfe7960c7bf384b722c9c26dad876fabc010bebc",
     "cutover_state": "complete_verified"
   }
 }
