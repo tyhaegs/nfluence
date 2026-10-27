@@ -166,6 +166,12 @@
         768,
         1280
       ]
+    },
+    "recovery_link_layout": {
+      "brand_and_creator": true,
+      "below_password": true,
+      "desktop_and_mobile_verified": true,
+      "reset_navigation_verified": true
     }
   },
   "external_requirements": [
@@ -179,8 +185,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae03cc6a54c8191b78a0abd76095ef7",
-    "source_commit": "dedfd63392a4adfa11f628677fa066209f9c65ed",
+    "deployment_id": "appgdep_6ae0440c5834819196c5f39820690299",
+    "source_commit": "822037ebe68942639a0ce908f631f4701f925d42",
     "cutover_state": "complete_verified"
   }
 }
