@@ -29,7 +29,7 @@ Deliverables live in the private `content` bucket, under creator/application pat
 
 ## Website hosting
 
-The user approved public hosting and domain migration on October 26, 2026. The sibling `nfluence-secure-host/.openai/hosting.json` records the existing Site identity; reuse it for every update. Its public URL is `https://nfluence-secure-host.tyhaegs.chatgpt.site`. The Worker serves the same 59 published assets and sets actual CSP, HSTS, frame protection, MIME protection, referrer and permissions response headers. Both GitHub Pages and Sites static mode ignored `_headers`; the active serving layer is the Worker.
+The user approved public hosting and domain migration on October 26, 2026. The sibling `nfluence-secure-host/.openai/hosting.json` records the existing Site identity; reuse it for every update. Its public URL is `https://nfluence-secure-host.tyhaegs.chatgpt.site`. The Worker serves the same 60 published assets and sets actual CSP, HSTS, frame protection, MIME protection, referrer and permissions response headers. Both GitHub Pages and Sites static mode ignored `_headers`; the active serving layer is the Worker.
 
 Namecheap DNS targets are two apex A records (`162.159.143.30`, `172.66.3.26`) and a `www` CNAME to `custom-domains.chatgpt.site.`. Website records use a 60-second TTL. Ownership TXT records must stay in place. The Worker redirects `www` to the HTTPS apex and preserves paths and query strings. Both custom domains and certificates are active. Eleven public HTTPS checks passed for page/asset headers, the canonical redirect and 404 handling. Verification evidence is recorded in `notes/remediation-status.json`.
 
@@ -47,4 +47,4 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae0331941b48191965a7f118d00d53c`, saved version 5, source commit `9345012c01653c572f273fe639a220c811bd2c29`. It was checked against all 59 original asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae03af00184819198ffe08d6d543fe8`, saved version 6, source commit `02d1536559c667e695d9be4abd3cb24085462d96`. It was checked against all 60 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.

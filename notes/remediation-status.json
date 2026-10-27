@@ -167,8 +167,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae0331941b48191965a7f118d00d53c",
-    "source_commit": "9345012c01653c572f273fe639a220c811bd2c29",
+    "deployment_id": "appgdep_6ae03af00184819198ffe08d6d543fe8",
+    "source_commit": "02d1536559c667e695d9be4abd3cb24085462d96",
     "cutover_state": "complete_verified"
   }
 }
