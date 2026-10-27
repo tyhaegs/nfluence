@@ -3755,7 +3755,6 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
   return (
     <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       <PublicNav onSignIn={() => {}} />
-      <button className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>Forgot your password?</button>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 0 60px" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -3793,6 +3792,7 @@ function SignIn({ onSignIn, onBack, onSignUp }) {
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
+          <button type="button" className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>forgot your password?</button>
           {isSignUp && (
             <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)" }}>
               <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)} style={{ marginTop: 3, accentColor: "#fff", flexShrink: 0 }} />
@@ -6417,7 +6417,6 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
   return (
     <div style={{ minHeight: "100vh", width: "100%", overflowX: "hidden", background: "radial-gradient(circle at calc(46% + 250px) calc(58% - 175px), rgba(255,255,255,.103) 0%, rgba(255,255,255,.0309) 38%, transparent 52%), linear-gradient(180deg, #040b15 0%, #070f1f 100%)", backgroundColor: "#040b15", color: "#fff", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column" }}>
       <PublicNav onSignIn={() => {}} />
-      <button className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>Forgot your password?</button>
       <style>{`
         .nf-signin-input { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35); color: #fff; padding: 14px 16px; font-size: .95rem; width: 100%; outline: none; font-family: system-ui, sans-serif; transition: border-color .12s, box-shadow .12s, background .12s; }
         .nf-signin-input::placeholder { color: rgba(255,255,255,.4); }
@@ -6440,6 +6439,7 @@ function CreatorSignIn({ onSignIn, onBack, onSignUp }) {
               {showPass ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
             </div>
           </div>
+          <button type="button" className="nf-recovery-link" onClick={()=>{location.hash='forgotpassword'}}>forgot your password?</button>
           {authError && (
             <div style={{ fontSize: ".82rem", color: "rgba(255,130,130,.95)", textAlign: "center", padding: "10px 14px", borderRadius: 10, background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.18)" }}>
               {authError}
