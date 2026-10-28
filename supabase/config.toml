@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.site-events]
 verify_jwt = false
+
+[functions.owner-admin]
+verify_jwt = true

@@ -1,0 +1,54 @@
+begin;
+create temp table owner_fixture as select gen_random_uuid() owner_id,gen_random_uuid() brand_id,gen_random_uuid() other_id,gen_random_uuid() session_id;
+grant select on owner_fixture to service_role,authenticated;
+insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) select owner_id,'owner-fixture-'||owner_id||'@example.invalid',now(),'{"role":"brand"}'::jsonb from owner_fixture union all select brand_id,'chosen@example.invalid',now(),'{"role":"brand"}'::jsonb from owner_fixture union all select other_id,'other-fixture-'||other_id||'@example.invalid',now(),'{"role":"brand","is_owner":true}'::jsonb from owner_fixture;
+insert into public.platform_owners(user_id) select owner_id from owner_fixture;
+insert into auth.sessions(id,user_id) select session_id,owner_id from owner_fixture;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+set local role service_role;
+do $$
+declare o uuid;b uuid;x uuid;s uuid;r uuid:=gen_random_uuid();c jsonb;m jsonb;again jsonb;pay jsonb;rec jsonb;resource text;draft uuid:=gen_random_uuid();
+begin
+ select owner_id,brand_id,other_id,session_id into o,b,x,s from owner_fixture;
+ if not public.owner_session(o,s) or public.owner_session(x,s) or public.owner_session(o,gen_random_uuid()) then raise exception 'TEST FAILED: owner session authorization';end if;
+ foreach resource in array array['overview','people','brands','campaigns','memberships','codes','payments','activity'] loop perform public.owner_read(o,resource);end loop;
+ begin perform public.owner_read(x,'overview');raise exception 'TEST FAILED: metadata granted ownership';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ begin perform public.owner_manage(x,'create_code',null,jsonb_build_object('code_hash',repeat('a',64),'code_hint','TEST'),gen_random_uuid());raise exception 'TEST FAILED: nonowner issued code';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ c:=public.owner_manage(o,'create_code',null,jsonb_build_object('code_hash',repeat('a',64),'code_hint','TEST','label','Owner test','assigned_email','chosen@example.invalid'),r);
+ if c?'code_hash' or c->>'assigned_email'<>'chosen@example.invalid' then raise exception 'TEST FAILED: code inventory response';end if;
+ again:=public.owner_manage(o,'create_code',null,jsonb_build_object('code_hash',repeat('a',64),'code_hint','TEST','label','Owner test','assigned_email','chosen@example.invalid'),r);
+ if c->>'id'<>again->>'id' then raise exception 'TEST FAILED: duplicate code on retry';end if;
+ rec:=jsonb_build_object('brand_id',b,'name','Owner fixture campaign','brand_name','Fixture','deadline','30 days','comp_type','product','comp','','platforms','[]'::jsonb,'deliverables','{}'::jsonb,'featured',false,'featured_weeks',0);
+ begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('a',64),rec,'other@example.invalid');raise exception 'TEST FAILED: recipient email ignored';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ pay:=public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('a',64),rec,'chosen@example.invalid');
+ perform public.owner_read(o,'campaign_detail',pay->>'campaign_id');
+ perform public.owner_manage(o,'campaign_state',(pay->>'campaign_id')::uuid,'{"stage":"wrap_up","note":"Completed campaign"}'::jsonb,gen_random_uuid());
+ perform public.owner_manage(o,'campaign_details',(pay->>'campaign_id')::uuid,'{"name":"Updated fixture","description":"Corrected brief","deadline":"45 days","note":"Corrected timing"}'::jsonb,gen_random_uuid());
+ insert into public.campaigns(id,brand_id,name,brand_name,deadline,stage,comp_type,comp,featured) values(draft,b,'Unpaid draft','Fixture','30 days','draft','product','',false);
+ begin perform public.owner_manage(o,'campaign_state',draft,'{"stage":"open","note":"Skip billing"}'::jsonb,gen_random_uuid());raise exception 'TEST FAILED: unpaid draft published';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ m:=public.owner_manage(o,'grant_membership',null,jsonb_build_object('brand_id',b,'ends_at',now()+interval '1 year','note','Selected business gift'),gen_random_uuid());
+ if m->>'grant_source'<>'owner' or m->>'source_payment_id' is not null then raise exception 'TEST FAILED: fake membership payment';end if;
+ begin perform public.owner_manage(o,'grant_membership',null,jsonb_build_object('brand_id',b,'ends_at',now()+interval '2 years','note','Duplicate access'),gen_random_uuid());raise exception 'TEST FAILED: overlapping memberships';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ perform public.owner_manage(o,'extend_membership',(m->>'id')::uuid,jsonb_build_object('ends_at',now()+interval '2 years','note','Extended selected brand'),gen_random_uuid());
+ perform public.owner_manage(o,'end_membership',(m->>'id')::uuid,'{"note":"Access ended for test"}'::jsonb,gen_random_uuid());
+ if exists(select 1 from public.subscriptions where id=(m->>'id')::uuid and status='active' and current_period_end>now()) then raise exception 'TEST FAILED: access not ended';end if;
+ c:=public.owner_manage(o,'create_code',null,jsonb_build_object('code_hash',repeat('b',64),'code_hint','REVK','label','Revoke test'),gen_random_uuid());
+ perform public.owner_manage(o,'revoke_code',(c->>'id')::uuid,'{}'::jsonb,gen_random_uuid());
+ begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('b',64),rec,'chosen@example.invalid');raise exception 'TEST FAILED: revoked invitation accepted';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ if (select count(*) from public.owner_events where actor_id=o)<>8 then raise exception 'TEST FAILED: audit trail missing or duplicated';end if;
+
+end;$$;
+reset role;
+delete from auth.sessions where id=(select session_id from owner_fixture);
+set local role service_role;
+do $$begin if public.owner_session((select owner_id from owner_fixture),(select session_id from owner_fixture)) then raise exception 'TEST FAILED: revoked session still authorized';end if;end;$$;
+reset role;
+set local role authenticated;
+do $$begin
+ begin perform public.owner_read(null,'overview');raise exception 'TEST FAILED: direct owner reads';exception when insufficient_privilege then null;end;
+ begin perform public.owner_manage(null,'create_code',null,'{}'::jsonb,gen_random_uuid());raise exception 'TEST FAILED: direct owner writes';exception when insufficient_privilege then null;end;
+ begin perform count(*) from public.platform_owners;raise exception 'TEST FAILED: owner list exposed';exception when insufficient_privilege then null;end;
+end;$$;
+reset role;
+rollback;
+select 'Owner access, live sessions, metadata forgery, all views, scoped codes, redemption, revocation, membership grant/extend/end, audit records, idempotency, draft billing guard and direct-client denial passed; all fixtures rolled back.' result;

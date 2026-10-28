@@ -6,7 +6,7 @@ test('invite codes normalize identically and hash without exposing the code',asy
  assert.equal(normalizeCampaignCode(' nfgift-test-1234 '),'NFGIFT-TEST-1234');
  assert.equal(await campaignCodeHash('nfgift-test-1234'),await campaignCodeHash(' NFGIFT-TEST-1234 '));
  assert.match(await campaignCodeHash('NFGIFT-TEST-1234'),/^[0-9a-f]{64}$/);
- for(const c of ['', 'short', 'a'.repeat(81),'<script>test</script>'])assert.throws(()=>normalizeCampaignCode(c));
+ for(const c of ['', 'abc', 'a'.repeat(81),'<script>test</script>'])assert.throws(()=>normalizeCampaignCode(c));
 });
 test('unknown, disabled, expired, used, and other-brand invitations cannot quote free',()=>{
  const active={enabled:true};assert.equal(validateCampaignGrant(active,'brand'),active);
@@ -20,4 +20,12 @@ test('invitations waive only a standard new campaign, never paid extras or annua
  assert.throws(()=>freeCampaignQuote('campaign_new',{featured:true,featured_weeks:7}));
  assert.throws(()=>freeCampaignQuote('campaign_new',{featured:false,featured_weeks:30}));
  assert.equal(price('campaign_new',{}).amount_cents,29900);
+});
+test('reusable codes remain valid after any number of redemptions, but capped codes stop',()=>{
+ assert.equal(normalizeCampaignCode('demo'),'DEMO');
+ const reusable={enabled:true,max_redemptions:null,redemption_count:500,redeemed_payment_id:'prior'};
+ assert.ok(validateCampaignGrant(reusable,'brand'));
+ assert.throws(()=>validateCampaignGrant({...reusable,enabled:false},'brand'));
+ assert.throws(()=>validateCampaignGrant({...reusable,max_redemptions:500},'brand'));
+ assert.ok(validateCampaignGrant({...reusable,max_redemptions:501},'brand'));
 });

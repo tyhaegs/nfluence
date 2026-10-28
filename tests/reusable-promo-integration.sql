@@ -1,0 +1,25 @@
+begin;
+create temp table reusable_fixture as select gen_random_uuid() brand,gen_random_uuid() other,gen_random_uuid() request_id;
+grant select on reusable_fixture to service_role;
+insert into auth.users(id,email,raw_user_meta_data) select brand,'reuse-'||brand||'@example.invalid','{"role":"brand"}'::jsonb from reusable_fixture union all select other,'reuse-'||other||'@example.invalid','{"role":"brand"}'::jsonb from reusable_fixture;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+insert into public.campaign_sponsorship_codes(code_hash,code_hint,label,max_redemptions) values(repeat('c',64),'TEST','Reusable test',null);
+set local role service_role;
+do $$declare b uuid;o uuid;r uuid;rec jsonb;first_pay jsonb;again jsonb;other_pay jsonb;
+begin
+ select brand,other,request_id into b,o,r from reusable_fixture;
+ rec:=jsonb_build_object('brand_id',b,'name','Reusable fixture','brand_name','Fixture','deadline','30 days','comp_type','product','comp','','platforms','[]'::jsonb,'deliverables','{}'::jsonb,'featured',false,'featured_weeks',0);
+ first_pay:=public.redeem_campaign_sponsorship(b,r,repeat('c',64),rec);
+ again:=public.redeem_campaign_sponsorship(b,r,repeat('c',64),rec);
+ if first_pay->>'id'<>again->>'id' then raise exception 'TEST FAILED: retry changed receipt';end if;
+ again:=public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('c',64),rec);
+ if first_pay->>'campaign_id'=again->>'campaign_id' then raise exception 'TEST FAILED: reusable code blocked new campaign';end if;
+ other_pay:=public.redeem_campaign_sponsorship(o,gen_random_uuid(),repeat('c',64),rec||jsonb_build_object('brand_id',o));
+ if (select redemption_count from public.campaign_sponsorship_codes where code_hash=repeat('c',64))<>3 or (select count(*) from public.campaign_sponsorship_redemptions where code_id=(select id from public.campaign_sponsorship_codes where code_hash=repeat('c',64)))<>3 then raise exception 'TEST FAILED: use history or counter incorrect';end if;
+ update public.campaign_sponsorship_codes set enabled=false where code_hash=repeat('c',64);
+ begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('c',64),rec);raise exception 'TEST FAILED: revoked reusable code worked';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+ if (select count(*) from public.campaigns where brand_id in(b,o) and stage='open')<>3 then raise exception 'TEST FAILED: revocation changed existing campaigns';end if;
+end;$$;
+reset role;
+rollback;
+select 'Reusable code supports repeat campaigns and multiple brands; retries do not duplicate campaigns; usage counter and history match; revocation stops future uses and preserves published campaigns. Fixtures rolled back.' result;

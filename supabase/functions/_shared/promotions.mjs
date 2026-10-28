@@ -1,15 +1,17 @@
 import {PRICES} from './pricing.mjs';
 export function normalizeCampaignCode(value){
  const code=String(value||'').trim().toUpperCase();
- if(!/^[A-Z0-9][A-Z0-9-]{7,79}$/.test(code))throw Error('Enter a valid free-campaign code.');
+ if(!/^[A-Z0-9][A-Z0-9-]{3,79}$/.test(code))throw Error('Enter a valid free-campaign code.');
  return code;
 }
 export async function campaignCodeHash(value){
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(normalizeCampaignCode(value)));
  return [...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-export function validateCampaignGrant(grant,brandId,now=new Date()){
- if(!grant||!grant.enabled||grant.redeemed_payment_id||(grant.expires_at&&new Date(grant.expires_at)<=now)||(grant.assigned_brand_id&&grant.assigned_brand_id!==brandId))throw Error('This code is invalid, expired, or already used.');
+export function validateCampaignGrant(grant,brandId,now=new Date(),email=''){
+ const limit=grant?.max_redemptions===undefined?1:grant.max_redemptions;
+ const used=grant?.redemption_count??(grant?.redeemed_payment_id?1:0);
+ if(!grant||!grant.enabled||(limit!==null&&used>=limit)||(grant.expires_at&&new Date(grant.expires_at)<=now)||(grant.assigned_brand_id&&grant.assigned_brand_id!==brandId)||(grant.assigned_email&&grant.assigned_email!==String(email).trim().toLowerCase()))throw Error('This code is invalid, expired, or already used.');
  return grant;
 }
 export function freeCampaignQuote(type,record){

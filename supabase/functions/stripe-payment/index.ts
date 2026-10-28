@@ -56,12 +56,12 @@ Deno.serve(async req=>{
    const giftQuote=freeCampaignQuote(type,rec);
    const codeHash=await campaignCodeHash(body.promoCode);
    if(action==='quote'){
-    const grant=checked(await admin.from('campaign_sponsorship_codes').select('enabled,assigned_brand_id,expires_at,redeemed_payment_id').eq('code_hash',codeHash).maybeSingle());
-    validateCampaignGrant(grant,user.id);
+    const grant=checked(await admin.from('campaign_sponsorship_codes').select('enabled,assigned_brand_id,assigned_email,expires_at,redeemed_payment_id,max_redemptions,redemption_count').eq('code_hash',codeHash).maybeSingle());
+    validateCampaignGrant(grant,user.id,new Date(),user.email);
     return json(giftQuote);
    }
    if(!/^[0-9a-f-]{36}$/i.test(body.requestId||''))throw Error('A checkout request ID is required.');
-   const pay=checked(await admin.rpc('redeem_campaign_sponsorship',{p_brand:user.id,p_request:body.requestId,p_code_hash:codeHash,p_record:rec}));
+   const pay=checked(await admin.rpc('redeem_campaign_sponsorship',{p_brand:user.id,p_request:body.requestId,p_code_hash:codeHash,p_record:rec,p_email:user.email}));
    return json({free:true,campaignId:pay.campaign_id,...giftQuote});
   }
   const sub=checked(await admin.from('subscriptions').select('*').eq('brand_id',user.id).eq('status','active').gt('current_period_end',new Date().toISOString()).order('current_period_end',{ascending:false}).limit(1))[0];

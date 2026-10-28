@@ -8,6 +8,7 @@ import { ConversationHub, RecoveryScreen, UploadLibrary, AnnualPlanPanel, AppBou
 import './accessibility.js';
 import './app.css';
 import './auth.css';
+import {OwnerDashboard,ownerRequest} from './owner-dashboard.jsx';
 import {DEMO_CAMPAIGNS, DEMO_BRAND_META} from './demos.js';
 import {AuthLayout, AuthSteps, PasswordField, AccountSignIn, ConfirmationHelp} from './auth-ui.jsx';
 window.supabase = { createClient };
@@ -3054,11 +3055,13 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                   if (!isFree && !cardRef.current) return;
                   setPayLoading(true); setPayError("");
                   let res;
+                  const checkoutPayload={ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() };
                   try {
-                    res = await callStripePaymentV2({ action: 'charge', type: 'campaign_new', features: pendingCampaignData, promoCode: (promoCode || '').trim() }, session?.access_token);
+                    res = await callStripePaymentV2(checkoutPayload, session?.access_token);
                     if (!res.free) await confirmStripeCard(res.client_secret, cardRef.current);
                   res.confirmed=true;
                     if (onPublish) await onPublish(pendingCampaignData, {}, { campaignId: res.campaignId, free: !!res.free });
+                    sessionStorage.removeItem('nfluence.checkout.'+JSON.stringify({...checkoutPayload,requestId:undefined}));
                     setShowPayModal(false);
                   } catch (err) {
                     setPayError(err.message || "Payment failed");
@@ -7395,7 +7398,7 @@ function clearPendingProfile() {
 }
 
 function NfluenceApp() {
-  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
+  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "owner", "confirmemail"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [showLandingMenu, setShowLandingMenu] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("Nike");
@@ -7404,6 +7407,7 @@ function NfluenceApp() {
   const [user, setUser] = useState(null); // { email, name }
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isOwner,setIsOwner]=useState(false);
   const [confirmEmailInfo, setConfirmEmailInfo] = useState(null); // { role, email } while awaiting email confirmation
   const [pendingBuilderView, setPendingBuilderView] = useState(null); // 'builder'|'gigbuilder' to resume after sign-in
   const [myCampaigns, setMyCampaigns] = useState([]);
@@ -7464,7 +7468,7 @@ function NfluenceApp() {
 
   const hydrateSession=async(session,{redirect=false}={})=>{
     const sb=getSB();setAuthSession(session);
-    if(!session){setUser(null);setCreatorUser(null);setAuthLoading(false);return;}
+    if(!session){setUser(null);setCreatorUser(null);setIsOwner(false);setAuthLoading(false);return;}
     const u=session.user;
     let profile=unwrap(await sb.from('profiles').select('*').eq('id',u.id).single());
     const pending=readPendingProfile();
@@ -7476,7 +7480,9 @@ function NfluenceApp() {
       if(profile.role==='creator')unwrap(await sb.from('creator_profiles').upsert({id:u.id,bio:d.bio,location:d.location,age:d.age,languages:d.languages,niches:d.niches,instagram:d.instagram,instagram_followers:d.instagramFollowers,tiktok:d.tiktok,tiktok_followers:d.tiktokFollowers,youtube:d.youtube,youtube_followers:d.youtubeFollowers,x:d.x,x_followers:d.xFollowers,facebook:d.facebook,facebook_followers:d.facebookFollowers,avatar_url:d.avatarUrl||null,banner_url:d.bannerUrl||null}));
       clearPendingProfile();
     }
-    const identity={...profile,id:u.id,email:u.email,name:profile.name||u.user_metadata?.name||'Account',logoUrl:profile.logo_url,bannerUrl:profile.banner_url,socialLinks:profile.social_links||{},role:profile.role};
+    let ownerAllowed=false;try{ownerAllowed=(await ownerRequest('access',{},session)).is_owner;}catch{}
+    setIsOwner(ownerAllowed);
+    const identity={...profile,isOwner:ownerAllowed,id:u.id,email:u.email,name:profile.name||u.user_metadata?.name||'Account',logoUrl:profile.logo_url,bannerUrl:profile.banner_url,socialLinks:profile.social_links||{},role:profile.role};
     if(profile.role==='brand'){setUser(identity);setCreatorUser(null);setMyCampaigns(await fetchOwnedCampaigns(sb,u.id));}
     else if(profile.role==='creator'){
       setCreatorUser(identity);setUser(null);
@@ -7492,7 +7498,7 @@ function NfluenceApp() {
     const creatorIds=[...new Set(calls.map(c=>c.creator_id))];const people=creatorIds.length?unwrap(await sb.from('profiles_public').select('id,name').in('id',creatorIds)):[];
     const names=new Map(people.map(p=>[p.id,p.name]));setScheduledCalls(Object.fromEntries(calls.map(c=>[c.id,{...callFromRow(c),creatorName:names.get(c.creator_id)||'Creator'}])));
     setAuthLoading(false);
-    if(redirect)setView(profile.role==='brand'?'dashboard':'creatordashboard');
+    if(redirect)setView(ownerAllowed?'owner':profile.role==='brand'?'dashboard':'creatordashboard');
     return identity;
   };
   useEffect(()=>{
@@ -7500,7 +7506,7 @@ function NfluenceApp() {
     sb.auth.getSession().then(async r=>{if(!alive)return;const session=unwrap(r).session;const recovery=new URLSearchParams(location.search).has('recovery')||location.hash.includes('type=recovery');if(recovery){setAuthSession(session);setAuthLoading(false);setView('resetpassword');return;}await hydrateSession(session,{redirect:!!session&&['','signin','creatorsignin'].includes(location.hash.replace('#',''))});}).catch(error=>{setAuthLoading(false);setOperationError(error.message);});
     const {data:{subscription}}=sb.auth.onAuthStateChange((event,session)=>{
       if(event==='PASSWORD_RECOVERY'){setAuthSession(session);setView('resetpassword');setAuthLoading(false);return;}
-      if(event==='SIGNED_OUT'){setAuthSession(null);setUser(null);setCreatorUser(null);setMyCampaigns([]);setCreatorApplied([]);setCreatorActive([]);setNotifications([]);setScheduledCalls({});setView('landing');}
+      if(event==='SIGNED_OUT'){setAuthSession(null);setIsOwner(false);setUser(null);setCreatorUser(null);setMyCampaigns([]);setCreatorApplied([]);setCreatorActive([]);setNotifications([]);setScheduledCalls({});setView('landing');}
       else if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){setAuthSession(session);setTimeout(()=>{if(alive&&!new URLSearchParams(location.search).has('recovery'))hydrateSession(session).catch(error=>setOperationError(error.message));},0);}
     });
     const timer=setInterval(()=>{sb.auth.getSession().then(({data})=>{if(data.session)hydrateSession(data.session).catch(()=>{});});},30000);
@@ -7513,7 +7519,7 @@ function NfluenceApp() {
   useEffect(() => {
     try { localStorage.setItem("nf_last_view", view); } catch (e) {}
     // Mirror auth-flow / public views into the URL hash so refresh stays put
-    const HASHED_VIEWS = ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"];
+    const HASHED_VIEWS = ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "owner", "confirmemail"];
     if (typeof window !== "undefined") {
       const currentHash = window.location.hash.replace("#", "");
       if (HASHED_VIEWS.includes(view)) {
@@ -7529,7 +7535,7 @@ function NfluenceApp() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.replace("#", "");
-      if (["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"].includes(h)) {
+      if (["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "owner", "confirmemail"].includes(h)) {
         setView(h);
       }
     };
@@ -7588,7 +7594,7 @@ function NfluenceApp() {
     try{email=normalizeEmail(email);const response=await getSB().auth.signInWithPassword({email,password});if(response.error?.code==='email_not_confirmed')return {confirmationRequired:true};const result=unwrap(response);const identity=await hydrateSession(result.session);
       if(signInRedirect){setSelectedCampaign(signInRedirect);setSignInRedirect(null);setAutoApply(identity.role==='creator');setView('detail');}
       else if(pendingBuilderView&&identity.role==='brand'){setView(pendingBuilderView);setPendingBuilderView(null);}
-      else setView(identity.role==='brand'?'dashboard':'creatordashboard');
+      else setView(identity.isOwner?'owner':identity.role==='brand'?'dashboard':'creatordashboard');
       return null;
     }catch(error){return error.message?.includes('Invalid login credentials')?'Incorrect email or password.':error.message;}
   };
@@ -7598,6 +7604,7 @@ function NfluenceApp() {
     setCreatorUser(null);
     setUser(null);
     setAuthSession(null);
+    setIsOwner(false);
     setMyCampaigns([]);
     setNotifications([]);
     setAppliedCampaigns([]);
@@ -7788,6 +7795,11 @@ function NfluenceApp() {
     else { setPendingBuilderView(target); setView('signupchoice'); }
   };
 
+  if(view==='owner'){
+    if(authLoading)return <main id="main-content" className="workspace"><h1>Owner dashboard</h1><p role="status">Checking your account…</p></main>;
+    if(!authSession)return <SignIn onSignIn={async(...args)=>{const error=await handleSignIn(...args);if(!error)setView('owner');return error;}} onBack={()=>setView('landing')} onSignUp={()=>setView('signupchoice')}/>;
+    return <OwnerDashboard key={authSession.user.id} session={authSession} onBack={()=>setView('dashboard')} onSignOut={handleSignOut}/>;
+  }
   if(view==='forgotpassword'||view==='resetpassword')return <RecoveryScreen mode={view==='forgotpassword'?'forgot':'reset'} onBack={()=>setView('signin')} onDone={()=>{history.replaceState(null,'','/campaigns/#signin');setView('signin');}}/>;
   if(view==='creatorreviews'&&authSession)return <CreatorReviewWorkspace user={authSession.user} onBack={()=>setView('creatordashboard')}/>;
   if(view==='plans'&&authSession&&user)return <AnnualPlanPanel session={authSession} onBack={()=>setView('dashboard')}/>;
@@ -7841,7 +7853,7 @@ function NfluenceApp() {
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
-    <div style={{display:"flex",justifyContent:"center",gap:20,padding:12}}><button className="nf-recovery-link" onClick={()=>setView("plans")}>Campaign plans</button><button className="nf-recovery-link" onClick={()=>{setSelectedCampaign(null);setView("content")}}>Review deliverables</button></div>
+    <div style={{display:"flex",justifyContent:"center",gap:20,padding:12}}>{isOwner&&<button className="nf-recovery-link" onClick={()=>setView("owner")}>Owner dashboard</button>}<button className="nf-recovery-link" onClick={()=>setView("plans")}>Campaign plans</button><button className="nf-recovery-link" onClick={()=>{setSelectedCampaign(null);setView("content")}}>Review deliverables</button></div>
     <Dashboard user={user} campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("landing")} onSignOut={handleSignOut} onNewCampaign={() => setView("builder")} onNewGig={() => setView("gigbuilder")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("dashboard"); setView("detail"); }} onEditCampaign={(c) => { setSelectedCampaign(c); setView("edit"); }} onUnfeature={handleUnfeature} onViewReviews={handleViewReviews} lastReviewsVisitedAt={lastReviewsVisitedAt} onBrowse={() => setView("browse")} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} onOpenMessages={() => setView("inbox")} scheduledCalls={scheduledCalls} onUpdateUser={async (updatedUser) => {
       const sb = getSB();
       if (updatedUser?.id && sb) {
@@ -8021,6 +8033,7 @@ function NfluenceApp() {
         )}
       </div>
 
+      {isOwner&&<div style={{display:"flex",justifyContent:"center",padding:"12px 16px"}}><button className="nf-cta-btn" onClick={()=>setView("owner")} style={{padding:"12px 20px",borderRadius:12,border:"1px solid #ffffff40",background:"#ffffff08",color:"white",cursor:"pointer"}}>owner dashboard</button></div>}
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "50px 24px 20px", maxWidth: 700, margin: "0 auto" }}>
         <h1 className="campaign-title" style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>

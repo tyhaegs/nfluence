@@ -47,7 +47,7 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae25dff5378819187f4a050a9934c38`, saved version 13, source commit `cede0d579be627755ce45af9ee204cfff176a92e`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae26689e788819183cfde751cdfdceb`, saved version 20, source commit `debcdbbe692b6e15b64c99e5db6e42b3d4f494cf`. It was checked against all 64 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
 
 Marketing headers are generated from `scripts/navigation.mjs` during the production build. Shared presentation and mobile interaction live in `assets/navigation.css` and `assets/navigation.js`. Edit these sources instead of changing a single generated page header. The campaign application retains its React navigation.
 
@@ -55,15 +55,15 @@ Account access uses the shared `campaigns/src/auth-ui.jsx` components and `auth.
 
 The four original public demo campaigns in `campaigns/src/demos.js` are intentional examples for prospective brands. Preserve them on the landing and browse pages. Demo records use stable `demo-` IDs and explicit labels, stay separate from live database records, and never accept real applications.
 
-## Free-campaign invitations
+## Free-campaign codes
 
-`campaign_sponsorship_codes` is a service-only, RLS-enabled inventory of individual single-use invitations. Each invitation waives the $299 platform fee for one standard new campaign. A brand enters it in the existing promo field, applies it, then confirms a $0 publication without a card. This works while ordinary Stripe checkout is unavailable. Featured placement must be turned off; annual access, gigs, edits and creator compensation are separate.
+The active `demo` code is reusable with no use limit, as requested. Code matching is case-insensitive. It waives the standard $299 new-campaign platform fee without a card, even while ordinary Stripe checkout is unavailable. Featured placement must be off; annual access, gigs, edits and creator compensation are separate. The earlier random invitation and `supervibe` name have been replaced.
 
-Issue a new cryptographically random code for each chosen brand. Store only SHA-256 of its trimmed uppercase form, plus a short display hint; never commit the actual invitation to website source. `assigned_brand_id` and `expires_at` are optional restrictions. Disabling an unused row revokes that invitation. Share the original code privately with the chosen brand.
+Codes are created and revoked in `/campaigns/#owner`. The owner chooses reusable or single-use behavior, an optional recipient account email, an optional expiration, and a label. Recipient email is compared with the verified Auth email; it can be reserved before the brand signs up. Only a hash is stored; the full code is displayed when created.
 
-The authenticated `stripe-payment` function verifies the brand and looks up the hash for a quote. `redeem_campaign_sponsorship` locks the invitation and atomically prepares/finalizes the publication, writes a zero-dollar payment receipt, and consumes the invitation. It is executable only by the billing service. Matching request retries return the same receipt; a second publication or changed request is rejected. A failed publication rolls back the redemption.
+`campaign_sponsorship_redemptions` records every use, linked to its zero-dollar payment receipt and campaign. `redeem_campaign_sponsorship` locks the code, checks its restrictions, publishes and consumes a use atomically. Matching request retries return the same receipt; separate campaigns can reuse an unlimited code. Revocation prevents future redemptions and preserves existing campaigns. Completed client checkouts clear their request key so a later identical campaign can use a fresh request.
 
-Migration: `20261028203251_free_campaign_invites.sql`. Billing Edge Function version 15 retains JWT verification. `tests/promo-integration.sql` exercises the real database in a transaction and rolls back every fixture.
+Migrations: `20261028203251_free_campaign_invites.sql`, `20261028205524_owner_control_center.sql`, `20261028210516_reusable_campaign_codes.sql`. Billing function version 17 retains JWT verification. Transactional tests are in `tests/promo-integration.sql` and `tests/reusable-promo-integration.sql`.
 
 ## Signup confirmation repair — October 28, 2026
 
@@ -76,3 +76,13 @@ Verified with a temporary QA signup: branded email reached the agency Gmail inbo
 Duplicate signup handling now rejects Auth's empty-identities response for already-confirmed emails and maps explicit duplicate errors to a clear existing-account message. Pending signup responses are checked against the saved `profiles_public.role`; editable auth metadata never determines the registered account type. Both brand and creator handlers save local onboarding data only after these checks pass. Matching pending accounts retain confirmation recovery. Live QA verified opposite-role signup rejection before and after confirmation, with the original profile role preserved; the QA account was signed out and removed. Application checks cover both role directions and preserve network/rate-limit errors. Website builds exclude `supabase/` so shared page navigation cannot be inserted into saved email templates.
 
 The confirmation card now contains only a short instruction, email field, resend action, and login/help links. Extra delivery and recovery guidance lives in a native modal dialog opened by “Need help?”. The dialog supports Escape, backdrop dismissal, keyboard focus containment, and password-reset navigation. Resend feedback is concise; the existing cooldown and error handling are retained. Desktop and phone-size browser checks verified the compact layout and help navigation.
+
+## Owner control room
+
+Open `https://nfluenceagency.com/campaigns/#owner`. The requested primary owner login is `tyler@nfluenceagency.com`; an invitation was sent to that address so the owner can confirm it and choose a password. The previous verified owner account remains available. No password was selected or changed by automation.
+
+The dashboard manages real campaigns, account and membership records, promo codes and redemption history, platform payment receipts, private deliverables, recorded creator payouts, and an owner-action audit log. It can grant annual-plan access without inventing a payment, extend or end access, edit campaign descriptions/timing, and move published campaigns through their lifecycle. Drafts still require a checkout or sponsored code. Ending platform membership does not issue a refund or alter external Stripe charges.
+
+`owner-admin` version 3 validates the JWT with Auth, requires a confirmed email and a matching active Auth session, and checks `platform_owners` on every operation. The allowlist and mutation/read RPCs are service-only. Owner status does not come from customer-editable metadata or profile roles. Owner directory queries use canonical Auth emails. Every dashboard mutation is idempotent and audited.
+
+`tests/owner-integration.sql` exercises ownership, session invalidation, metadata forgery, all read views, membership changes, scoped codes, campaign changes, client denials, and audit receipts inside a rolled-back transaction. UI previews use isolated local data; they do not change real memberships or consume the live promo.

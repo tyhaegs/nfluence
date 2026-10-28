@@ -196,8 +196,8 @@
     "domain_ownership_records": "configured",
     "ssl": "active_both_domains",
     "primary_site_traffic_changed": true,
-    "deployment_id": "appgdep_6ae25dff5378819187f4a050a9934c38",
-    "source_commit": "cede0d579be627755ce45af9ee204cfff176a92e",
+    "deployment_id": "appgdep_6ae26689e788819183cfde751cdfdceb",
+    "source_commit": "debcdbbe692b6e15b64c99e5db6e42b3d4f494cf",
     "cutover_state": "complete_verified"
   },
   "homepage_brand_correction": {
@@ -226,12 +226,36 @@
     "verification": "Landing, browse and detail layouts checked at 320, 375, 768 and 1440px. Search, detail navigation, posting-guide preview and campaign-start action checked. 13 application tests and 4 hosting tests passed."
   },
   "campaign_sponsorship_codes": {
-    "status": "live_verified",
-    "billing_function_version": 15,
+    "status": "live_reusable_verified",
+    "billing_function_version": 17,
     "migration": "20261028203251_free_campaign_invites",
-    "scope": "Each privately issued invitation covers one standard $299 new-campaign publication. Featured placement, gigs, annual access and creator compensation are excluded.",
-    "controls": "SHA-256 code hashes; service-only inventory and RPC; brand role check; optional account assignment and expiry; row locking; atomic redemption/publication/payment receipt; idempotent retries; failure rollback.",
+    "scope": "demo is reusable with no redemption limit. Codes cover the standard $299 campaign fee; featured placement, annual plans and creator compensation remain separate.",
+    "controls": "Hashed code inventory; optional verified-email restriction, expiration and use limit; transactional redemption ledger and counter; retry safety; revocation stops future uses without changing published campaigns.",
     "verification": "16 application tests, 4 hosting tests, transactional production database checks, 7 authenticated HTTP checks, and local checkout UI tests passed. No live test campaign or email was sent. QA account and invitation removed. First owner invitation remains unused.",
     "ui": "Code can be applied while card checkout is unavailable. Valid invitations show $0, no card requirement, and confirm & publish. Changing a code invalidates the old quote."
+  },
+  "owner_dashboard": {
+    "status": "published_verified",
+    "url": "https://nfluenceagency.com/campaigns/#owner",
+    "primary_login": "tyler@nfluenceagency.com",
+    "login_setup": "Invitation sent; owner chooses password through the email link. Owner API requires confirmed email and a live session.",
+    "features": [
+      "overview",
+      "all real campaign details and status controls",
+      "membership grant/extend/end",
+      "promo creation with reusable or single-use settings",
+      "email reservations and optional expiry",
+      "redemption history and revocation",
+      "canonical account directory",
+      "platform payment history",
+      "private deliverable inspection and recorded creator payouts",
+      "audit history"
+    ],
+    "authorization": "Service-only owner allowlist; JWT validated with Auth; confirmed email; live session; ownership checked on every request. Customer metadata cannot grant access.",
+    "versions": {
+      "owner_admin": 3,
+      "stripe_payment": 17
+    },
+    "verification": "32 unit tests, 4 Worker tests, three transactional production database suites, authenticated owner-denial/promo HTTP checks, and 28 section plus 4 modal responsive checks passed. QA records rolled back or removed."
   }
 }
