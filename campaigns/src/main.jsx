@@ -12,7 +12,7 @@ import {DEMO_CAMPAIGNS, DEMO_BRAND_META} from './demos.js';
 import {AuthLayout, AuthSteps, PasswordField, AccountSignIn, ConfirmationHelp} from './auth-ui.jsx';
 window.supabase = { createClient };
 window.Cropper = Cropper;
-import {normalizeEmail} from './auth-flow.js';
+import {normalizeEmail,signupAccount} from './auth-flow.js';
 
 // ═══════════════════════════════════════════════
 // ── Data ──
@@ -7582,8 +7582,8 @@ function NfluenceApp() {
   };
   const handleBrandOnboardingComplete=async data=>{
     data={...data,email:normalizeEmail(data.email)};
+    const result=await signupAccount(getSB(),{email:data.email,password:data.password,role:'brand',name:data.name},location.origin);
     stashPendingProfile({email:data.email,role:'brand',data});
-    const result=unwrap(await getSB().auth.signUp({email:data.email,password:data.password,options:{emailRedirectTo:location.origin+'/campaigns/',data:{role:'brand',name:data.name}}}));
     if(!result.session){setConfirmEmailInfo({email:data.email,role:'brand'});setView('confirmemail');return;}
     await hydrateSession(result.session);setView(pendingBuilderView||'dashboard');setPendingBuilderView(null);
   };
@@ -7628,7 +7628,7 @@ function NfluenceApp() {
   const handleCreatorSignIn=async(email,name,password,profileData=null)=>{
     if(!name)return handleSignIn(email,null,password);
     email=normalizeEmail(email);
-    try{stashPendingProfile({email,role:'creator',data:{...profileData,name}});const result=unwrap(await getSB().auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/campaigns/',data:{role:'creator',name}}}));if(!result.session){setConfirmEmailInfo({email,role:'creator'});setView('confirmemail');return null;}await hydrateSession(result.session,{redirect:true});return null;}catch(error){return error.message;}
+    try{const result=await signupAccount(getSB(),{email,password,role:'creator',name},location.origin);stashPendingProfile({email,role:'creator',data:{...profileData,name}});if(!result.session){setConfirmEmailInfo({email,role:'creator'});setView('confirmemail');return null;}await hydrateSession(result.session,{redirect:true});return null;}catch(error){return error.message;}
   };
   const handleCreatorSignOut = async () => {
     const sb = getSB();
@@ -8150,4 +8150,3 @@ function NfluenceApp() {
   );
 }
 createRoot(document.getElementById('root')).render(<AppBoundary><NfluenceApp /></AppBoundary>);
-  
