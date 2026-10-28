@@ -28,7 +28,7 @@ const PLATFORM_EXAMPLES = {
 };
 const LANGUAGES = ["English", "Spanish", "French", "German", "Portuguese", "Italian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi"];
 const INDUSTRIES = [
-  "fitness & training", "wellness & supplements", "beauty & skincare", "fashion & apparel",
+  "fitness & training", "wellness & supplements", "beauty & skincare", "hair", "fashion & apparel",
   "outdoors & adventure", "health & nutrition", "tech & gadgets", "gaming",
   "lifestyle & home", "food & beverage", "coffee & energy", "sports equipment",
   "travel", "pets", "automotive", "finance & investing", "education & coaching",
