@@ -25,3 +25,8 @@ test('owner selects reusable or single-use behavior explicitly',async()=>{
  const single=await ownerChange({action:'create_code',requestId,data:{code:'a-gift',usage:'single'}});assert.equal(single.data.max_redemptions,1);
  await assert.rejects(()=>ownerChange({action:'create_code',requestId,data:{code:'demo',usage:'unrecognized'}}));
 });
+
+test('campaign edits reject impossible dates and zero or excessive durations',async()=>{
+ for(const deadline of ['2027-02-30','2027-13-01','0 days','366 days','-1 month','tomorrow'])await assert.rejects(()=>ownerChange({action:'campaign_details',requestId,targetId,data:{name:'Campaign',deadline,note:'Correct brief'}}));
+ const result=await ownerChange({action:'campaign_details',requestId,targetId,data:{name:'Campaign',deadline:'2028-02-29',note:'Correct brief'}});assert.equal(result.data.deadline,'2028-02-29');
+});

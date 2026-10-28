@@ -251,11 +251,26 @@
       "private deliverable inspection and recorded creator payouts",
       "audit history"
     ],
-    "authorization": "Service-only owner allowlist; JWT validated with Auth; confirmed email; live session; ownership checked on every request. Customer metadata cannot grant access.",
+    "authorization": "Service-only owner allowlist; JWT verified with Auth; confirmed email; existing, unexpired Auth session; owner checked on every request. No ownership from customer metadata.",
     "versions": {
-      "owner_admin": 3,
+      "owner_admin": 4,
       "stripe_payment": 17
     },
-    "verification": "32 unit tests, 4 Worker tests, three transactional production database suites, authenticated owner-denial/promo HTTP checks, and 28 section plus 4 modal responsive checks passed. QA records rolled back or removed."
+    "verification": "32 unit tests, 4 Worker tests, three transactional production database suites, authenticated owner-denial/promo HTTP checks, and 28 section plus 4 modal responsive checks passed. QA records rolled back or removed.",
+    "dashboard_audit": {
+      "date": "2026-10-28",
+      "migration": "20261028230834_dashboard_audit.sql",
+      "report": "../nfluence-review/dashboard-2026-10-28/audit.md",
+      "remaining_setup": [
+        "Primary owner email confirmation pending",
+        "Live Stripe checkout disabled"
+      ],
+      "verification": "38 unit tests; transactional database security, membership, codes, campaign rules and 101-row pagination; real authenticated owner/ordinary-brand API checks; 28 populated section and 4 modal responsive checks; delayed response and error recovery browser checks. Fixtures rolled back or removed.",
+      "site_version": 23,
+      "deployment_id": "appgdep_6ae2821d76d0819185e86be366159d7f",
+      "hosting_commit": "54aa62618ae3f28ec725496ce9695a8967dbdb93",
+      "security_advisor_findings": 0,
+      "hosting_tests_passed": 4
+    }
   }
 }

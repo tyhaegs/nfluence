@@ -37,7 +37,34 @@ begin
  begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('b',64),rec,'chosen@example.invalid');raise exception 'TEST FAILED: revoked invitation accepted';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
  if (select count(*) from public.owner_events where actor_id=o)<>8 then raise exception 'TEST FAILED: audit trail missing or duplicated';end if;
 
+ -- Populated inventory exercises server pagination, status precedence and canonical recipients.
+ insert into public.campaign_sponsorship_codes(code_hash,code_hint,label,assigned_brand_id,max_redemptions)
+ select encode(extensions.digest('audit-'||o||'-'||n,'sha256'),'hex'),'PAGE','audit-page-'||o,b,null from generate_series(1,101)n;
+ again:=public.owner_read(o,'codes','audit-page-'||o,2,50,'available');
+ if (again->>'total')::int<>101 or jsonb_array_length(again->'rows')<>1 or again->'rows'->0->>'assigned_brand_email'<>'chosen@example.invalid' then raise exception 'TEST FAILED: populated pagination or canonical recipient';end if;
+ update public.campaign_sponsorship_codes set enabled=false where id=(again->'rows'->0->>'id')::uuid;
+ again:=public.owner_read(o,'codes','audit-page-'||o,2,50,'available');
+ if (again->>'total')::int<>100 or jsonb_array_length(again->'rows')<>0 then raise exception 'TEST FAILED: filtered page removal';end if;
+ again:=public.owner_read(o,'codes','audit-page-'||o,0,50,'revoked');
+ if (again->>'total')::int<>1 then raise exception 'TEST FAILED: revoked filter';end if;
+ update public.campaign_sponsorship_codes set expires_at=now()-interval '1 day' where label='audit-page-'||o and enabled;
+ again:=public.owner_read(o,'codes','audit-page-'||o,0,50,'expired');
+ if (again->>'total')::int<>100 then raise exception 'TEST FAILED: expiry filter';end if;
+ again:=public.owner_read(o,'people','chosen@example.invalid',0,50,'creator');
+ if (again->>'total')::int<>0 then raise exception 'TEST FAILED: account role filter';end if;
+ again:=public.owner_read(o,'memberships','chosen@example.invalid',0,50,'active');
+ if (again->>'total')::int<>0 then raise exception 'TEST FAILED: active membership filter';end if;
+ again:=public.owner_read(o,'campaigns','Fixture',0,50,'draft');
+ if (again->>'total')::int<>1 then raise exception 'TEST FAILED: draft filter';end if;
+ again:=public.owner_read(o,'campaigns','Fixture',0,50,'closed');
+ if (again->>'total')::int<>1 then raise exception 'TEST FAILED: closed filter';end if;
+ begin perform public.owner_read(o,'codes','',0,50,'invalid');raise exception 'TEST FAILED: invalid filter accepted';exception when others then if sqlerrm like 'TEST FAILED%' then raise;end if;end;
+
 end;$$;
+reset role;
+update auth.sessions set not_after=now()-interval '1 second' where id=(select session_id from owner_fixture);
+set local role service_role;
+do $$begin if public.owner_session((select owner_id from owner_fixture),(select session_id from owner_fixture)) then raise exception 'TEST FAILED: time-boxed session authorized';end if;end;$$;
 reset role;
 delete from auth.sessions where id=(select session_id from owner_fixture);
 set local role service_role;
@@ -51,4 +78,4 @@ do $$begin
 end;$$;
 reset role;
 rollback;
-select 'Owner access, live sessions, metadata forgery, all views, scoped codes, redemption, revocation, membership grant/extend/end, audit records, idempotency, draft billing guard and direct-client denial passed; all fixtures rolled back.' result;
+select 'Owner access, live sessions, metadata forgery, all views, scoped codes, redemption, revocation, membership grant/extend/end, audit records, idempotency, draft billing guard and direct-client denial passed; filters, 101-row pagination, assigned recipients and expired sessions passed; all fixtures rolled back.' result;

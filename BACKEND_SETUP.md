@@ -83,6 +83,16 @@ Open `https://nfluenceagency.com/campaigns/#owner`. The requested primary owner 
 
 The dashboard manages real campaigns, account and membership records, promo codes and redemption history, platform payment receipts, private deliverables, recorded creator payouts, and an owner-action audit log. It can grant annual-plan access without inventing a payment, extend or end access, edit campaign descriptions/timing, and move published campaigns through their lifecycle. Drafts still require a checkout or sponsored code. Ending platform membership does not issue a refund or alter external Stripe charges.
 
-`owner-admin` version 3 validates the JWT with Auth, requires a confirmed email and a matching active Auth session, and checks `platform_owners` on every operation. The allowlist and mutation/read RPCs are service-only. Owner status does not come from customer-editable metadata or profile roles. Owner directory queries use canonical Auth emails. Every dashboard mutation is idempotent and audited.
+`owner-admin` version 4 validates the JWT with Auth, requires a confirmed email and a matching active Auth session, and checks `platform_owners` on every operation. The allowlist and mutation/read RPCs are service-only. Owner status does not come from customer-editable metadata or profile roles. Owner directory queries use canonical Auth emails. Every dashboard mutation is idempotent and audited.
 
 `tests/owner-integration.sql` exercises ownership, session invalidation, metadata forgery, all read views, membership changes, scoped codes, campaign changes, client denials, and audit receipts inside a rolled-back transaction. UI previews use isolated local data; they do not change real memberships or consume the live promo.
+
+## Dashboard audit — October 28, 2026
+
+Migration `20261028230834_dashboard_audit.sql` adds typed list filters to `owner_read` (sixth argument, default `all`) and enforces `auth.sessions.not_after`. The old five-argument overload was removed to avoid RPC ambiguity; existing positional calls resolve to the defaulted sixth argument. The RPC remains service-only with an owner allowlist and pinned search path. Owner API v4 validates filters and dates, bounds streamed bodies, and returns 404 for missing campaigns.
+
+The dashboard refreshes open details/history, cancels stale view requests, keeps save receipts through refresh failures, retries expired tokens once with the same mutation ID, preserves selected membership recipients across searches, clamps pagination, and safely opens signed files with a blocked-popup fallback. Overview links apply matching filters. Code inventory resolves assigned Auth emails and finite use caps. `demo` remains reusable and unlimited.
+
+Verification: 38 application tests; transactional permissions/session, membership/code/campaign/idempotency tests with 101-row pagination; authenticated owner and brand API checks using disposable accounts; all seven populated sections at 320/390/768/1440 pixels; modal, search, delayed-request and failure recovery checks. Primary owner email confirmation and live Stripe setup remain pending. Browser images use local fixtures; no real membership, payment or promo redemption was changed.
+
+Published as Sites version 23, hosting commit `54aa62618ae3f28ec725496ce9695a8967dbdb93`, deployment `appgdep_6ae2821d76d0819185e86be366159d7f`. All 71 served assets passed four Worker checks; the browser confirmed the live route serves the new release and the security advisor has no findings.
