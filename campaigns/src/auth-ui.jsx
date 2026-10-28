@@ -1,4 +1,14 @@
-import React, {useState} from 'react';
+import React, {useState,useEffect,useRef} from 'react';
+import {getClient} from './data.js';
+import {normalizeEmail,resendConfirmation,confirmationError} from './auth-flow.js';
+
+export function ConfirmationHelp({initialEmail=''}) {
+  const [email,setEmail]=useState(initialEmail),[busy,setBusy]=useState(false),[remaining,setRemaining]=useState(0),[message,setMessage]=useState(''),[error,setError]=useState('');
+  const sending=useRef(false);
+  useEffect(()=>{if(!remaining)return;const timer=setTimeout(()=>setRemaining(n=>Math.max(0,n-1)),1000);return()=>clearTimeout(timer);},[remaining]);
+  async function submit(event){event.preventDefault();if(sending.current||remaining)return;sending.current=true;setBusy(true);setError('');setMessage('');try{await resendConfirmation(getClient(),email,location.origin);setRemaining(60);setMessage('If this address has an account awaiting confirmation, a new email has been requested. Use the newest email. Already confirmed? Log in or reset your password.');}catch(error){setError(confirmationError(error));if(error.status===429)setRemaining(60);}finally{sending.current=false;setBusy(false);}}
+  return <form onSubmit={submit} className="nf-auth-form"><fieldset disabled={busy}><legend className="sr-only">Request confirmation email</legend><label className="nf-auth-field"><span>Email address</span><input type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={e=>setEmail(e.target.value)} required/></label><button className="nf-auth-primary" type="submit" disabled={busy||remaining>0||!normalizeEmail(email)}>{busy?'Requesting…':remaining?`Resend available in ${remaining}s`:'Resend confirmation email'}</button></fieldset>{message&&<p className="nf-auth-notice" role="status">{message}</p>}{error&&<p className="nf-auth-error" role="alert">{error}</p>}<p className="nf-auth-notice">Check Junk, Spam, and Outlook’s Other tab for an email from Nfluence. You can request a link again here if yours expires.</p><a className="nf-auth-text-button" href="#forgotpassword">Reset your password</a></form>;
+}
 
 export function AuthLayout({navigation,mode='signin',onLogIn,onCreate,title='Account access',description='Your next campaign starts here.',children,onboarding=false,pageRef,disabled=false,headline=false}) {
   return <div ref={pageRef} className={'nf-auth-page'+(!navigation?' nf-auth-standalone':'')}>
@@ -27,8 +37,8 @@ export function PasswordField({id,label='Password',value,onChange,autoComplete='
 }
 
 export function AccountSignIn({navigation,onSignIn,onBack,onSignUp,role='brand'}) {
-  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  async function submit(event){event.preventDefault();if(busy)return;setBusy(true);setError('');try{const result=await onSignIn(email,null,password);if(result)setError(result);}catch(failure){setError(failure.message||'We could not sign you in. Please try again.');}finally{setBusy(false);}}
+  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[needsConfirmation,setNeedsConfirmation]=useState(false);
+  async function submit(event){event.preventDefault();if(busy)return;setBusy(true);setError('');setNeedsConfirmation(false);try{const result=await onSignIn(normalizeEmail(email),null,password);if(result?.confirmationRequired){setNeedsConfirmation(true);setError('Confirm your email before logging in. You can request a new link below.');}else if(result)setError(result);}catch(failure){setError(failure.message||'We could not sign you in. Please try again.');}finally{setBusy(false);}}
   return <AuthLayout navigation={navigation} disabled={busy} onLogIn={()=>{}} onCreate={onSignUp} description={role==='creator'?'Connect with brands. Manage your campaigns.':'Connect with creators. Manage your campaigns.'}>
     <form onSubmit={submit} className="nf-auth-form"><fieldset disabled={busy}><legend className="sr-only">Log in to nfluence</legend>
       <label className="nf-auth-field" htmlFor={'nf-'+role+'-email'}><span>Email address</span><input id={'nf-'+role+'-email'} type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={e=>setEmail(e.target.value)} required/></label>
@@ -36,6 +46,8 @@ export function AccountSignIn({navigation,onSignIn,onBack,onSignUp,role='brand'}
       {error&&<p className="nf-auth-error" role="alert">{error}</p>}
       <div className="nf-auth-actions"><button className="nf-auth-secondary" type="button" onClick={onBack}>Back</button><button className="nf-auth-primary" type="submit" disabled={busy||!email.includes('@')||password.length<8}>{busy?'Logging in…':'Log in'}</button></div>
     </fieldset></form>
+    {needsConfirmation&&<ConfirmationHelp key={normalizeEmail(email)} initialEmail={normalizeEmail(email)}/>}
+    {!needsConfirmation&&<a className="nf-auth-text-button" href="#confirmemail">Missing your confirmation email?</a>}
     <button className="nf-auth-text-button" type="button" disabled={busy} onClick={()=>{location.hash='forgotpassword'}}>Forgot your password?</button>
   </AuthLayout>;
 }

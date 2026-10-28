@@ -9,9 +9,10 @@ import './accessibility.js';
 import './app.css';
 import './auth.css';
 import {DEMO_CAMPAIGNS, DEMO_BRAND_META} from './demos.js';
-import {AuthLayout, AuthSteps, PasswordField, AccountSignIn} from './auth-ui.jsx';
+import {AuthLayout, AuthSteps, PasswordField, AccountSignIn, ConfirmationHelp} from './auth-ui.jsx';
 window.supabase = { createClient };
 window.Cropper = Cropper;
+import {normalizeEmail} from './auth-flow.js';
 
 // ═══════════════════════════════════════════════
 // ── Data ──
@@ -3765,12 +3766,12 @@ function SignUpChoice({onBack,onBrand,onCreator,onSignIn}) {
 // ── BrandOnboarding ──
 
 // Shown after signup when email confirmation is enabled (signUp returns no session).
-function ConfirmEmailNotice({email,role,onSignIn,onHome}) {
+function ConfirmEmailNotice({email,onSignIn,onHome}) {
   return <AuthLayout navigation={<PublicNav onSignIn={onSignIn} hideSignIn/>} title="Check your email" description="Confirm your account, then log in." headline>
-    <p className="nf-auth-notice">We sent a confirmation link{email?<> to <strong>{email}</strong></>:''}. Open that link to finish setting up your account.</p>
-    <button type="button" className="nf-auth-primary" onClick={onSignIn}>Log in</button>
+    <p className="nf-auth-notice">If <strong>{email||'your email address'}</strong> needs confirmation, look for a link from Nfluence. If you already have an account, log in or reset your password instead.</p>
+    <ConfirmationHelp initialEmail={email}/>
+    <button type="button" className="nf-auth-text-button" onClick={onSignIn}>Back to log in</button>
     <button type="button" className="nf-auth-text-button" onClick={onHome}>Back to home</button>
-    <p className="nf-auth-notice" style={{marginTop:16,marginBottom:0,textAlign:'center'}}>Didn't get it? Check your spam folder.</p>
   </AuthLayout>;
 }
 
@@ -7397,7 +7398,7 @@ function clearPendingProfile() {
 }
 
 function NfluenceApp() {
-  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
+  const initialHashView = (typeof window !== "undefined" && ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"].includes(window.location.hash.replace("#", ""))) ? window.location.hash.replace("#", "") : "landing";
   const [view, setView] = useState(initialHashView); // landing | builder | browse | detail | brandprofile | signin | dashboard | messages | inbox | onboarding | reviews | creatordashboard | creatorinbox | creatormessages | creatorprofile | notifications | faq
   const [showLandingMenu, setShowLandingMenu] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("Nike");
@@ -7515,7 +7516,7 @@ function NfluenceApp() {
   useEffect(() => {
     try { localStorage.setItem("nf_last_view", view); } catch (e) {}
     // Mirror auth-flow / public views into the URL hash so refresh stays put
-    const HASHED_VIEWS = ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword"];
+    const HASHED_VIEWS = ["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"];
     if (typeof window !== "undefined") {
       const currentHash = window.location.hash.replace("#", "");
       if (HASHED_VIEWS.includes(view)) {
@@ -7531,7 +7532,7 @@ function NfluenceApp() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.replace("#", "");
-      if (["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword"].includes(h)) {
+      if (["faq", "browse", "signin", "creatorsignin", "signupchoice", "brandonboarding", "creatoronboarding", "forgotpassword", "resetpassword", "confirmemail"].includes(h)) {
         setView(h);
       }
     };
@@ -7580,13 +7581,14 @@ function NfluenceApp() {
     setMyCampaigns(prev=>prev.map(c=>c.id===campaign.id?{...c,reviews:c.reviews.map(r=>r.id===saved.id?{...r,brandResponse:saved.brand_response}:r)}:c));
   };
   const handleBrandOnboardingComplete=async data=>{
+    data={...data,email:normalizeEmail(data.email)};
     stashPendingProfile({email:data.email,role:'brand',data});
     const result=unwrap(await getSB().auth.signUp({email:data.email,password:data.password,options:{emailRedirectTo:location.origin+'/campaigns/',data:{role:'brand',name:data.name}}}));
     if(!result.session){setConfirmEmailInfo({email:data.email,role:'brand'});setView('confirmemail');return;}
     await hydrateSession(result.session);setView(pendingBuilderView||'dashboard');setPendingBuilderView(null);
   };
   const handleSignIn=async(email,name,password)=>{
-    try{const result=unwrap(await getSB().auth.signInWithPassword({email,password}));const identity=await hydrateSession(result.session);
+    try{email=normalizeEmail(email);const response=await getSB().auth.signInWithPassword({email,password});if(response.error?.code==='email_not_confirmed')return {confirmationRequired:true};const result=unwrap(response);const identity=await hydrateSession(result.session);
       if(signInRedirect){setSelectedCampaign(signInRedirect);setSignInRedirect(null);setAutoApply(identity.role==='creator');setView('detail');}
       else if(pendingBuilderView&&identity.role==='brand'){setView(pendingBuilderView);setPendingBuilderView(null);}
       else setView(identity.role==='brand'?'dashboard':'creatordashboard');
@@ -7625,6 +7627,7 @@ function NfluenceApp() {
 
   const handleCreatorSignIn=async(email,name,password,profileData=null)=>{
     if(!name)return handleSignIn(email,null,password);
+    email=normalizeEmail(email);
     try{stashPendingProfile({email,role:'creator',data:{...profileData,name}});const result=unwrap(await getSB().auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/campaigns/',data:{role:'creator',name}}}));if(!result.session){setConfirmEmailInfo({email,role:'creator'});setView('confirmemail');return null;}await hydrateSession(result.session,{redirect:true});return null;}catch(error){return error.message;}
   };
   const handleCreatorSignOut = async () => {
@@ -7801,7 +7804,7 @@ function NfluenceApp() {
   if (view === "brandonboarding") return <BrandOnboarding onBack={() => setView("signupchoice")} onComplete={handleBrandOnboardingComplete} onSignIn={() => setView("signin")} />;
   if (view === "creatorsignin") return <CreatorSignIn onSignIn={handleCreatorSignIn} onBack={() => setView("landing")} onSignUp={() => setView("creatoronboarding")} />;
   if (view === "creatoronboarding") return <CreatorOnboarding onBack={() => setView("signupchoice")} onComplete={handleCreatorSignIn} onSignIn={() => setView("creatorsignin")} />;
-  if (view === "confirmemail") return <ConfirmEmailNotice email={confirmEmailInfo?.email} role={confirmEmailInfo?.role} onSignIn={() => setView(confirmEmailInfo?.role === "creator" ? "creatorsignin" : "signin")} onHome={() => setView("landing")} />;
+  if (view === "confirmemail") return <ConfirmEmailNotice email={confirmEmailInfo?.email||readPendingProfile()?.email} role={confirmEmailInfo?.role} onSignIn={() => setView(confirmEmailInfo?.role === "creator" ? "creatorsignin" : "signin")} onHome={() => setView("landing")} />;
   if (view === "creatordashboard") return <>
     <div style={{display:'flex',justifyContent:'center',gap:20,padding:12}}><button className="nf-recovery-link" onClick={()=>{setSelectedCampaign(null);setView('content')}}>Your deliverables</button><button className="nf-recovery-link" onClick={()=>setView('creatorreviews')}>Review a campaign</button></div>
     <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} onBrowseGigs={() => setView("gigbrowse")} creatorProfile={creatorProfile} onEditProfile={async (form) => {

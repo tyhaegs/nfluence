@@ -64,3 +64,11 @@ Issue a new cryptographically random code for each chosen brand. Store only SHA-
 The authenticated `stripe-payment` function verifies the brand and looks up the hash for a quote. `redeem_campaign_sponsorship` locks the invitation and atomically prepares/finalizes the publication, writes a zero-dollar payment receipt, and consumes the invitation. It is executable only by the billing service. Matching request retries return the same receipt; a second publication or changed request is rejected. A failed publication rolls back the redemption.
 
 Migration: `20261028203251_free_campaign_invites.sql`. Billing Edge Function version 15 retains JWT verification. `tests/promo-integration.sql` exercises the real database in a transaction and rolls back every fixture.
+
+## Signup confirmation repair — October 28, 2026
+
+Public auth screens provide confirmation resends with a 60-second cooldown and visible delivery-request errors. Login errors retain the `email_not_confirmed` signal so the resend form appears immediately. Repeat signup copy is conditional and does not promise a new email for an already-confirmed account. Email addresses are trimmed and normalized before signup/login/resend.
+
+The active Supabase Confirm sign up template uses subject `Confirm your email for nfluence` and `supabase/templates/confirmation.html`. Its link points to `https://nfluenceagency.com/campaigns/confirm.html#token_hash={{ .TokenHash }}`. This page strips the fragment from history and waits for an explicit confirmation button before calling `verifyOtp` with `type: email`; fetching the page alone does not consume the token. The site must be deployed before enabling this template. Existing direct Supabase confirmation links remain compatible. The sender remains the verified Resend address.
+
+Verified with a temporary QA signup: branded email reached the agency Gmail inbox, the token established a confirmed session, replay was rejected, sign-out removed the session, and the temporary account was deleted. All 19 application checks and four Worker checks passed. Sites version 14 is deployed from hosting commit `fa25b67f0caf48f9fa5cc7e66f93b695ef884861`. Inbox placement at other email providers remains outside application control.
