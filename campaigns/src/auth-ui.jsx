@@ -46,7 +46,7 @@ export function PasswordField({id,label='Password',value,onChange,autoComplete='
 export function AccountSignIn({navigation,onSignIn,onBack,onSignUp,role='brand'}) {
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[needsConfirmation,setNeedsConfirmation]=useState(false);
   async function submit(event){event.preventDefault();if(busy)return;setBusy(true);setError('');setNeedsConfirmation(false);try{const result=await onSignIn(normalizeEmail(email),null,password);if(result?.confirmationRequired){setNeedsConfirmation(true);setError('Confirm your email before logging in. You can request a new link below.');}else if(result)setError(result);}catch(failure){setError(failure.message||'We could not sign you in. Please try again.');}finally{setBusy(false);}}
-  return <AuthLayout navigation={navigation} disabled={busy} onLogIn={()=>{}} onCreate={onSignUp} description={role==='creator'?'Connect with brands. Manage your campaigns.':'Connect with creators. Manage your campaigns.'}>
+  return <AuthLayout navigation={navigation} disabled={busy} onLogIn={()=>{}} onCreate={onSignUp} description="">
     <form onSubmit={submit} className="nf-auth-form"><fieldset disabled={busy}><legend className="sr-only">Log in to nfluence</legend>
       <label className="nf-auth-field" htmlFor={'nf-'+role+'-email'}><span>Email address</span><input id={'nf-'+role+'-email'} type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={e=>setEmail(e.target.value)} required/></label>
       <PasswordField id={'nf-'+role+'-password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password"/>
@@ -54,7 +54,9 @@ export function AccountSignIn({navigation,onSignIn,onBack,onSignUp,role='brand'}
       <div className="nf-auth-actions"><button className="nf-auth-secondary" type="button" onClick={onBack}>Back</button><button className="nf-auth-primary" type="submit" disabled={busy||!email.includes('@')||password.length<8}>{busy?'Logging in…':'Log in'}</button></div>
     </fieldset></form>
     {needsConfirmation&&<ConfirmationHelp key={normalizeEmail(email)} initialEmail={normalizeEmail(email)}/>}
-    {!needsConfirmation&&<a className="nf-auth-text-button" href="#confirmemail">Missing your confirmation email?</a>}
-    <button className="nf-auth-text-button" type="button" disabled={busy} onClick={()=>{location.hash='forgotpassword'}}>Forgot your password?</button>
+    <div className="nf-auth-recovery-links">
+      {!needsConfirmation&&<a className="nf-auth-text-button" href="#confirmemail" aria-disabled={busy} onClick={event=>{if(busy)event.preventDefault();}}>Missing your confirmation email?</a>}
+      <a className="nf-auth-text-button" href="#forgotpassword" aria-disabled={busy} onClick={event=>{if(busy)event.preventDefault();}}>Forgot your password?</a>
+    </div>
   </AuthLayout>;
 }

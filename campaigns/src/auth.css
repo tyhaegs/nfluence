@@ -28,6 +28,10 @@
 .nf-auth-primary:disabled{background:#ffffff1a;color:#aeb8c6;border-color:#ffffff1a;opacity:1}
 .nf-auth-panel .nf-auth-text-button{display:block;min-height:44px;margin:8px auto 0;padding:10px;border:0;background:transparent;color:#aeb8c6;font:400 .875rem/1.5 system-ui,sans-serif;text-align:center;cursor:pointer}
 .nf-auth-text-button:hover{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.nf-auth-recovery-links{display:grid;gap:0;margin-top:16px}
+.nf-auth-panel .nf-auth-recovery-links .nf-auth-text-button{margin:0;min-height:36px;padding:6px 0;text-decoration:none}
+.nf-auth-panel .nf-auth-recovery-links .nf-auth-text-button:hover{text-decoration:underline}
+.nf-auth-recovery-links a[aria-disabled=true]{opacity:.55;pointer-events:none}
 .nf-auth-footer{align-self:end;padding:32px 0 12px;background:transparent;color:#929eae;font-size:.875rem;line-height:1.6}
 .nf-auth-footer nav{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px}
 .nf-auth-footer a{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:none}
