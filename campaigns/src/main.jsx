@@ -3766,12 +3766,9 @@ function SignUpChoice({onBack,onBrand,onCreator,onSignIn}) {
 // ── BrandOnboarding ──
 
 // Shown after signup when email confirmation is enabled (signUp returns no session).
-function ConfirmEmailNotice({email,onSignIn,onHome}) {
-  return <AuthLayout navigation={<PublicNav onSignIn={onSignIn} hideSignIn/>} title="Check your email" description="Confirm your account, then log in." headline>
-    <p className="nf-auth-notice">If <strong>{email||'your email address'}</strong> needs confirmation, look for a link from Nfluence. If you already have an account, log in or reset your password instead.</p>
-    <ConfirmationHelp initialEmail={email}/>
-    <button type="button" className="nf-auth-text-button" onClick={onSignIn}>Back to log in</button>
-    <button type="button" className="nf-auth-text-button" onClick={onHome}>Back to home</button>
+function ConfirmEmailNotice({email,onSignIn}) {
+  return <AuthLayout navigation={<PublicNav onSignIn={onSignIn} hideSignIn/>} title="Check your email" description="Open the link from Nfluence to continue." headline>
+    <ConfirmationHelp initialEmail={email} onSignIn={onSignIn}/>
   </AuthLayout>;
 }
 
