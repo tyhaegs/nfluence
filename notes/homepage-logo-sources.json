@@ -1,0 +1,48 @@
+{
+  "updated": "2026-10-28",
+  "sources": [
+    {
+      "brand": "Coral Club",
+      "page": "https://coralclub.us/",
+      "asset": "Official inline SVG header logo",
+      "file": "coral-club.svg"
+    },
+    {
+      "brand": "Modern Muze",
+      "page": "https://modernmuze.com/",
+      "asset": "https://modernmuze.com/wp-content/uploads/2023/09/ModernMuze_Logo1.png",
+      "file": "modern-muze.png"
+    },
+    {
+      "brand": "Dad Grass",
+      "page": "https://dadgrass.com/",
+      "asset": "https://dadgrass.com/cdn/shop/files/DG_Logo_Horizontal_White_2.png?v=1714504375&width=900",
+      "file": "dad-grass.png"
+    },
+    {
+      "brand": "USC Next Level Sports Conference",
+      "page": "https://uscnextlevelsports.usc.edu/",
+      "asset": "https://uscnextlevelsports.usc.edu/_assets/media/4d259a93c88e6d6efb753c7c0dbf828a.png",
+      "file": "usc-next-level.png"
+    },
+    {
+      "brand": "Secret",
+      "page": "https://secret.com/en-us",
+      "asset": "https://images.ctfassets.net/w9l9p5870v5o/4m9dO5fHaONEwPT1aHAvkW/ebd7b5cf07327a068c77f1f6b17e6442/Isolation_Mode.svg",
+      "file": "secret.svg",
+      "treatment": "Official vector paths rendered white with negative spaces preserved using an SVG mask."
+    },
+    {
+      "brand": "BELLAMI Hair",
+      "page": "https://www.bellamihair.com/",
+      "asset": "https://www.bellamihair.com/cdn/shop/files/Bellami_Hair_8bfc50f6-f26e-4d5f-9e48-8e317b91c69c.png?v=1783083003&width=1200",
+      "file": "bellami.png"
+    },
+    {
+      "brand": "Venus et Fleur",
+      "page": "https://www.venusetfleur.com/",
+      "asset": "Official --icon-logo SVG from site styles",
+      "file": "venus-et-fleur.svg"
+    }
+  ]
+}
