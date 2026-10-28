@@ -2,6 +2,7 @@ import {serviceKey} from '../_shared/environment.mjs';
 import Stripe from 'npm:stripe@14.25.0';
 import {createClient} from 'npm:@supabase/supabase-js@2.108.2';
 import {price,campaignRecord,checkoutEnabled} from '../_shared/pricing.mjs';
+import {campaignCodeHash,validateCampaignGrant,freeCampaignQuote} from '../_shared/promotions.mjs';
 const origins=['https://nfluenceagency.com','https://www.nfluenceagency.com'];
 const checked=(r:any)=>{if(r.error)throw Error(r.error.message);return r.data;};
 Deno.serve(async req=>{
@@ -40,7 +41,7 @@ Deno.serve(async req=>{
    return json({ok:true,status:'canceled'});
   }
   const type=action==='annual'?'annual':body.type;
-  if(body.promoCode)throw Error('Promotional codes are currently unavailable. Standard prices apply.');
+  if(body.promoCode && type!=='campaign_new')throw Error('Free-campaign codes are for new campaigns only.');
   let rec:any=body.features||{};
   if(type==='campaign_new')rec=campaignRecord(rec,user.id);
   if(type==='campaign_edit'){
@@ -50,6 +51,18 @@ Deno.serve(async req=>{
   }
   if(type==='gig'){
    const f=rec;rec={title:String(f.title||'').trim(),description:f.description||null,comp:f.comp!=null?String(f.comp):null,pay_type:f.pay_type??f.payType??null,deadline:f.deadline||null,location:f.location||null,platforms:f.platforms||[],deliverables:f.deliverables||null,skills_required:f.skills_required??f.skills??[],requirements:f.requirements||null,equipment:f.equipment||null};if(rec.title.length<2)throw Error('Enter a gig title.');
+  }
+  if(body.promoCode){
+   const giftQuote=freeCampaignQuote(type,rec);
+   const codeHash=await campaignCodeHash(body.promoCode);
+   if(action==='quote'){
+    const grant=checked(await admin.from('campaign_sponsorship_codes').select('enabled,assigned_brand_id,expires_at,redeemed_payment_id').eq('code_hash',codeHash).maybeSingle());
+    validateCampaignGrant(grant,user.id);
+    return json(giftQuote);
+   }
+   if(!/^[0-9a-f-]{36}$/i.test(body.requestId||''))throw Error('A checkout request ID is required.');
+   const pay=checked(await admin.rpc('redeem_campaign_sponsorship',{p_brand:user.id,p_request:body.requestId,p_code_hash:codeHash,p_record:rec}));
+   return json({free:true,campaignId:pay.campaign_id,...giftQuote});
   }
   const sub=checked(await admin.from('subscriptions').select('*').eq('brand_id',user.id).eq('status','active').gt('current_period_end',new Date().toISOString()).order('current_period_end',{ascending:false}).limit(1))[0];
   let period:string|null=null,available=false;

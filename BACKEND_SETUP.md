@@ -47,10 +47,20 @@ Agency proof should use approved client examples and verified outcomes. No new c
 
 Server functions select a current secret key from `SUPABASE_SECRET_KEYS`. Legacy anon/service_role JWT API keys were disabled on this project in May 2026; do not re-enable them or use them for new admin requests. An authenticated production quote returned 29900 cents after this repair; no payment was charged.
 
-The current hosting deployment is `appgdep_6ae0fc7c88388191a90950cd4f3947eb`, saved version 12, source commit `19f938bdac95a4dfdb7fc10eb64a9528c7a5f459`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
+The current hosting deployment is `appgdep_6ae25dff5378819187f4a050a9934c38`, saved version 13, source commit `cede0d579be627755ce45af9ee204cfff176a92e`. It was checked against all 62 current asset bytes, plus routing, CSP hashes, conditional requests and canonical redirects.
 
 Marketing headers are generated from `scripts/navigation.mjs` during the production build. Shared presentation and mobile interaction live in `assets/navigation.css` and `assets/navigation.js`. Edit these sources instead of changing a single generated page header. The campaign application retains its React navigation.
 
 Account access uses the shared `campaigns/src/auth-ui.jsx` components and `auth.css`, adapted from the Oasis Peptides panel design with nfluence branding. Brand and creator login, role selection, signup steps, email confirmation and password recovery share the same panel. Recovery stays centered below the Back / Log in action row. Auth service calls and signup persistence remain in the existing handlers.
 
 The four original public demo campaigns in `campaigns/src/demos.js` are intentional examples for prospective brands. Preserve them on the landing and browse pages. Demo records use stable `demo-` IDs and explicit labels, stay separate from live database records, and never accept real applications.
+
+## Free-campaign invitations
+
+`campaign_sponsorship_codes` is a service-only, RLS-enabled inventory of individual single-use invitations. Each invitation waives the $299 platform fee for one standard new campaign. A brand enters it in the existing promo field, applies it, then confirms a $0 publication without a card. This works while ordinary Stripe checkout is unavailable. Featured placement must be turned off; annual access, gigs, edits and creator compensation are separate.
+
+Issue a new cryptographically random code for each chosen brand. Store only SHA-256 of its trimmed uppercase form, plus a short display hint; never commit the actual invitation to website source. `assigned_brand_id` and `expires_at` are optional restrictions. Disabling an unused row revokes that invitation. Share the original code privately with the chosen brand.
+
+The authenticated `stripe-payment` function verifies the brand and looks up the hash for a quote. `redeem_campaign_sponsorship` locks the invitation and atomically prepares/finalizes the publication, writes a zero-dollar payment receipt, and consumes the invitation. It is executable only by the billing service. Matching request retries return the same receipt; a second publication or changed request is rejected. A failed publication rolls back the redemption.
+
+Migration: `20261028203251_free_campaign_invites.sql`. Billing Edge Function version 15 retains JWT verification. `tests/promo-integration.sql` exercises the real database in a transaction and rolls back every fixture.

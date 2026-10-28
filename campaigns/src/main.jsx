@@ -110,7 +110,7 @@ const DEMO_MESSAGES = {};
 // ── Messages ──
 
 
-// Promo codes now live server-side only (Edge Function VALID_PROMOS). The client never
+// Promo invitations live only in the server-side sponsorship inventory. The client never
 // validates or applies discounts — it shows the server quote. (Phase 2+3 payment refactor.)
 
 function businessDaysSince(dateStr) {
@@ -1831,22 +1831,24 @@ function CampaignBuilder({ onBack, onPublish, session }) {
   const [promoCode, setPromoCode] = useState("");
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const quoteRequestRef = useRef(0);
   const [quoteError, setQuoteError] = useState("");
   const isFree = !!quote && quote.amount_cents === 0;
   const fetchQuote = async (code = promoCode) => {
     if (!pendingCampaignData) return;
+    const request = ++quoteRequestRef.current;
     setQuoteLoading(true); setQuoteError("");
     try {
       const q = await callStripePaymentV2({ action: 'quote', type: 'campaign_new', features: pendingCampaignData, promoCode: (code || '').trim() }, session?.access_token);
-      setQuote(q);
-    } catch (e) { setQuote(null); setQuoteError(e.message || 'could not load price'); }
-    finally { setQuoteLoading(false); }
+      if(request === quoteRequestRef.current) setQuote(q);
+    } catch (e) { if(request === quoteRequestRef.current){setQuote(null); setQuoteError(e.message || 'could not load price');} }
+    finally { if(request === quoteRequestRef.current) setQuoteLoading(false); }
   };
   const needCard = showPayModal && !!quote && quote.amount_cents > 0;
   // Layer 1 orphan cleanup: sweep this user's stale draft campaigns (+ pending payments/promos) on mount.
   
   useEffect(() => {
-    if (!showPayModal) { setQuote(null); setQuoteError(""); setPayError(""); setPromoCode(""); return; }
+    if (!showPayModal) { ++quoteRequestRef.current; setQuoteLoading(false); setQuote(null); setQuoteError(""); setPayError(""); setPromoCode(""); return; }
     fetchQuote();
   }, [showPayModal, pendingCampaignData]);
   useEffect(() => {
@@ -3035,15 +3037,15 @@ function CampaignBuilder({ onBack, onPublish, session }) {
               </div>
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input value={promoCode} onChange={e => setPromoCode(e.target.value)} aria-label="promo code" placeholder="promo code"
-                    style={{ flex: 1, background: "rgba(255,255,255,.05)", border: `1px solid ${quote && quote.discount_pct > 0 ? "rgba(100,255,150,.4)" : quoteError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
-                  <button onClick={() => fetchQuote(promoCode)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
+                  <input value={promoCode} disabled={payLoading} onChange={e => {setPromoCode(e.target.value);++quoteRequestRef.current;setQuote(null);setQuoteError("");setQuoteLoading(false);}} aria-label="promo code" placeholder="promo code"
+                    style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,.05)", border: `1px solid ${quote && quote.discount_pct > 0 ? "rgba(100,255,150,.4)" : quoteError ? "rgba(255,100,100,.4)" : "rgba(255,255,255,.12)"}`, borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: ".88rem", outline: "none", fontFamily: "system-ui, sans-serif" }} />
+                  <button disabled={payLoading || quoteLoading} onClick={() => fetchQuote(promoCode)} style={{ padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "#fff", fontSize: ".82rem", cursor: "pointer", fontFamily: "system-ui, sans-serif", whiteSpace: "nowrap" }}>apply</button>
                 </div>
-                {quote && quote.discount_pct > 0 && <div style={{ fontSize: ".75rem", color: "rgba(100,255,150,.9)", marginTop: 6 }}>✓ {promoCode.toUpperCase()} applied — {Math.round(quote.discount_pct * 100)}% off fees</div>}
-                {quote&&!quote.checkout_available&&<p role="status" style={{margin:'12px 0',color:'#ffd89c'}}>Online checkout is temporarily unavailable. <a href="/contact.html" style={{color:'inherit'}}>Contact nfluence</a> to discuss your campaign.</p>}
+                {quote?.free_campaign && <p role="status" style={{fontSize:".82rem",color:"rgba(150,255,185,.95)",lineHeight:1.5,marginTop:10}}>Free campaign applied — the $299 campaign fee is covered. No card needed. Creator compensation is separate.</p>}
+                {quote&&!quote.checkout_available&&<p role="status" style={{margin:'12px 0',color:'#ffd89c'}}>Card checkout is temporarily unavailable. Have a free-campaign code? Enter it above to publish without a card. <a href="/contact.html" style={{color:'inherit'}}>Contact nfluence</a> for help.</p>}
               {quoteError && <div style={{ fontSize: ".75rem", color: "rgba(255,100,100,.8)", marginTop: 6 }}>{quoteError}</div>}
               </div>
-              {!isFree && <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />}
+              {needCard && quote?.checkout_available && <div ref={cardDivRef} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, padding: "13px 14px", marginBottom: 12 }} />}
               {payError && <div style={{ fontSize: ".8rem", color: "rgba(255,100,100,.9)", marginBottom: 10 }}>{payError}</div>}
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => { setShowPayModal(false); setPayError(""); }} disabled={payLoading} style={{ flex: 1, padding: "13px", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)", background: "transparent", color: "rgba(255,255,255,.5)", cursor: payLoading ? "not-allowed" : "pointer", fontSize: ".9rem", fontFamily: "system-ui, sans-serif" }}>cancel</button>
