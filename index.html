@@ -203,7 +203,7 @@
       justify-content: center;
       gap: 16px var(--logo-gap);
       width: 100%;
-      max-width: 1020px;
+      max-width: 1120px;
       margin: 32px 0 0;
       padding: 0 24px;
       list-style: none;
@@ -215,43 +215,61 @@
       justify-content: center;
       flex: 0 0 calc((100% - (var(--columns) - 1) * var(--logo-gap)) / var(--columns));
       min-width: 0;
-      min-height: 88px;
+      min-height: 100px;
     }
 
     .brand-mark {
       display: block;
-      width: min(var(--mark-width, 148px), 100%);
+      width: min(var(--mark-width, 164px), 100%);
       height: auto;
-      max-height: 62px;
+      max-height: 78px;
       opacity: .95;
       filter: drop-shadow(0 3px 12px rgba(0,0,0,.25));
     }
 
     .brand-mark--white { filter: brightness(0) invert(1) drop-shadow(0 3px 12px rgba(0,0,0,.25)); }
-    .brand-logo--modern-muze { --mark-width: 166px; }
-    .brand-logo--usc-next-level { --mark-width: 116px; }
-    .brand-logo--secret { --mark-width: 105px; }
-    .brand-logo--venus-et-fleur { --mark-width: 176px; }
+    /* Match visual weight: thin wordmarks need more width than compact badges. */
+    .brand-logo--choolip { --mark-width: 156px; }
+    .brand-logo--sweet-sweat { --mark-width: 184px; }
+    .brand-logo--jupiter { --mark-width: 174px; }
+    .brand-logo--palms { --mark-width: 126px; }
+    .brand-logo--nicole-frank { --mark-width: 212px; }
+    .brand-logo--outstanding-foods { --mark-width: 138px; }
+    .brand-logo--pendry { --mark-width: 184px; }
+    .brand-logo--coral-club { --mark-width: 174px; }
+    .brand-logo--modern-muze { --mark-width: 184px; }
+    .brand-logo--dad-grass { --mark-width: 170px; }
+    .brand-logo--usc-next-level { --mark-width: 144px; }
+    .brand-logo--secret { --mark-width: 124px; }
+    .brand-logo--bellami { --mark-width: 204px; }
+    .brand-logo--venus-et-fleur { --mark-width: 230px; }
 
-    .brand-logo--palms { --mark-width: 116px; }
-    .brand-logo--nicole-frank { --mark-width: 162px; }
-
-    @media (max-width: 999px) {
+    @media (max-width: 1099px) {
       .brand-strip {
         --columns: 3;
-        max-width: 680px;
+        max-width: 900px;
       }
+    }
+
+    @media (max-width: 699px) {
+      .brand-strip {
+        --columns: 2;
+        --logo-gap: 24px;
+        max-width: 680px;
+        gap: 12px var(--logo-gap);
+        padding-inline: 16px;
+      }
+      .brand-logo { min-height: 84px; }
+      .brand-mark { max-height: 72px; }
     }
 
     @media (max-width: 479px) {
       .hero-logo { margin: 28px 0 28px; }
-      .brand-strip {
-        --columns: 2;
-        --logo-gap: 20px;
-        gap: 12px var(--logo-gap);
-      }
-      .brand-logo { min-height: 68px; }
-      .brand-mark { width: min(var(--mark-width, 130px), 100%); max-height: 52px; }
+      /* Keep the two widest, finest wordmarks readable on narrow phones. */
+      .brand-logo--bellami,
+      .brand-logo--venus-et-fleur { flex-basis: 100%; min-height: 64px; }
+      .brand-logo--bellami { --mark-width: 224px; }
+      .brand-logo--venus-et-fleur { --mark-width: 272px; }
     }
 
     .intro-text {
@@ -562,15 +580,15 @@
     <div class="hero-line" aria-hidden="true"></div>
 
     <ul class="brand-strip" aria-label="Brands">
-      <li class="brand-logo"><svg class="brand-mark" viewBox="34 126 1128 296" width="1128" height="296" role="img" aria-label="Choolip"><image href="assets/brand-logos/choolip.png" width="1200" height="592" /></svg></li>
-      <li class="brand-logo"><svg class="brand-mark" viewBox="144 366 1263 240" width="1263" height="240" role="img" aria-label="Sweet Sweat"><image href="assets/brand-logos/sweet-sweat.png" width="1536" height="1024" /></svg></li>
-      <li class="brand-logo"><svg class="brand-mark" viewBox="0 231 1200 166" width="1200" height="166" role="img" aria-label="Jupiter"><image href="assets/brand-logos/jupiter.png" width="1200" height="628" /></svg></li>
+      <li class="brand-logo brand-logo--choolip"><svg class="brand-mark" viewBox="34 126 1128 296" width="1128" height="296" role="img" aria-label="Choolip"><image href="assets/brand-logos/choolip.png" width="1200" height="592" /></svg></li>
+      <li class="brand-logo brand-logo--sweet-sweat"><svg class="brand-mark" viewBox="144 366 1263 240" width="1263" height="240" role="img" aria-label="Sweet Sweat"><image href="assets/brand-logos/sweet-sweat.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo brand-logo--jupiter"><svg class="brand-mark" viewBox="0 231 1200 166" width="1200" height="166" role="img" aria-label="Jupiter"><image href="assets/brand-logos/jupiter.png" width="1200" height="628" /></svg></li>
       <li class="brand-logo brand-logo--palms"><svg class="brand-mark" viewBox="174 196 706 207" width="706" height="207" role="img" aria-label="Palms"><image href="assets/brand-logos/palms.png" width="1050" height="600" /></svg></li>
       <li class="brand-logo"><svg class="brand-mark" viewBox="167 386 1222 225" width="1222" height="225" role="img" aria-label="Nouhaus"><image href="assets/brand-logos/nouhaus.png" width="1536" height="1024" /></svg></li>
       <li class="brand-logo brand-logo--nicole-frank"><svg class="brand-mark" viewBox="128 387 1327 209" width="1327" height="209" role="img" aria-label="Nicole Frank"><image href="assets/brand-logos/nicole-frank.png" width="1536" height="1024" /></svg></li>
-      <li class="brand-logo"><svg class="brand-mark" viewBox="196 157 1114 618" width="1114" height="618" role="img" aria-label="Outstanding Foods"><image href="assets/brand-logos/outstanding-foods.png" width="1536" height="1024" /></svg></li>
+      <li class="brand-logo brand-logo--outstanding-foods"><svg class="brand-mark" viewBox="196 157 1114 618" width="1114" height="618" role="img" aria-label="Outstanding Foods"><image href="assets/brand-logos/outstanding-foods.png" width="1536" height="1024" /></svg></li>
       <li class="brand-logo"><svg class="brand-mark" viewBox="182 221 1212 410" width="1212" height="410" role="img" aria-label="Caliwater"><image href="assets/brand-logos/caliwater.png" width="1536" height="1024" /></svg></li>
-      <li class="brand-logo"><svg class="brand-mark" viewBox="49 404 937 221" width="937" height="221" role="img" aria-label="Pendry Hotels"><image href="assets/brand-logos/pendry.png" width="1024" height="1024" /></svg></li>
+      <li class="brand-logo brand-logo--pendry"><svg class="brand-mark" viewBox="49 404 937 221" width="937" height="221" role="img" aria-label="Pendry Hotels"><image href="assets/brand-logos/pendry.png" width="1024" height="1024" /></svg></li>
       <li class="brand-logo brand-logo--coral-club"><svg class="brand-mark" viewBox="0 0 640 114" width="640" height="114" role="img" aria-label="Coral Club"><image href="assets/brand-logos/coral-club.svg" width="640" height="114" /></svg></li>
       <li class="brand-logo brand-logo--modern-muze"><svg class="brand-mark brand-mark--white" viewBox="0 0 1147 209" width="1147" height="209" role="img" aria-label="Modern Muze"><image href="assets/brand-logos/modern-muze.png" width="1147" height="209" /></svg></li>
       <li class="brand-logo brand-logo--dad-grass"><svg class="brand-mark" viewBox="29 0 852 184" width="852" height="184" role="img" aria-label="Dad Grass"><image href="assets/brand-logos/dad-grass.png" width="900" height="184" /></svg></li>

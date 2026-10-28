@@ -272,5 +272,13 @@
       "security_advisor_findings": 0,
       "hosting_tests_passed": 4
     }
+  },
+  "homepage_logo_sizing": {
+    "date": "2026-10-28",
+    "status": "published_verified",
+    "site_version": 24,
+    "hosting_commit": "d0b980d7c055bf12c71ae9422e4ec10ba1bb9a6e",
+    "changes": "Larger individual widths for finer wordmarks and smaller badges; roomier slots; 2/3/4-column responsive layout; centered full rows for BELLAMI and Venus et Fleur on narrow phones.",
+    "verification": "All 16 logos fit without horizontal overflow at 320,390,480,699,700,768,1000,1100,1440 px. Four hosting tests passed for all 71 assets. Published logo dimensions verified in browser."
   }
 }
