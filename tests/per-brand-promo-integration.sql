@@ -24,7 +24,7 @@ begin
  begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('d',64),rec||'{"name":"Another campaign"}'::jsonb);raise exception 'TEST FAILED: changed brief bypassed trial';exception when others then if sqlerrm not like 'This code covers one free campaign per brand%' then raise;end if;end;
  other_pay:=public.redeem_campaign_sponsorship(o,gen_random_uuid(),repeat('d',64),rec||jsonb_build_object('brand_id',o));
  if first_pay->>'campaign_id'=other_pay->>'campaign_id' or (select count(*) from public.campaign_sponsorship_brand_usage where code_id=cid and redemption_count=1)<>2 then raise exception 'TEST FAILED: other brand could not receive own trial';end if;
- -- Deleting an older campaign removes its receipt/ledger but must not reset the allowance.
+ -- Deleting an older campaign preserves its receipt/history and must not reset the allowance.
  delete from public.campaigns where id=(first_pay->>'campaign_id')::uuid;
  if (select redemption_count from public.campaign_sponsorship_brand_usage where code_id=cid and brand_id=b)<>1 then raise exception 'TEST FAILED: deleting campaign reset trial';end if;
  begin perform public.redeem_campaign_sponsorship(b,gen_random_uuid(),repeat('d',64),rec);raise exception 'TEST FAILED: deletion bypassed trial';exception when others then if sqlerrm not like 'This code covers one free campaign per brand%' then raise;end if;end;

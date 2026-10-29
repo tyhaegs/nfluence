@@ -108,3 +108,11 @@ Billing function v18 checks the same counter for quotes; repeated use returns a 
 Verified with 40 application tests, three rolled-back database suites, authenticated API tests using two disposable brand accounts, and desktop/phone dashboard checks. Tests cover first use, repeat and changed-brief rejection, cross-brand eligibility, preserved idempotency, failure rollback, campaign-deletion resistance, denied direct counter access, and restoration of the standard $299 quote without the code. No real campaign, receipt, membership, or payment was changed by tests.
 
 The one-per-brand update is published as Sites version 25, hosting commit `42bdf5a3e4dc0fb2bf27125ce3c66ba42cc39841`, deployment `appgdep_6ae292d7a72c8191aad9931a0ffd45ec`. All four hosting checks passed. The browser confirms the live asset release; the security advisor returned no findings.
+
+## Full owner functionality and visual audit — October 28, 2026
+
+Migration `20261029004052_owner_dashboard_integrity.sql` serializes membership changes by brand and rejects overlapping active access or a pending annual checkout. Campaign deletion now preserves platform receipts and sponsored-use history with `ON DELETE SET NULL`; owner history marks removed campaigns and checkout retries cannot reuse the deleted campaign’s free allowance. Activity rows resolve readable target labels.
+
+The UI separates failed lists from real empty results, restores focus through code-dialog replacement, supports Escape on code confirmation, locks background scrolling, uses 44px minimum touch targets, and displays clear campaign/cap/payment labels. Verification includes 43 application checks, rolled-back integrity/regression suites, 49 populated section and 28 modal size checks, plus real production sign-in, code creation/copy, private upload download, draft editing and membership actions using disposable fixtures. No real money was moved; the real `demo` code was untouched.
+
+Published as Sites version 27, hosting commit `ede2936b604ffb5610e392277ad6a00e5e2a4c67`, deployment `appgdep_6ae2992258808191bb844cde50fa2359`. The primary owner invitation and live Stripe setup remain pending. The complete evidence and limits are in `notes/owner-full-audit-2026-10-28.md`.

@@ -1,0 +1,34 @@
+begin;
+create temp table integrity_fixture as select gen_random_uuid() owner_id,gen_random_uuid() brand_id;
+grant select on integrity_fixture to service_role;
+insert into auth.users(id,email,raw_user_meta_data) select owner_id,'integrity-owner-'||owner_id||'@example.invalid','{"role":"brand"}'::jsonb from integrity_fixture union all select brand_id,'integrity-brand-'||brand_id||'@example.invalid','{"role":"brand"}'::jsonb from integrity_fixture;
+insert into public.platform_owners(user_id) select owner_id from integrity_fixture;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+set local role service_role;
+do $$declare o uuid;b uuid;old jsonb;current jsonb;p jsonb;code jsonb;pay jsonb;rec jsonb;history jsonb;request_id uuid:=gen_random_uuid();
+begin
+ select owner_id,brand_id into o,b from integrity_fixture;
+ old:=public.owner_manage(o,'grant_membership',null,jsonb_build_object('brand_id',b,'ends_at',now()+interval '1 year','note','Original test access'),gen_random_uuid());
+ perform public.owner_manage(o,'end_membership',(old->>'id')::uuid,'{"note":"End original test access"}'::jsonb,gen_random_uuid());
+ current:=public.owner_manage(o,'grant_membership',null,jsonb_build_object('brand_id',b,'ends_at',now()+interval '1 year','note','New test membership'),gen_random_uuid());
+ begin perform public.owner_manage(o,'extend_membership',(old->>'id')::uuid,jsonb_build_object('ends_at',now()+interval '2 years','note','Try restoring older access'),gen_random_uuid());raise exception 'TEST FAILED: overlapping active membership';exception when others then if sqlerrm not like 'This brand has another active membership%' then raise;end if;end;
+ if (select count(*) from public.subscriptions where brand_id=b and status='active' and current_period_end>now())<>1 then raise exception 'TEST FAILED: overlapping access';end if;
+ perform public.owner_manage(o,'end_membership',(current->>'id')::uuid,'{"note":"End access before pending checkout"}'::jsonb,gen_random_uuid());
+ p:=public.prepare_checkout(b,gen_random_uuid(),'annual',199900,'{}'::jsonb,null);
+ begin perform public.owner_manage(o,'extend_membership',(current->>'id')::uuid,jsonb_build_object('ends_at',now()+interval '2 years','note','Try extending while checkout pending'),gen_random_uuid());raise exception 'TEST FAILED: pending annual checkout ignored';exception when others then if sqlerrm not like 'An annual checkout is pending%' then raise;end if;end;
+ update public.payments set status='canceled' where id=(p->>'id')::uuid;
+ perform public.owner_manage(o,'extend_membership',(current->>'id')::uuid,jsonb_build_object('ends_at',now()+interval '2 years','note','Valid extension'),gen_random_uuid());
+ -- An actual sponsored publication is created only within this rolled-back transaction.
+ code:=public.owner_manage(o,'create_code',null,jsonb_build_object('code_hash',repeat('e',64),'code_hint','KEEP','label','Receipt preservation fixture','max_redemptions',null,'max_redemptions_per_brand',1),gen_random_uuid());
+ rec:=jsonb_build_object('brand_id',b,'name','Receipt preservation fixture','brand_name','Fixture','deadline','30 days','comp_type','product','comp','','platforms','[]'::jsonb,'deliverables','{}'::jsonb,'featured',false,'featured_weeks',0);
+ pay:=public.redeem_campaign_sponsorship(b,request_id,repeat('e',64),rec);
+ delete from public.campaigns where id=(pay->>'campaign_id')::uuid;
+ if not exists(select 1 from public.payments where id=(pay->>'id')::uuid and status='succeeded' and campaign_id is null) then raise exception 'TEST FAILED: financial receipt lost';end if;
+ history:=public.owner_read(o,'code_redemptions',code->>'id');
+ if (history->>'total')::int<>1 or history->'rows'->0->>'campaign'<>'Deleted campaign' or (history->'rows'->0->>'campaign_deleted')::boolean is not true then raise exception 'TEST FAILED: deleted campaign history lost';end if;
+ begin perform public.redeem_campaign_sponsorship(b,request_id,repeat('e',64),rec);raise exception 'TEST FAILED: deleted campaign replay succeeded';exception when others then if sqlerrm not like 'The original campaign was deleted%' then raise;end if;end;
+ if (select redemption_count from public.campaign_sponsorship_brand_usage where code_id=(code->>'id')::uuid and brand_id=b)<>1 then raise exception 'TEST FAILED: allowance reset';end if;
+end;$$;
+reset role;
+rollback;
+select 'Membership overlap and pending-checkout guards, valid extension, retained receipts/history, deleted-campaign replay errors and unchanged trial allowance passed; all fixtures rolled back.' result;

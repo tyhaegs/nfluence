@@ -7,7 +7,7 @@ function enhance(){scheduled=false;const root=document.getElementById('root');if
  root.querySelectorAll('[role="button"]').forEach(el=>{if(!el.textContent.trim()&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',el.querySelector('svg')?'Toggle control':'Open navigation menu');});
  root.querySelectorAll('[class*="hamburger"]').forEach(el=>el.setAttribute('aria-label','Open navigation menu'));
  root.querySelectorAll('div[style*="position: fixed"][style*="inset: 0"]').forEach(el=>{if(el.querySelector('input,textarea,button')&&!el.closest('[role="dialog"]')){el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',el.querySelector('h1,h2,h3')?.textContent||'Campaign dialog');el.tabIndex=-1;}});
- const dialogs=[...root.querySelectorAll('[role="dialog"]')];const dialog=dialogs.at(-1)||null;if(dialog!==lastDialog){if(dialog){returnFocus=document.activeElement;dialog.focus();}else if(returnFocus?.isConnected)returnFocus.focus();lastDialog=dialog;}
+ const dialogs=[...root.querySelectorAll('[role="dialog"]')];const dialog=dialogs.at(-1)||null;if(dialog!==lastDialog){if(dialog){if(!lastDialog)returnFocus=document.activeElement;dialog.focus();}else if(returnFocus?.isConnected)returnFocus.focus();lastDialog=dialog;}
  const h=root.querySelector('h1,[data-screen-title]');const title=h?.textContent?.replace(/\s+/g,' ').trim()||'';if(title&&title!==lastScreen){lastScreen=title;document.title=title+' | nfluence';}
 }
 new MutationObserver(()=>{if(!scheduled){scheduled=true;requestAnimationFrame(enhance);}}).observe(document.getElementById('root'),{childList:true,subtree:true});

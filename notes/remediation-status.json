@@ -274,6 +274,24 @@
       "hosting_commit": "54aa62618ae3f28ec725496ce9695a8967dbdb93",
       "security_advisor_findings": 0,
       "hosting_tests_passed": 4
+    },
+    "full_audit": {
+      "date": "2026-10-28",
+      "status": "published_verified",
+      "site_version": 27,
+      "hosting_commit": "ede2936b604ffb5610e392277ad6a00e5e2a4c67",
+      "deployment_id": "appgdep_6ae2992258808191bb844cde50fa2359",
+      "migration": "20261029004052_owner_dashboard_integrity.sql",
+      "application_tests": 43,
+      "section_layout_checks": 49,
+      "dialog_layout_checks": 28,
+      "live_browser": "Temporary verified owner: sign-in, code creation/copy, private file open, private draft edit, membership grant, keyboard/focus. Disposable records removed.",
+      "live_api": "Membership extend/end, code revocation/history, private download, audit target labels and owner-access revocation passed.",
+      "remaining_setup": [
+        "Primary owner email confirmation",
+        "Live Stripe checkout configuration"
+      ],
+      "report": "notes/owner-full-audit-2026-10-28.md"
     }
   },
   "homepage_logo_sizing": {

@@ -7,7 +7,7 @@ export function createOwnerRequest({auth,fetcher,url}){
   async function send(){try{return await fetcher(url,{method:'POST',headers:{Authorization:'Bearer '+current.access_token,'Content-Type':'application/json'},body})}catch{throw ownerError(action==='read'||action==='access'?'Connection interrupted. Try refreshing.':'Connection interrupted. The change may have saved. Retry the same action to check it safely.',0)}}
   let res=await send();
   if(res.status===401){const fresh=await auth.refreshSession();current=fresh.data?.session;if(fresh.error||!current?.access_token)throw ownerError('Your session expired. Please sign in again.',401);res=await send();}
-  let result;try{result=await res.json()}catch{throw ownerError('The dashboard returned an unreadable response. Please refresh.',res.status===401||res.status===403?res.status:0)}
+  let result;try{result=await res.json()}catch{throw ownerError(action==='read'||action==='access'?'The dashboard returned an unreadable response. Please refresh.':'The response could not be read. The change may have saved. Retry the same action to check it safely.',res.status===401||res.status===403?res.status:0)}
   if(!res.ok)throw ownerError(result.error||'This owner action could not be completed.',res.status);
   return result;
  };
