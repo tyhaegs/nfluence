@@ -57,13 +57,13 @@ The four original public demo campaigns in `campaigns/src/demos.js` are intentio
 
 ## Free-campaign codes
 
-The active `demo` code is reusable with no use limit, as requested. Code matching is case-insensitive. It waives the standard $299 new-campaign platform fee without a card, even while ordinary Stripe checkout is unavailable. Featured placement must be off; annual access, gigs, edits and creator compensation are separate. The earlier random invitation and `supervibe` name have been replaced.
+The active `demo` code can be used by multiple brands, once per brand account. After the first successful sponsored campaign, that brand must use regular paid pricing or its existing paid annual entitlement. Code matching is case-insensitive. It waives the standard $299 new-campaign platform fee without a card, even while ordinary Stripe checkout is unavailable. Featured placement must be off; annual access, gigs, edits and creator compensation are separate. The earlier random invitation and `supervibe` name have been replaced.
 
-Codes are created and revoked in `/campaigns/#owner`. The owner chooses reusable or single-use behavior, an optional recipient account email, an optional expiration, and a label. Recipient email is compared with the verified Auth email; it can be reserved before the brand signs up. Only a hash is stored; the full code is displayed when created.
+Codes are created and revoked in `/campaigns/#owner`. The owner chooses one-per-brand, reusable, or single-use behavior, an optional recipient account email, an optional expiration, and a label. Recipient email is compared with the verified Auth email; it can be reserved before the brand signs up. Only a hash is stored; the full code is displayed when created.
 
 `campaign_sponsorship_redemptions` records every use, linked to its zero-dollar payment receipt and campaign. `redeem_campaign_sponsorship` locks the code, checks its restrictions, publishes and consumes a use atomically. Matching request retries return the same receipt; separate campaigns can reuse an unlimited code. Revocation prevents future redemptions and preserves existing campaigns. Completed client checkouts clear their request key so a later identical campaign can use a fresh request.
 
-Migrations: `20261028203251_free_campaign_invites.sql`, `20261028205524_owner_control_center.sql`, `20261028210516_reusable_campaign_codes.sql`. Billing function version 17 retains JWT verification. Transactional tests are in `tests/promo-integration.sql` and `tests/reusable-promo-integration.sql`.
+Migrations: `20261028203251_free_campaign_invites.sql`, `20261028205524_owner_control_center.sql`, `20261028210516_reusable_campaign_codes.sql`. Billing function version 18 retains JWT verification. Transactional tests are in `tests/promo-integration.sql` and `tests/reusable-promo-integration.sql`.
 
 ## Signup confirmation repair — October 28, 2026
 
@@ -83,7 +83,7 @@ Open `https://nfluenceagency.com/campaigns/#owner`. The requested primary owner 
 
 The dashboard manages real campaigns, account and membership records, promo codes and redemption history, platform payment receipts, private deliverables, recorded creator payouts, and an owner-action audit log. It can grant annual-plan access without inventing a payment, extend or end access, edit campaign descriptions/timing, and move published campaigns through their lifecycle. Drafts still require a checkout or sponsored code. Ending platform membership does not issue a refund or alter external Stripe charges.
 
-`owner-admin` version 4 validates the JWT with Auth, requires a confirmed email and a matching active Auth session, and checks `platform_owners` on every operation. The allowlist and mutation/read RPCs are service-only. Owner status does not come from customer-editable metadata or profile roles. Owner directory queries use canonical Auth emails. Every dashboard mutation is idempotent and audited.
+`owner-admin` version 5 validates the JWT with Auth, requires a confirmed email and a matching active Auth session, and checks `platform_owners` on every operation. The allowlist and mutation/read RPCs are service-only. Owner status does not come from customer-editable metadata or profile roles. Owner directory queries use canonical Auth emails. Every dashboard mutation is idempotent and audited.
 
 `tests/owner-integration.sql` exercises ownership, session invalidation, metadata forgery, all read views, membership changes, scoped codes, campaign changes, client denials, and audit receipts inside a rolled-back transaction. UI previews use isolated local data; they do not change real memberships or consume the live promo.
 
@@ -91,8 +91,20 @@ The dashboard manages real campaigns, account and membership records, promo code
 
 Migration `20261028230834_dashboard_audit.sql` adds typed list filters to `owner_read` (sixth argument, default `all`) and enforces `auth.sessions.not_after`. The old five-argument overload was removed to avoid RPC ambiguity; existing positional calls resolve to the defaulted sixth argument. The RPC remains service-only with an owner allowlist and pinned search path. Owner API v4 validates filters and dates, bounds streamed bodies, and returns 404 for missing campaigns.
 
-The dashboard refreshes open details/history, cancels stale view requests, keeps save receipts through refresh failures, retries expired tokens once with the same mutation ID, preserves selected membership recipients across searches, clamps pagination, and safely opens signed files with a blocked-popup fallback. Overview links apply matching filters. Code inventory resolves assigned Auth emails and finite use caps. `demo` remains reusable and unlimited.
+The dashboard refreshes open details/history, cancels stale view requests, keeps save receipts through refresh failures, retries expired tokens once with the same mutation ID, preserves selected membership recipients across searches, clamps pagination, and safely opens signed files with a blocked-popup fallback. Overview links apply matching filters. Code inventory resolves assigned Auth emails and finite use caps. `demo` is now limited to one free campaign per brand account.
 
 Verification: 38 application tests; transactional permissions/session, membership/code/campaign/idempotency tests with 101-row pagination; authenticated owner and brand API checks using disposable accounts; all seven populated sections at 320/390/768/1440 pixels; modal, search, delayed-request and failure recovery checks. Primary owner email confirmation and live Stripe setup remain pending. Browser images use local fixtures; no real membership, payment or promo redemption was changed.
 
 Published as Sites version 23, hosting commit `54aa62618ae3f28ec725496ce9695a8967dbdb93`, deployment `appgdep_6ae2821d76d0819185e86be366159d7f`. All 71 served assets passed four Worker checks; the browser confirmed the live route serves the new release and the security advisor has no findings.
+
+## One free campaign per brand — October 28, 2026
+
+Migration `20261029002337_per_brand_campaign_code_limit.sql` sets `demo.max_redemptions_per_brand = 1` while retaining `max_redemptions = NULL` globally. Every brand account can use the shared code once. Regular standalone campaigns remain $299, and paid annual entitlements continue to apply when no promo is used.
+
+Private `campaign_sponsorship_brand_usage` counters are authoritative for per-brand limits. Existing ledger uses are backfilled. Publication checks the counter under the existing brand advisory lock and code row lock, then publishes, writes the receipt/ledger and increments both counters atomically. Matching successful retries return the original receipt before checking the quota. Failed publications consume no allowance. The counter survives campaign/receipt deletion and cannot be reset by a customer. Account/code removal cascades its own private usage rows.
+
+Billing function v18 checks the same counter for quotes; repeated use returns a message to remove the code and continue at regular pricing. Direct final-publication calls enforce the database rule independently of quotes. Owner API v5 supports the `per_brand` usage option; owner inventory and successful code-creation dialogs display “One free campaign per brand”. Checkout repeats the policy beside a valid free quote. Both functions retain JWT verification.
+
+Verified with 40 application tests, three rolled-back database suites, authenticated API tests using two disposable brand accounts, and desktop/phone dashboard checks. Tests cover first use, repeat and changed-brief rejection, cross-brand eligibility, preserved idempotency, failure rollback, campaign-deletion resistance, denied direct counter access, and restoration of the standard $299 quote without the code. No real campaign, receipt, membership, or payment was changed by tests.
+
+The one-per-brand update is published as Sites version 25, hosting commit `42bdf5a3e4dc0fb2bf27125ce3c66ba42cc39841`, deployment `appgdep_6ae292d7a72c8191aad9931a0ffd45ec`. All four hosting checks passed. The browser confirms the live asset release; the security advisor returned no findings.

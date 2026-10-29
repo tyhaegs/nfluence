@@ -30,3 +30,9 @@ test('campaign edits reject impossible dates and zero or excessive durations',as
  for(const deadline of ['2027-02-30','2027-13-01','0 days','366 days','-1 month','tomorrow'])await assert.rejects(()=>ownerChange({action:'campaign_details',requestId,targetId,data:{name:'Campaign',deadline,note:'Correct brief'}}));
  const result=await ownerChange({action:'campaign_details',requestId,targetId,data:{name:'Campaign',deadline:'2028-02-29',note:'Correct brief'}});assert.equal(result.data.deadline,'2028-02-29');
 });
+
+test('owner can issue one-per-brand invitations without a global redemption limit',async()=>{
+ const limited=await ownerChange({action:'create_code',requestId,data:{code:'demo-gift',usage:'per_brand',max_redemptions_per_brand:50}});
+ assert.equal(limited.data.max_redemptions,null);assert.equal(limited.data.max_redemptions_per_brand,1);
+ const unlimited=await ownerChange({action:'create_code',requestId,data:{code:'unlimited-gift',usage:'reusable'}});assert.equal(unlimited.data.max_redemptions_per_brand,null);
+});

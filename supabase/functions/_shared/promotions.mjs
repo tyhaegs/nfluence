@@ -12,6 +12,11 @@ export function validateCampaignGrant(grant,brandId,now=new Date(),email=''){
  const limit=grant?.max_redemptions===undefined?1:grant.max_redemptions;
  const used=grant?.redemption_count??(grant?.redeemed_payment_id?1:0);
  if(!grant||!grant.enabled||(limit!==null&&used>=limit)||(grant.expires_at&&new Date(grant.expires_at)<=now)||(grant.assigned_brand_id&&grant.assigned_brand_id!==brandId)||(grant.assigned_email&&grant.assigned_email!==String(email).trim().toLowerCase()))throw Error('This code is invalid, expired, or already used.');
+ const perBrand=grant.max_redemptions_per_brand;
+ if(perBrand!==null&&perBrand!==undefined){
+  if(!Number.isInteger(grant.brand_redemption_count)||grant.brand_redemption_count<0)throw Error('Could not verify this code’s eligibility. Please try again.');
+  if(grant.brand_redemption_count>=perBrand)throw Error('This code covers one free campaign per brand. Remove it to continue with regular pricing.');
+ }
  return grant;
 }
 export function freeCampaignQuote(type,record){

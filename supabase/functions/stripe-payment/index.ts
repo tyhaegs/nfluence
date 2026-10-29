@@ -56,9 +56,12 @@ Deno.serve(async req=>{
    const giftQuote=freeCampaignQuote(type,rec);
    const codeHash=await campaignCodeHash(body.promoCode);
    if(action==='quote'){
-    const grant=checked(await admin.from('campaign_sponsorship_codes').select('enabled,assigned_brand_id,assigned_email,expires_at,redeemed_payment_id,max_redemptions,redemption_count').eq('code_hash',codeHash).maybeSingle());
+    const grant=checked(await admin.from('campaign_sponsorship_codes').select('id,enabled,assigned_brand_id,assigned_email,expires_at,redeemed_payment_id,max_redemptions,max_redemptions_per_brand,redemption_count').eq('code_hash',codeHash).maybeSingle());
+    if(grant?.max_redemptions_per_brand!=null){
+     const usage=checked(await admin.from('campaign_sponsorship_brand_usage').select('redemption_count').eq('code_id',grant.id).eq('brand_id',user.id).maybeSingle());grant.brand_redemption_count=usage?.redemption_count??0;
+    }
     validateCampaignGrant(grant,user.id,new Date(),user.email);
-    return json(giftQuote);
+    return json({...giftQuote,max_redemptions_per_brand:grant.max_redemptions_per_brand??null});
    }
    if(!/^[0-9a-f-]{36}$/i.test(body.requestId||''))throw Error('A checkout request ID is required.');
    const pay=checked(await admin.rpc('redeem_campaign_sponsorship',{p_brand:user.id,p_request:body.requestId,p_code_hash:codeHash,p_record:rec,p_email:user.email}));

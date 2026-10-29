@@ -29,3 +29,13 @@ test('reusable codes remain valid after any number of redemptions, but capped co
  assert.throws(()=>validateCampaignGrant({...reusable,max_redemptions:500},'brand'));
  assert.ok(validateCampaignGrant({...reusable,max_redemptions:501},'brand'));
 });
+
+test('one-per-brand codes allow other brands but require a verified unused allowance',()=>{
+ const trial={enabled:true,max_redemptions:null,redemption_count:500,max_redemptions_per_brand:1,brand_redemption_count:0};
+ assert.ok(validateCampaignGrant(trial,'new-brand'));
+ assert.throws(()=>validateCampaignGrant({...trial,brand_redemption_count:1},'used-brand'),/one free campaign per brand/);
+ assert.throws(()=>validateCampaignGrant({...trial,brand_redemption_count:2},'used-brand'),/regular pricing/);
+ for(const count of [undefined,null,-1,'0',NaN])assert.throws(()=>validateCampaignGrant({...trial,brand_redemption_count:count},'brand'),/verify/);
+ // Regular pricing remains authoritative when the used code is removed.
+ assert.equal(price('campaign_new',{}).amount_cents,29900);
+});

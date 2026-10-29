@@ -1,5 +1,7 @@
 # nfluence owner dashboard audit — October 28, 2026
 
+Later update: the shared `demo` code now grants one free campaign per brand account. The unlimited-per-brand behavior described in this historical audit has been replaced; see `BACKEND_SETUP.md` for the current enforcement and verification.
+
 Dashboard: https://nfluenceagency.com/campaigns/#owner
 
 The owner control room was reviewed across overview, campaigns and details, memberships, promo codes and usage history, brands/creators, payment receipts, private deliverables, and the activity log. Confirmed defects were fixed. Testing combined source review, real authenticated API requests with disposable accounts, database transactions that roll back, and populated local browser fixtures. No real campaign, membership, payment, or promo redemption was changed by testing.

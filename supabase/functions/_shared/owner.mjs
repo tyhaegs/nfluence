@@ -16,9 +16,9 @@ export async function ownerChange(body){
  const request=uuid(body.requestId),target=action==='create_code'||action==='grant_membership'?null:uuid(body.targetId);const d=body.data||{};let data={},code;
  if(action==='create_code'){
   code=normalizeCampaignCode(d.code);const email=String(d.email||'').trim().toLowerCase();if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Enter the brand’s account email.');
-  const usage=d.usage||'single';if(!['single','reusable'].includes(usage))throw Error('Choose single-use or reusable.');
+  const usage=d.usage||'single';if(!['single','reusable','per_brand'].includes(usage))throw Error('Choose single-use, one per brand, or reusable.');
   const label=String(d.label||'').trim();if(label.length>120)throw Error('Use a label under 120 characters.');
-  data={code_hash:await campaignCodeHash(code),code_hint:code.slice(-4),label,assigned_email:email||null,assigned_brand_id:d.brandId?uuid(d.brandId):null,expires_at:d.expiresAt?futureDate(d.expiresAt):null,max_redemptions:usage==='reusable'?null:1};
+  data={code_hash:await campaignCodeHash(code),code_hint:code.slice(-4),label,assigned_email:email||null,assigned_brand_id:d.brandId?uuid(d.brandId):null,expires_at:d.expiresAt?futureDate(d.expiresAt):null,max_redemptions:usage==='single'?1:null,max_redemptions_per_brand:usage==='per_brand'?1:null};
  }else if(action==='grant_membership')data={brand_id:uuid(d.brandId),ends_at:futureDate(d.endsAt),note:String(d.note||'').trim()};
  else if(action==='extend_membership')data={ends_at:futureDate(d.endsAt),note:String(d.note||'').trim()};
  else if(action==='end_membership')data={note:String(d.note||'').trim()};

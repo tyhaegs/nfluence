@@ -226,13 +226,16 @@
     "verification": "Landing, browse and detail layouts checked at 320, 375, 768 and 1440px. Search, detail navigation, posting-guide preview and campaign-start action checked. 13 application tests and 4 hosting tests passed."
   },
   "campaign_sponsorship_codes": {
-    "status": "live_reusable_verified",
-    "billing_function_version": 17,
-    "migration": "20261028203251_free_campaign_invites",
-    "scope": "demo is reusable with no redemption limit. Codes cover the standard $299 campaign fee; featured placement, annual plans and creator compensation remain separate.",
-    "controls": "Hashed code inventory; optional verified-email restriction, expiration and use limit; transactional redemption ledger and counter; retry safety; revocation stops future uses without changing published campaigns.",
-    "verification": "16 application tests, 4 hosting tests, transactional production database checks, 7 authenticated HTTP checks, and local checkout UI tests passed. No live test campaign or email was sent. QA account and invitation removed. First owner invitation remains unused.",
-    "ui": "Code can be applied while card checkout is unavailable. Valid invitations show $0, no card requirement, and confirm & publish. Changing a code invalidates the old quote."
+    "status": "live_one_per_brand_verified",
+    "billing_function_version": 18,
+    "migration": "20261029002337_per_brand_campaign_code_limit",
+    "scope": "demo is shared across brands, one free standard campaign per brand account. Further campaigns use regular $299 pricing or paid annual entitlements. Featured placement, annual plans and creator compensation remain separate.",
+    "controls": "Private durable per-code/brand usage counters; historical usage backfill; quote and atomic final-publication checks; campaign deletion cannot reset the allowance; idempotent retries do not consume extra uses.",
+    "verification": "40 application tests; three database suites rolled back; authenticated two-brand API checks passed; local desktop/phone owner label verified. No real campaign published, no card charged and no demo redemption consumed.",
+    "ui": "Owner usage option and inventory identify one free campaign per brand. Checkout explains the cap. Used codes are rejected with guidance to remove the code and use regular pricing.",
+    "site_version": 25,
+    "hosting_commit": "42bdf5a3e4dc0fb2bf27125ce3c66ba42cc39841",
+    "deployment_id": "appgdep_6ae292d7a72c8191aad9931a0ffd45ec"
   },
   "owner_dashboard": {
     "status": "published_verified",
@@ -243,7 +246,7 @@
       "overview",
       "all real campaign details and status controls",
       "membership grant/extend/end",
-      "promo creation with reusable or single-use settings",
+      "promo creation with one-per-brand, reusable or single-use settings",
       "email reservations and optional expiry",
       "redemption history and revocation",
       "canonical account directory",
@@ -253,8 +256,8 @@
     ],
     "authorization": "Service-only owner allowlist; JWT verified with Auth; confirmed email; existing, unexpired Auth session; owner checked on every request. No ownership from customer metadata.",
     "versions": {
-      "owner_admin": 4,
-      "stripe_payment": 17
+      "owner_admin": 5,
+      "stripe_payment": 18
     },
     "verification": "32 unit tests, 4 Worker tests, three transactional production database suites, authenticated owner-denial/promo HTTP checks, and 28 section plus 4 modal responsive checks passed. QA records rolled back or removed.",
     "dashboard_audit": {
