@@ -34,3 +34,22 @@ export function zonedDateTime(date,time,zone){
 }
 
 export function sanitizePendingProfile(payload){const {password,confirmPassword,confirm_password,...data}=payload.data||{};return {email:payload.email,role:payload.role,data};}
+
+export function creatorProfileFromRow(row={},identity={}){
+ return {...row,id:row.id||identity.id,userId:row.id||identity.id,name:identity.name||row.name||'Creator',avatarUrl:row.avatar_url||null,bannerUrl:row.banner_url||null,instagramFollowers:row.instagram_followers,tiktokFollowers:row.tiktok_followers,youtubeFollowers:row.youtube_followers,xFollowers:row.x_followers,facebookFollowers:row.facebook_followers,platforms:{Instagram:row.instagram,TikTok:row.tiktok,YouTube:row.youtube,X:row.x,Facebook:row.facebook}};
+}
+export async function loadCreatorProfile(id,sb=getClient()){
+ const [profile,identity]=await Promise.all([sb.from('creator_profiles').select('*').eq('id',id).maybeSingle(),sb.from('profiles_public').select('id,name').eq('id',id).maybeSingle()]);
+ const row=unwrap(profile),person=unwrap(identity);if(!row||!person)throw Error('This creator profile is unavailable.');
+ return creatorProfileFromRow(row,person);
+}
+export function socialProfileLink(platform,input){
+ const bases={Instagram:'https://instagram.com/',TikTok:'https://tiktok.com/@',YouTube:'https://youtube.com/@',X:'https://x.com/',Facebook:'https://facebook.com/'};
+ const hosts={Instagram:['instagram.com'],TikTok:['tiktok.com'],YouTube:['youtube.com','youtu.be'],X:['x.com','twitter.com'],Facebook:['facebook.com','fb.com']};
+ const value=String(input||'').trim();if(!value||!bases[platform])return null;
+ if(/^https?:\/\//i.test(value)||/^(www\.)?(instagram\.com|tiktok\.com|youtube\.com|youtu\.be|x\.com|twitter\.com|facebook\.com|fb\.com)\//i.test(value)){
+  try{const url=new URL(/^https?:/i.test(value)?value:'https://'+value);if(url.username||url.password||!hosts[platform].includes(url.hostname.replace(/^www\./,'')))return null;url.protocol='https:';return {href:url.href,label:url.pathname.replace(/^\//,'').replace(/\/$/,'')||platform};}catch{return null;}
+ }
+ if(!/^@?[a-z0-9_.-]+$/i.test(value))return null;
+ const handle=value.replace(/^@/,'');return {href:bases[platform]+encodeURIComponent(handle),label:'@'+handle};
+}

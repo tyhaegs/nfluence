@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffe
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import Cropper from 'cropperjs';
-import { campaignFromRow, campaignToUpdate, eligibleCampaign, loadPublicCampaigns, unwrap, getClient, TERMS_VERSION, fetchOwnedCampaigns, applicationFromRow, callFromRow, billingInfo, zonedDateTime, sanitizePendingProfile } from './data.js';
+import { campaignFromRow, campaignToUpdate, eligibleCampaign, loadPublicCampaigns, unwrap, getClient, TERMS_VERSION, fetchOwnedCampaigns, applicationFromRow, callFromRow, billingInfo, zonedDateTime, sanitizePendingProfile, creatorProfileFromRow, loadCreatorProfile, socialProfileLink, safeHttpUrl } from './data.js';
 import { ConversationHub, RecoveryScreen, UploadLibrary, AnnualPlanPanel, AppBoundary, ManualPaymentForm, CreatorReviewWorkspace } from './features.jsx';
 import './accessibility.js';
 import './app.css';
@@ -566,7 +566,7 @@ function CampaignDetail({ campaign: initialCampaign, onStartCampaign, onBack, is
                   const isCurrent = i === currentIdx;
                   const isLineFilled = i < currentIdx; // line to the RIGHT of this dot is filled if we've passed this step
                   return (
-                    <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                    <div key={s} className="nf-stage-step" style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", minWidth:0 }}>
                       {/* connector line to the NEXT dot — sits at same y as dot center */}
                       {i < stages.length - 1 && (
                         <div style={{
@@ -825,11 +825,7 @@ function CampaignDetail({ campaign: initialCampaign, onStartCampaign, onBack, is
                 border: "1px solid rgba(255,255,255,.1)",
                 background: "rgba(255,255,255,.05)",
               }}>
-                <img
-                  src={`https://i.pravatar.cc/100?img=${avatarIdx(creator.name)}`}
-                  alt={creator.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
+                {c.isDemo ? <img src={`https://i.pravatar.cc/100?img=${avatarIdx(creator.name)}`} alt={creator.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span aria-hidden="true" style={{display:"grid",placeItems:"center",height:"100%",fontWeight:600}}>{(creator.name||'C').split(' ').map(n=>n[0]).join('').slice(0,2)}</span>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
@@ -1334,7 +1330,7 @@ function CampaignDetail({ campaign: initialCampaign, onStartCampaign, onBack, is
                   </div>
                   <div style={{ fontSize: "1.2rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif", marginBottom: 8 }}>application sent!</div>
                   <div style={{ fontSize: ".9rem", opacity: .5, lineHeight: 1.6, maxWidth: 340, margin: "0 auto 24px" }}>
-                    {c.brand} will review your profile and reach out if you're selected. Keep an eye on your email.
+                    {c.brand} will review your profile and reach out if you're selected. Check your dashboard for updates.
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{
@@ -1821,7 +1817,7 @@ function CampaignEditor({ campaign: initialCampaign, onBack, onSave, session }) 
 
 // ── CampaignBuilder ──
 
-function CampaignBuilder({ onBack, onPublish, session }) {
+function CampaignBuilder({ onBack, onPublish, session, brandProfile = {} }) {
   const [step, setStep] = useState(0);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
@@ -1868,7 +1864,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     return () => { clearTimeout(t); cardRef.current?.destroy(); cardRef.current = null; };
   }, [needCard]);
   const [brand, setBrand] = useState({
-    name: "", tagline: "", bio: "", manager: "", phone: "", email: "", website: "", phoneCode: "+1",
+    name: brandProfile.name || "", tagline: brandProfile.tagline || "", bio: brandProfile.bio || "", manager: "", phone: brandProfile.phone || "", email: brandProfile.email || "", website: brandProfile.website || "", phoneCode: "+1",
     city: "", state: "", country: "",
     vibes: [], logoPreview: null, logoTransform: null, logoEditing: false,
     socialPills: { Instagram: false, TikTok: false, YouTube: false, X: false, Facebook: false, Website: false },
@@ -1896,7 +1892,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
   const selectedSocials = SOCIAL_OPTIONS.filter(k => brand.socialPills[k]);
   const socialsComplete = selectedSocials.every(k => brand.socials[k]?.trim());
   const selectedPlatformKeys = PLATFORM_LIST.filter(p => platforms.selected[p]);
-  const hasDeliverable = selectedPlatformKeys.some(p => platforms.deliverables[p]?.trim());
+  const hasDeliverable = selectedPlatformKeys.every(p => platforms.deliverables[p]?.trim());
 
   const canProceed = useMemo(() => {
     if (step === 0) return brand.name.trim() && brand.bio.trim() && brand.manager.trim() && isValidEmail(brand.email) && socialsComplete;
@@ -1905,7 +1901,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
     if (step === 3) {
       const isPaid = terms.compType === "paid" || terms.compType === "product+paid";
       const needsCap = isPaid && (campaign.spotsTotal === null || campaign.spotsTotal === 0);
-      const hasDeadline = terms.deadlineMode === "date" ? !!terms.deadlineDate : !!(terms.deadlineAmount && parseInt(terms.deadlineAmount) > 0);
+      const hasDeadline = terms.deadlineMode === "date" ? Date.parse(terms.deadlineDate+"T23:59:59Z") > Date.now() : !!(terms.deadlineAmount && parseInt(terms.deadlineAmount) > 0);
       const hasAmount = !isPaid || (parseFloat((terms.compAmount || "").replace(/[^0-9.]/g, "")) > 0);
       return terms.compType && terms.country && !needsCap && hasDeadline && hasAmount;
     }
@@ -2649,7 +2645,7 @@ function CampaignBuilder({ onBack, onPublish, session }) {
         <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
           <div className="nf-wrap">
             <div className="nf-section-title">platforms & deliverables</div>
-            <div className="nf-hint">(select platforms and fill in at least one deliverable)</div>
+            <div className="nf-hint">(add deliverables for each selected platform)</div>
             {PLATFORM_LIST.map(p => (
               <div key={p}>
                 <div
@@ -2894,9 +2890,9 @@ function CampaignBuilder({ onBack, onPublish, session }) {
                       {[
                         "pinned to the top of the browse page above all other campaigns",
                         "shimmering gold brand name so creators notice you instantly",
-                        "seen first by thousands of active creators browsing for deals",
+                        "featured placement in the campaign directory",
                         "\"featured\" label in search results and campaign listings",
-                        "priority indexing — your campaign is always fresh and visible",
+                        "placement remains active for your selected duration",
                       ].map((item, i) => (
                         <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                           <span style={{ color: "rgba(255,200,60,.6)", flexShrink: 0, marginTop: 1 }}>✦</span>
@@ -4425,7 +4421,7 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
         })()}
 
         {/* Stats Row — 3 col: active · needs attention · total creators, then reviews */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginBottom: 8 }}>
           {/* active campaigns */}
           <div className="nf-stat-card">
             <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>{allCampaigns.filter(c => ["open","active","shipped","delivered","accepted"].includes(c.stage)).length}</div>
@@ -4470,17 +4466,11 @@ function Dashboard({ user, campaigns, demoCampaigns, onBack, onSignOut, onNewCam
                     const dateStr = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
                     const timeStr = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)" }}>
+                      <div key={i} className="nf-call-row" style={{ display: "flex", gap:12, alignItems: "center", padding: "14px 20px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)" }}>
                         <div style={{ fontWeight: 700, fontSize: ".95rem", color: "#fff", flex: 1 }}>{call.brand} · {call.campaign}</div>
-                        <div style={{ fontSize: ".9rem", opacity: .5, marginRight: 20, whiteSpace: "nowrap", minWidth: 220, textAlign: "center" }}>{dateStr} · {timeStr}</div>
-                        {call.status === "confirmed" ? (
-                          <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)" }}>confirmed</div>
-                        ) : (
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(100,255,150,.4)", background: "rgba(100,255,150,.08)", fontSize: ".85rem", fontWeight: 700, color: "rgba(100,255,150,.9)", cursor: "pointer", animation: "nf-confirm-shimmer 2.5s ease-in-out infinite" }}>confirm</div>
-                            <div style={{ padding: "6px 16px", borderRadius: 20, border: "1px solid rgba(255,100,100,.3)", background: "rgba(255,100,100,.06)", fontSize: ".85rem", fontWeight: 700, color: "rgba(255,120,120,.8)", cursor: "pointer" }}>decline</div>
-                          </div>
-                        )}
+                        <div className="nf-call-time" style={{ fontSize: ".9rem", opacity: .7, marginRight: 20, whiteSpace: "nowrap", minWidth: 220, textAlign: "center" }}>{dateStr} · {timeStr}</div>
+                        <span style={{fontSize:'.85rem',color:call.status==='confirmed'?'#b7efc8':'#c8d5e5'}}>{call.status==='confirmed'?'Confirmed':'Awaiting creator'}</span>
+                        {safeHttpUrl(call.meetLink)&&<a className="nf-creator-btn" href={safeHttpUrl(call.meetLink)} target="_blank" rel="noopener noreferrer">Join call</a>}
                       </div>
                     );
                   })}
@@ -5201,13 +5191,22 @@ function CreatorInbox({ conversations, onSelectThread, onBack, onSend, allMessag
 
 // ── CreatorPublicProfile ──
 
+function CreatorProfileScreen({creator,onBack,onMessage}){
+ const [profile,setProfile]=useState(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+ const id=creator.userId||creator.creatorId||creator.id;
+ useEffect(()=>{let alive=true;setProfile(null);setError('');if(!id){setProfile(creator);return;}loadCreatorProfile(id).then(p=>{if(alive)setProfile(p)}).catch(e=>{if(alive)setError(e.message)});return()=>{alive=false}},[id,retry]);
+ if(!profile)return <main id="main-content" className="workspace"><button onClick={onBack}>← Back</button><h1>Creator profile</h1>{error?<><p role="alert" className="error">{error}</p><button onClick={()=>setRetry(v=>v+1)}>Try again</button></>:<p role="status">Loading profile…</p>}</main>;
+ return <CreatorPublicProfile creator={profile} onBack={onBack} onMessage={onMessage}/>;
+}
+
 function CreatorPublicProfile({ creator, onBack, onMessage }) {
   const platforms = [
     { key: "Instagram", handle: creator.instagram, count: creator.instagramFollowers, url: "https://instagram.com/" },
     { key: "TikTok",    handle: creator.tiktok,    count: creator.tiktokFollowers,    url: "https://tiktok.com/@" },
     { key: "YouTube",  handle: creator.youtube,    count: creator.youtubeFollowers,   url: "https://youtube.com/@" },
-    { key: "X",        handle: creator.x,          count: creator.xFollowers,         url: "https://x.com/" },
-  ].filter(p => p.handle);
+    { key: "X",        handle: creator.x,          count: creator.xFollowers },
+    { key: "Facebook", handle: creator.facebook, count: creator.facebookFollowers },
+  ].map(p=>({...p,link:socialProfileLink(p.key,p.handle)})).filter(p=>p.link);
 
   const niches = creator.niches ? creator.niches.split(",").map(n => n.trim()).filter(Boolean) : [];
   const completedCount = typeof creator.completedCampaigns === "number" ? creator.completedCampaigns : 0;
@@ -5305,8 +5304,8 @@ function CreatorPublicProfile({ creator, onBack, onMessage }) {
             <div className="nf-plat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
               <style>{`.nf-plat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } @media(max-width:600px){ .nf-plat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }`}</style>
               {platforms.map(p => {
-                const handle = p.handle.startsWith("@") ? p.handle : "@" + p.handle;
-                const href = p.url + handle.replace("@", "");
+                const handle = p.link.label;
+                const href = p.link.href;
                 const count = abbrev(p.count);
                 return (
                   <a key={p.key} href={href} target="_blank" rel="noopener noreferrer" className="cpp-plat-card">
@@ -6609,7 +6608,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
       `}</style>
 
       {/* Header */}
-      <div style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
+      <div className="nf-creator-header" style={{ width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
         <div style={{ fontFamily: "'Monda', system-ui, sans-serif", fontWeight: 600, fontSize: "1.1rem", cursor: "pointer", flexShrink: 0 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onBack}>nfluence</div>
         <div style={{ display: "flex", gap: 18, fontSize: ".9rem", alignItems: "center", flexShrink: 0 }}>
           <span style={{ color: "#fff", cursor: "pointer", opacity: .7 }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => onBrowse?.()}>campaigns</span>
@@ -6671,10 +6670,10 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               </div>
             )}
             {/* Rating + completed campaigns — clickable */}
-            {activeCampaigns.filter(c => c.myStage === "paid").length > 0 || creatorProfile.rating ? (
+            {(creatorProfile.reviews || []).length > 0 ? (
               <div onClick={() => setShowCreatorReviews(true)} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, cursor: "pointer" }}>
                 <span style={{ color: "#fbbf24", fontSize: ".95rem" }}>{'★'.repeat(Math.round(creatorProfile.rating || 5))}{'☆'.repeat(5 - Math.round(creatorProfile.rating || 5))}</span>
-                <span style={{ fontSize: ".85rem", opacity: .5 }}>{creatorProfile.rating || "5.0"} · <span style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>({(creatorProfile.reviews || []).length || 3} review{((creatorProfile.reviews || []).length || 3) !== 1 ? "s" : ""})</span></span>
+                <span style={{ fontSize: ".85rem", opacity: .5 }}>{creatorProfile.rating || "5.0"} · <span style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>({(creatorProfile.reviews || []).length} review{((creatorProfile.reviews || []).length) !== 1 ? "s" : ""})</span></span>
               </div>
             ) : null}
             {/* Bio — above pills, single line */}
@@ -6693,15 +6692,16 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                 { key: "Instagram", handle: creatorProfile.instagram, count: creatorProfile.instagramFollowers, url: "https://instagram.com/" },
                 { key: "TikTok", handle: creatorProfile.tiktok, count: creatorProfile.tiktokFollowers, url: "https://tiktok.com/@" },
                 { key: "YouTube", handle: creatorProfile.youtube, count: creatorProfile.youtubeFollowers, url: "https://youtube.com/@" },
-                { key: "X", handle: creatorProfile.x, count: creatorProfile.xFollowers, url: "https://x.com/" },
-              ].filter(p => p.handle);
+                { key: "X", handle: creatorProfile.x, count: creatorProfile.xFollowers },
+                { key: "Facebook", handle: creatorProfile.facebook, count: creatorProfile.facebookFollowers },
+              ].map(p=>({...p,link:socialProfileLink(p.key,p.handle)})).filter(p=>p.link);
               if (!platData.length) return null;
               return (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12, marginTop: 16 }}
                   className="nf-plat-grid">
                   <style>{`.nf-plat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } @media(max-width:600px){ .nf-plat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }`}</style>
                   {platData.map(p => (
-                    <a key={p.key} href={p.url + p.handle.replace(/^@/, "")} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", borderRadius: 16, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", transition: "transform .2s, border-color .2s, box-shadow .2s" }}
+                    <a className="nf-social-card" key={p.key} href={p.link.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", borderRadius: 16, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", transition: "transform .2s, border-color .2s, box-shadow .2s" }}
                       onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.2)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,.3)"; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.boxShadow = "none"; }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -6710,12 +6710,12 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                         </div>
                         {p.count && (
                           <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", lineHeight: 1 }}>{p.count}</div>
+                            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", lineHeight: 1 }}>{new Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(Number(String(p.count).replaceAll(",",""))) !== "NaN" ? new Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(Number(String(p.count).replaceAll(",",""))) : p.count}</div>
                             <div style={{ fontSize: ".7rem", color: "rgba(255,255,255,.35)", marginTop: 2 }}>followers</div>
                           </div>
                         )}
                       </div>
-                      <div style={{ fontSize: ".85rem", color: "rgba(255,255,255,.6)" }}>{p.handle}</div>
+                      <div style={{ fontSize: ".85rem", color: "rgba(255,255,255,.6)", overflowWrap:"anywhere" }}>{p.link.label}</div>
                     </a>
                   ))}
                 </div>
@@ -6730,7 +6730,7 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
           {[
             { label: "active campaigns", value: activeCampaigns.length, onClick: () => setShowActiveModal(true) },
             { label: "pending campaigns", value: appliedCampaigns.filter(c => c.status === "applied").length, onClick: () => setShowPendingModal(true) },
-            { label: "completed campaigns", value: appliedCampaigns.filter(c => c.status === "paid").length, onClick: () => setShowCompletedModal(true) },
+            { label: "completed campaigns", value: appliedCampaigns.filter(c => c.myStage === "paid").length, onClick: () => setShowCompletedModal(true) },
           ].map((s, i) => (
             <div key={i} className="nf-creator-card" style={{ padding: "18px 20px", textAlign: "center", cursor: "pointer" }} onClick={s.onClick}>
               <div style={{ fontSize: ".72rem", opacity: .35, marginBottom: 8, textTransform: "lowercase" }}>{s.label}</div>
@@ -6760,13 +6760,13 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                       </div>
                     </div>
                     {/* Stage tracker — matches brand view */}
-                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${CREATOR_STAGES.length}, 1fr)`, alignItems: "start", marginBottom: 4 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${CREATOR_STAGES.length}, minmax(0, 1fr))`, alignItems: "start", marginBottom: 4 }}>
                       {CREATOR_STAGES.map((s, si) => {
                         const isActive = si <= stageIdx;
                         const isCurrent = si === stageIdx;
                         const isLineFilled = si < stageIdx;
                         return (
-                          <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                          <div key={s} className="nf-stage-step" style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", minWidth:0 }}>
                             {si < CREATOR_STAGES.length - 1 && (
                               <div style={{ position: "absolute", top: 8, left: "calc(50% + 9px)", right: "calc(-50% + 9px)", height: 2, background: isLineFilled ? "#fff" : "rgba(255,255,255,.08)", transition: "background .3s" }} />
                             )}
@@ -6818,10 +6818,11 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                   const brand=call.brandName, campaign=call.campaignName;
                   const isPast = new Date(call.datetime) < new Date();
                   return (
-                    <div key={key} style={{ padding: "14px 18px", borderRadius: 14, background: call.confirmed ? "rgba(100,200,255,.05)" : "rgba(255,255,255,.03)", border: `1px solid ${call.confirmed ? "rgba(100,200,255,.2)" : "rgba(255,255,255,.1)"}`, display: "flex", alignItems: "center", gap: 12 }}>
+                    <div key={key} className="nf-call-row" style={{ padding: "14px 18px", borderRadius: 14, background: call.confirmed ? "rgba(100,200,255,.05)" : "rgba(255,255,255,.03)", border: `1px solid ${call.confirmed ? "rgba(100,200,255,.2)" : "rgba(255,255,255,.1)"}`, display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ fontWeight: 600, fontSize: ".88rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{brand} · {campaign}</div>
-                      <div style={{ width: 220, textAlign: "center", fontSize: ".8rem", opacity: .5, whiteSpace: "nowrap", flexShrink: 0 }}>{formatCallTime(call.datetime, call.timezone)}</div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, width: 160, justifyContent: "flex-end" }}>
+                      <div className="nf-call-time" style={{ width: 220, textAlign: "center", fontSize: ".8rem", opacity: .5, whiteSpace: "nowrap", flexShrink: 0 }}>{formatCallTime(call.datetime, call.timezone)}</div>
+                      <div className="nf-call-actions" style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, width: 160, justifyContent: "flex-end" }}>
+                        {safeHttpUrl(call.meetLink)&&<a className="nf-creator-btn" href={safeHttpUrl(call.meetLink)} target="_blank" rel="noopener noreferrer">Join call</a>}
                         {call.confirmed ? (
                           <div style={{ padding: "5px 14px", borderRadius: 10, background: "rgba(100,255,150,.1)", border: "1px solid rgba(100,255,150,.25)", fontSize: ".78rem", fontWeight: 600, color: "rgba(100,255,150,.9)" }}>confirmed</div>
                         ) : !isPast ? (
@@ -6867,12 +6868,12 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
                         </div>
                         {c.deadline && <div style={{ fontSize: ".72rem", opacity: .3 }}>due {c.deadline}</div>}
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${CREATOR_STAGES.length}, 1fr)`, alignItems: "start" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${CREATOR_STAGES.length}, minmax(0, 1fr))`, alignItems: "start" }}>
                         {CREATOR_STAGES.map((s, si) => {
                           const isActive = si <= stageIdx;
                           const isCurrent = si === stageIdx;
                           return (
-                            <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                            <div key={s} className="nf-stage-step" style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", minWidth:0 }}>
                               {si < CREATOR_STAGES.length - 1 && <div style={{ position: "absolute", top: 8, left: "calc(50% + 9px)", right: "calc(-50% + 9px)", height: 2, background: si < stageIdx ? "#fff" : "rgba(255,255,255,.08)" }} />}
                               <div style={{ width: isCurrent ? 18 : 14, height: isCurrent ? 18 : 14, borderRadius: "50%", background: isActive ? "#fff" : "rgba(255,255,255,.1)", border: isCurrent ? "2px solid #fff" : "none", boxShadow: isCurrent ? "0 0 12px rgba(255,255,255,.4)" : "none", marginTop: isCurrent ? 0 : 2, position: "relative", zIndex: 1 }} />
                               <div style={{ fontSize: ".6rem", marginTop: 8, textAlign: "center", opacity: isCurrent ? .9 : isActive ? .45 : .2, fontWeight: isCurrent ? 600 : 400, lineHeight: 1.2, padding: "0 2px" }}>{CREATOR_STAGE_LABELS[s]}</div>
@@ -6897,11 +6898,11 @@ function CreatorDashboard({ user, appliedCampaigns, activeCampaigns, uploads, on
               <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Monda', system-ui, sans-serif" }}>completed campaigns</div>
               <div onClick={() => setShowCompletedModal(false)} style={{ cursor: "pointer", width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", opacity: .7 }}><XIcon size={16} /></div>
             </div>
-            {appliedCampaigns.filter(c => c.status === "accepted").length === 0 ? (
+            {appliedCampaigns.filter(c => c.myStage === "paid").length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 0", opacity: .3, fontSize: ".9rem" }}>no completed campaigns yet</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {appliedCampaigns.filter(c => c.status === "accepted").map((c, i) => (
+                {appliedCampaigns.filter(c => c.myStage === "paid").map((c, i) => (
                   <div key={i} style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", display: "flex", alignItems: "center", gap: 14 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,.1)", background: "#0c1424", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {c.logoUrl ? <img src={c.logoUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: ".55rem", opacity: .4 }}>logo</span>}
@@ -7487,7 +7488,7 @@ function NfluenceApp() {
     else if(profile.role==='creator'){
       setCreatorUser(identity);setUser(null);
       const cp=unwrap(await sb.from('creator_profiles').select('*').eq('id',u.id).maybeSingle())||{};
-      setCreatorProfile({...cp,id:u.id,userId:u.id,name:identity.name,instagramFollowers:cp.instagram_followers,tiktokFollowers:cp.tiktok_followers,youtubeFollowers:cp.youtube_followers,xFollowers:cp.x_followers,facebookFollowers:cp.facebook_followers,avatarUrl:cp.avatar_url,bannerUrl:cp.banner_url,platforms:{Instagram:cp.instagram,TikTok:cp.tiktok,YouTube:cp.youtube,X:cp.x,Facebook:cp.facebook}});
+      setCreatorProfile(creatorProfileFromRow(cp,identity));
       const rows=unwrap(await sb.from('applications').select('*,campaigns(*)').eq('creator_id',u.id));
       const apps=rows.map(applicationFromRow);setCreatorApplied(apps);setCreatorActive(apps.filter(a=>a.status==='accepted'&&a.myStage!=='paid'));setAppliedCampaigns(apps.map(a=>a.id||a.campaignId));
       setAppliedGigs(unwrap(await sb.from('gig_applications').select('gig_id').eq('creator_id',u.id)).map(a=>a.gig_id));
@@ -7512,7 +7513,7 @@ function NfluenceApp() {
     const timer=setInterval(()=>{sb.auth.getSession().then(({data})=>{if(data.session)hydrateSession(data.session).catch(()=>{});});},30000);
     return()=>{alive=false;subscription.unsubscribe();clearInterval(timer);};
   },[]);
-  useEffect(()=>{const route=async()=>{const hash=location.hash.slice(1);const m=hash.match(/^campaign\/([0-9a-f-]{36})$/i);if(m){try{const row=unwrap(await getSB().from('campaigns').select('*,applications(*),reviews(*)').eq('id',m[1]).maybeSingle());if(!row){setOperationError('This campaign is unavailable or no longer public.');setView('browse');return;}const people=unwrap(await getSB().from('profiles_public').select('*').eq('id',row.brand_id).maybeSingle());setSelectedCampaign(campaignFromRow({...row,profile:people}));setView('detail');}catch(error){setOperationError(error.message);setView('browse');}}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
+  useEffect(()=>{const route=async()=>{const hash=location.hash.slice(1);const demo=DEMO_CAMPAIGNS.find(c=>hash==='campaign/'+c.id);if(demo){setSelectedCampaign(demo);setView('detail');return;}const m=hash.match(/^campaign\/([0-9a-f-]{36})$/i);if(m){try{const row=unwrap(await getSB().from('campaigns').select('*,applications(*),reviews(*)').eq('id',m[1]).maybeSingle());if(!row){setOperationError('This campaign is unavailable or no longer public.');setView('browse');return;}const people=unwrap(await getSB().from('profiles_public').select('*').eq('id',row.brand_id).maybeSingle());setSelectedCampaign(campaignFromRow({...row,profile:people}));setView('detail');}catch(error){setOperationError(error.message);setView('browse');}}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
   useEffect(()=>{if(authSession&&user&&new URLSearchParams(location.search).has('annual_session'))setView('plans');},[authSession?.user?.id,user?.id]);
   useEffect(()=>{if(view==='detail'&&selectedCampaign?.id)history.replaceState(null,'','#campaign/'+selectedCampaign.id);},[view,selectedCampaign?.id]);
   // Persist current view to localStorage on every change
@@ -7524,7 +7525,7 @@ function NfluenceApp() {
       const currentHash = window.location.hash.replace("#", "");
       if (HASHED_VIEWS.includes(view)) {
         if (currentHash !== view) window.history.replaceState(null, "", "#" + view);
-      } else if (HASHED_VIEWS.includes(currentHash)) {
+      } else if (HASHED_VIEWS.includes(currentHash) || (view!=="detail" && currentHash.startsWith("campaign/") && !authLoading)) {
         // We've moved off a public view (e.g. into dashboard) — clear stale hash
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
@@ -7654,7 +7655,7 @@ function NfluenceApp() {
   const handleApply=async(campaign,data)=>{
     if(campaign.isDemo || String(campaign.id).startsWith("demo-")) throw Error("Demo campaigns are examples and do not accept applications.");
     if(!creatorUser?.id)throw Error('Please sign in with a creator account.');
-    const row=unwrap(await getSB().from('applications').insert({campaign_id:campaign.id,creator_id:creatorUser.id,status:'applied',stage:'applied',name:data.name,pitch:data.pitch,portfolio:data.portfolio,platforms:data.platforms}).select().single());
+    const row=unwrap(await getSB().from('applications').insert({campaign_id:campaign.id,creator_id:creatorUser.id,status:'applied',stage:'applied',name:data.name,pitch:data.pitch,portfolio:data.portfolio,platforms:data.platforms,handles:data.handles}).select().single());
     setAppliedCampaigns(prev=>[...new Set([...prev,campaign.id])]);
     await hydrateSession(authSession);return row;
   };
@@ -7818,13 +7819,17 @@ function NfluenceApp() {
     <div style={{display:'flex',justifyContent:'center',gap:20,padding:12}}><button className="nf-recovery-link" onClick={()=>{setSelectedCampaign(null);setView('content')}}>Your deliverables</button><button className="nf-recovery-link" onClick={()=>setView('creatorreviews')}>Review a campaign</button></div>
     <CreatorDashboard user={creatorUser} appliedCampaigns={creatorApplied} activeCampaigns={creatorActive} uploads={creatorUploads} onSignOut={handleCreatorSignOut} onBack={() => setView("landing")} onBrowseGigs={() => setView("gigbrowse")} creatorProfile={creatorProfile} onEditProfile={async (form) => {
         const sb = getSB();
-        if (sb && creatorUser?.id) { unwrap(await sb.from('creator_profiles').upsert({
+        if (sb && creatorUser?.id) {
+          if(!form.name?.trim())throw Error('Enter your name.');
+          unwrap(await sb.from('profiles').update({name:form.name.trim()}).eq('id',creatorUser.id).select('id').single());
+          unwrap(await sb.from('creator_profiles').upsert({
           id: creatorUser.id,
           bio: form.bio,
           location: form.location,
           age: form.age,
           languages: form.languages,
           niches: form.niches,
+          skills: form.skills || [],
           instagram: form.instagram,
           instagram_followers: form.instagramFollowers,
           tiktok: form.tiktok,
@@ -7838,7 +7843,7 @@ function NfluenceApp() {
           avatar_url: form.avatarUrl || null,
           banner_url: form.bannerUrl || null,
         }));await hydrateSession(authSession); }
-      }} onUpload={async upload=>{await import('./features.jsx').then(m=>m.uploadDeliverable(upload.applicationId,upload.file));await hydrateSession(authSession);}} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setSelectedCampaign(campaign);setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([,call])=>call.creator_id===creatorUser?.id))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
+      }} onUpload={async upload=>{await import('./features.jsx').then(m=>m.uploadDeliverable(upload.applicationId,upload.file));await hydrateSession(authSession);}} onSelectCampaign={(c) => { setSelectedCampaign(mergedDemos.find(d => d.id === c.id) || c); setDetailSource("landing"); setView("detail"); }} onBrowse={() => setView("browse")} onViewOwnProfile={() => { setSelectedCreatorProfile(creatorProfile); setCreatorProfileReturnView("creatordashboard"); setView("creatorprofile"); }} onOpenMessages={(campaign) => { if (campaign) { const creatorName = creatorProfile?.name || creatorUser?.name || ""; const key = `${campaign.brand}::${campaign.campaign}::${creatorName}`; setSelectedCampaign(campaign);setCreatorMessageThread({ key, brandName: campaign.brand, campaignName: campaign.campaign }); setView("creatormessages"); } else { setView("creatorinbox"); } }} scheduledCalls={Object.fromEntries(Object.entries(scheduledCalls).filter(([,call])=>call.creator_id===creatorUser?.id))} onRespondToCall={handleRespondToCall} notifications={notifications} onMarkAllNotifsRead={markAllNotifsRead} onViewAllNotifications={() => setView("notifications")} />
     {operationError && <div role="alert" className="async-error" style={{position:"fixed",bottom:16,left:16,right:16,zIndex:3000}}>{operationError}<button onClick={()=>setOperationError("")} style={{marginLeft:16}}>Dismiss</button></div>}{showToast && <NotificationToast message={toastMessage} onView={() => { setShowToast(false); setView("notifications"); }} onDismiss={() => setShowToast(false)} />}
   </>;
   if (view === "creatorinbox") {
@@ -7849,7 +7854,7 @@ function NfluenceApp() {
     const brandAvatarMap = Object.fromEntries(DEMO_CAMPAIGNS.map(c => [c.brand, c.logoUrl || null]));
     return <Messages campaign={{ brand: creatorMessageThread.brandName, campaign: creatorMessageThread.campaignName }} creatorName={creatorProfile?.name || creatorUser?.name || ""} messages={allMessages[creatorMessageThread.key] || []} onSend={handleCreatorSendMessage} onBack={() => setView("creatorinbox")} isBrand={false} brandAvatar={brandAvatarMap[creatorMessageThread.brandName] || null} creatorAvatar={creatorProfile?.avatarUrl || null} />;
   }
-  if (view === "creatorprofile" && selectedCreatorProfile) return <CreatorPublicProfile creator={selectedCreatorProfile} onBack={() => setView(creatorProfileReturnView)} onMessage={selectedCampaign ? () => handleOpenMessage(selectedCampaign, selectedCreatorProfile, "creatorprofile") : null} />;
+  if (view === "creatorprofile" && selectedCreatorProfile) return <CreatorProfileScreen creator={selectedCreatorProfile} onBack={() => setView(creatorProfileReturnView)} onMessage={selectedCampaign ? () => handleOpenMessage(selectedCampaign, selectedCreatorProfile, "creatorprofile") : null} />;
   if (view === "onboarding") return <OnboardingPage onDone={handleOnboardingDone} />;
   if (view === "reviews") return <ReviewsPage campaigns={myCampaigns} demoCampaigns={brandDemoCampaigns} onBack={() => setView("dashboard")} onUpdateReview={handleUpdateReview} />;
   if (view === "dashboard") return <>
@@ -7883,7 +7888,7 @@ function NfluenceApp() {
   if ((view === "builder" || view === "gigbuilder") && !user) {
     return <SignUpChoice onBack={() => setView("landing")} onBrand={() => setView("brandonboarding")} onCreator={() => setView("creatoronboarding")} onSignIn={() => setView("signin")} />;
   }
-  if (view === "builder") return <CampaignBuilder onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
+  if (view === "builder") return <CampaignBuilder brandProfile={user} onBack={() => user ? setView("dashboard") : setView("landing")} onPublish={handlePublish} session={authSession} />;
   if (view === "gigbuilder") return <GigListingBuilder onBack={() => setView("dashboard")} onPublish={handleGigPublish} session={authSession} />;
   if(view==='edit'&&selectedCampaign)return <CampaignEditor campaign={selectedCampaign} onBack={()=>setView('dashboard')} session={authSession} onSave={async updated=>{
     const row=unwrap(await getSB().from('campaigns').update(campaignToUpdate(updated)).eq('id',updated.id).select().single());
@@ -7892,7 +7897,7 @@ function NfluenceApp() {
   if (view === "brandprofile") return <BrandProfile brand={selectedBrand} allCampaigns={mergedDemos} onBack={() => setView("browse")} onSelectCampaign={(c) => { setSelectedCampaign(c); setDetailSource("browse"); setView("detail"); }} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} user={user} />;
   if (view === "gigbrowse") return <GigBrowse onBack={() => creatorUser ? setView("creatordashboard") : setView("landing")} onSelectGig={(g) => { setSelectedGig(g); setView("gigdetail"); }} appliedGigs={appliedGigs} creatorUser={creatorUser} />;
   if (view === "gigdetail" && selectedGig) return <GigDetail gig={selectedGig} onBack={() => setView("gigbrowse")} creatorUser={creatorUser} appliedGigs={appliedGigs} onApply={handleGigApply} onSignInRedirect={() => setView("creatorsignin")} />;
-  if (view === "browse") return <BrowseCampaigns loading={publicLoading} error={publicError} onRetry={refreshPublic} campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c)=>{setSelectedCampaign(c);setDetailSource("browse");setView("detail");}} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.brand === c.brand && d.campaign === c.campaign) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
+  if (view === "browse") return <BrowseCampaigns loading={publicLoading} error={publicError} onRetry={refreshPublic} campaigns={mergedDemos} onBack={() => setView("landing")} onSelectCampaign={(c)=>{setSelectedCampaign(c);setDetailSource("browse");setView("detail");}} appliedCampaigns={appliedCampaigns} onApplyClick={(c) => { setSelectedCampaign(mergedDemos.find(d => d.id === c.id) || c); setAutoApply(true); setDetailSource("browse"); setView("detail"); }} onFaq={() => setView("faq")} onSignIn={() => user ? setView("dashboard") : creatorUser ? setView("creatordashboard") : setView("signin")} user={user} creatorUser={creatorUser} />;
   if (view === "messages" && selectedCampaign && messageCreator) {
     const key = getMessageKey(selectedCampaign, messageCreator);
     return <Messages

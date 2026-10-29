@@ -11,3 +11,15 @@
 .nf-browse-card,.nf-campaign-card{min-width:0}.nf-campaign-summary{gap:10px}.nf-campaign-summary>div:first-child{min-width:0;flex:1;overflow-wrap:break-word}
 @media(max-width:500px){.nf-campaign-summary{flex-direction:column}.nf-campaign-summary>div:last-child{display:flex;flex-wrap:wrap;align-items:center;gap:8px;text-align:left!important}.nf-campaign-summary>div:last-child>div{margin:0!important}.nf-campaign-summary>div:last-child>div:nth-last-child(2){display:none}.nf-demo-preview{padding:10px 14px}.nf-demo-heading{margin-top:8px}}
 @media(max-width:600px){.nf-comp-deliverables{grid-template-columns:1fr!important}}
+
+/* Populated workspaces must remain readable on narrow screens. */
+.workspace h1,.workspace h2,.workspace p,.inbox-threads button,.cpp-plat-card{overflow-wrap:anywhere;min-width:0}
+.workspace-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.nf-creator-input{min-width:0}.nf-call-actions{width:auto!important;flex-wrap:wrap}.nf-call-actions a{text-decoration:none;white-space:nowrap}
+@media(max-width:600px){.nf-creator-header{height:auto!important;min-height:64px;flex-wrap:wrap;gap:8px;padding:12px 16px!important}.nf-creator-header>div:last-child{gap:12px!important;flex-wrap:wrap;min-width:0}.nf-call-row{flex-wrap:wrap}.nf-call-row>div:first-child{flex-basis:100%!important;white-space:normal!important}.nf-call-time{width:auto!important;text-align:left!important;white-space:normal!important}.nf-call-actions{width:100%!important;justify-content:flex-start!important}.nf-creator-btn{min-height:44px}.cpp-plat-card{padding:14px!important}}
+
+.nf-social-card{min-width:0;overflow-wrap:anywhere}.nf-social-card>div:first-child{gap:8px;flex-wrap:wrap}.nf-social-card>div:first-child>div:first-child{flex-shrink:0}
+@media(max-width:600px){.nf-social-card{padding:14px!important}.nf-call-time{min-width:0!important}.nf-call-row{gap:12px}.nf-call-row>a{flex-shrink:0}}
+
+.nf-stat-card{min-width:0;overflow-wrap:anywhere}.nf-stage-step{overflow-wrap:anywhere}.ce-input{min-width:0}
+@media(max-width:400px){.ce-feat-pill{min-width:0;flex-direction:column;gap:4px!important}.nf-stat-card{padding:16px 10px!important}.nf-stage-step>div:last-child{padding:0 1px!important;font-size:.62rem!important}}
