@@ -8037,7 +8037,7 @@ function NfluenceApp() {
       {/* Hero */}
       <div style={{ textAlign: "center", padding: "50px 24px 20px", maxWidth: 700, margin: "0 auto" }}>
         <h1 className="campaign-title" style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "clamp(1.6rem, 5vw, 2.8rem)", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
-          <span style={{ color: "rgba(255,255,255,.4)" }}>launch creator campaigns</span>{" "}<span style={{ color: "#fff" }}>with a clear path to delivery</span>
+          <span style={{ color: "rgba(255,255,255,.4)" }}>your brand. their creativity.</span>{" "}<span style={{ color: "#fff" }}>one great campaign.</span>
         </h1>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
           <button onClick={() => goToBuilder("builder")} className="nf-cta-btn" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 0, width: "100%", maxWidth: 220, padding: "14px 28px", borderRadius: 16, fontFamily: "system-ui, sans-serif", textTransform: "lowercase", fontSize: ".99rem", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.28)", backdropFilter: "blur(20px)", color: "#fff", cursor: "pointer", boxShadow: "0 10px 28px rgba(0,0,0,.25)" }}>
@@ -8054,7 +8054,6 @@ function NfluenceApp() {
 
       {/* Open Campaigns */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 16px 80px" }}>
-        <p style={{textAlign:'center',color:'#b9c7d8',marginBottom:24}}>$299 per campaign · $1,999 for 12 months · Free for creators</p>
         {publicCampaigns.length > 0 && <h2 style={{ fontFamily: "'Monda', system-ui, sans-serif", fontSize: "1.4rem", textAlign: "center", marginBottom: 28, fontWeight: 600 }}>current campaigns</h2>}
         {publicLoading?<p className="nf-empty-state" role="status">Loading current campaigns…</p>:publicError?<div className="nf-empty-state" role="alert"><p>Campaigns couldn’t load. Please try again.</p><button onClick={refreshPublic}>Try again</button></div>:null}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
