@@ -17,7 +17,7 @@ for(const file of await htmlFiles()){
  const hashes=[...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].filter(m=>m[1].trim()).map(m=>"'sha256-"+createHash('sha256').update(m[1]).digest('base64')+"'");
  // Legacy markup still uses inline styles; scripts are restricted to first-party bundles, exact hashes and Stripe.
  const policy="default-src 'self'; script-src 'self' https://js.stripe.com "+hashes.join(' ')+"; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://xynujmscxjxbfivylfne.supabase.co wss://xynujmscxjxbfivylfne.supabase.co https://api.stripe.com https://formspree.io; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io";
- html=html.replace(/(<meta charset=[^>]+>)/i,`$1<meta http-equiv="Content-Security-Policy" content="${policy}">`).replaceAll('/assets/social-card.svg','/assets/social-card.png');
+ html=html.replace(/(<meta charset=[^>]+>)/i,`$1<meta http-equiv="Content-Security-Policy" content="${policy}">`).replaceAll('/assets/social-card.svg','/assets/social-card-logo-20261028.png');
  await writeFile(file,html);
 }
 console.log('Production bundles and page security policies built.');
