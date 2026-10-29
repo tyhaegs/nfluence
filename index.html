@@ -290,6 +290,10 @@
       margin: 0;
     }
 
+    .intro-text p + p {
+      margin-top: 1em;
+    }
+
     .popular {
       width: min(1100px, 100%);
       margin: 80px auto 140px;
@@ -438,12 +442,22 @@
         width: 80%;
       }
 
-      /* Intro text: narrower and left-aligned on mobile only */
+      /* Give body copy natural line lengths and readable spacing on phones. */
       .intro-text {
+        width: 100%;
+        max-width: 42rem;
         padding: 0 24px;
         text-align: left;
-        font-size: 18px;
-        line-height: 1.55;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+      }
+
+      .intro-text p {
+        text-wrap: pretty;
+        overflow-wrap: normal;
+        word-break: normal;
+        hyphens: none;
       }
 
       /* Services: 1 card per row on mobile, desktop untouched */
@@ -571,8 +585,6 @@
   <main id="main-content" style="width:100%;display:flex;flex-direction:column;align-items:center">
   <div class="logo">
     <svg class="hero-logo" viewBox="318 449 2267 495" width="2267" height="495" role="img" aria-label="nfluence"><image href="assets/brand-logos/nfluence.png" width="2903" height="1393" /></svg>
-    <h1 class="hero-heading">Build a brand people find, trust, and choose.</h1>
-    <p class="hero-description">Website design, search visibility, ecommerce, and marketing that connect your brand with its next customers.</p>
     <div class="actions">
       <a href="#popular" class="btn">view services</a>
       <a href="/campaigns/" class="btn">campaigns</a>
@@ -601,7 +613,10 @@
 
   <div class="intro-text">
     <p>
-      Brands at every stage benefit from clear direction and experienced support. For 15+ years we have partnered with companies across a range of industries, driving growth and producing results that matter. Big budget or bootstrapped, we deliver the services that put your brand in front of the right eyes. You provide the supply, we harness the demand.
+      Brands at every stage benefit from clear direction and experienced support. For 15+ years we have partnered with companies across a range of industries, driving growth and producing results that matter.
+    </p>
+    <p>
+      Big budget or bootstrapped, we deliver the services that put your brand in front of the right eyes. You provide the supply, we harness the demand.
     </p>
   </div>
 
